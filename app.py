@@ -12,7 +12,7 @@ SENHA_ACESSO = "123456"
 # ⚠️ ALTERE AQUI PARA O SEU USUÁRIO E O NOME DO SEU REPOSITÓRIO NO GITHUB
 NOME_DO_REPOSITORIO = "fredericogalhardi-gif/mvp-artefact" 
 
-# --- CONEXÃO COM O GITHUB (NOSSO BANCO DE DADOS) ---
+# --- CONEXÃO COM O GITHUB (NOSSO BANCO DE DADOS) ----
 @st.cache_resource
 def conectar_github():
     try:
@@ -20,7 +20,8 @@ def conectar_github():
         repo = g.get_repo(NOME_DO_REPOSITORIO)
         return repo
     except Exception as e:
-        st.error(f"Erro ao conectar no GitHub. Verifique o nome do repositório e o Token.")
+        # AGORA ELE VAI MOSTRAR O ERRO VERDADEIRO
+        st.error(f"O GitHub recusou a conexão. O erro exato foi: {e}")
         return None
 
 def carregar_notas(repo):
