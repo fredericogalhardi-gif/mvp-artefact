@@ -10,7 +10,7 @@ USUARIO_ID = "admin"
 SENHA_ACESSO = "123456"
 
 # ⚠️ ALTERE AQUI PARA O SEU USUÁRIO E O NOME DO SEU REPOSITÓRIO NO GITHUB
-NOME_DO_REPOSITORIO = "seu-usuario-do-github/mvp-artefact" 
+NOME_DO_REPOSITORIO = "fredericogalhardi-gif/mvp-artefact" 
 
 # --- CONEXÃO COM O GITHUB (NOSSO BANCO DE DADOS) ---
 @st.cache_resource
