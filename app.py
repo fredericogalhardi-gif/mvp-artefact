@@ -9,7 +9,7 @@ st.set_page_config(
     page_title="Artefact | Strategy",
     page_icon="💠",
     layout="wide",
-    initial_sidebar_state="collapsed" # Começa fechado para focar no conteúdo no celular
+    initial_sidebar_state="collapsed"
 )
 
 # --- 2. CONTROLE DE SESSÃO ---
@@ -52,7 +52,7 @@ def apply_theme():
             font-weight: 800;
         }}
 
-        /* Filtro Selectbox Adaptativo (Correção Tema Claro) */
+        /* Filtro Selectbox Adaptativo */
         div[data-baseweb="select"] > div {{
             background-color: {card_bg} !important;
             border-color: {card_border} !important;
@@ -64,18 +64,46 @@ def apply_theme():
             color: {text_color} !important;
         }}
 
-        /* Cartões de Métrica (Ajuste para Mobile) */
+        /* Cartões de Métrica (Layout 2x2 Desktop) */
         div[data-testid="stMetric"] {{
             background: {card_bg};
             border: 1px solid {card_border};
             border-radius: 12px;
-            padding: 1rem !important;
+            padding: 1.2rem !important;
             box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+            height: 100%;
         }}
         div[data-testid="stMetricValue"] > div {{
             font-size: 1.5rem !important;
             white-space: normal !important;
             word-wrap: break-word !important;
+        }}
+
+        /* MAGIA UI/UX: Forçando Grid 2x2 no Mobile */
+        @media (max-width: 640px) {{
+            /* Impede o Streamlit de empilhar as colunas horizontalmente */
+            div[data-testid="stHorizontalBlock"] {{
+                flex-direction: row !important;
+                flex-wrap: nowrap !important;
+                gap: 0.5rem !important; /* Espaçamento sutil entre os cards */
+            }}
+            /* Força as colunas a ocuparem exatamente 50% do espaço */
+            div[data-testid="column"] {{
+                width: 50% !important;
+                flex: 1 1 calc(50% - 0.25rem) !important;
+                min-width: 0 !important;
+            }}
+            /* Ajuste de tipografia para caber em 50% da tela mobile */
+            div[data-testid="stMetric"] {{
+                padding: 0.8rem !important;
+            }}
+            div[data-testid="stMetricValue"] > div {{
+                font-size: 1.15rem !important;
+                line-height: 1.2 !important;
+            }}
+            div[data-testid="stMetricLabel"] > div {{
+                font-size: 0.75rem !important;
+            }}
         }}
 
         /* Cartões de Leads Mobile-First */
@@ -157,7 +185,7 @@ if not st.session_state.logado:
                     st.error("Acesso Negado.")
     st.stop()
 
-# --- 6. DADOS COMPLETOS (40 LEADS) E LÓGICA ---
+# --- 6. DADOS COMPLETOS E LÓGICA ---
 LEADS_BASE = [
     {"id": 1, "nome": "Bruno Szarf", "empresa": "Stefanini", "cargo": "VP Global", "decisor": "Sim", "linkedin": "https://www.linkedin.com/in/brunoszarf", "score": 55},
     {"id": 2, "nome": "Patrícia Rosado", "empresa": "Tupy", "cargo": "VP de Pessoas, Cultura e SSMA", "decisor": "Sim", "linkedin": "https://www.linkedin.com/in/patricia-rosado-b15ba01a", "score": 52},
@@ -246,7 +274,6 @@ if st.session_state.view_mode == 'dashboard':
     st.markdown('<h2 style="margin-bottom:0;">Visão Executiva</h2>', unsafe_allow_html=True)
     st.markdown('<p class="subtext">Panorama do Funil</p>', unsafe_allow_html=True)
     
-    # Métricas adaptadas para Mobile (Usando 2 colunas para não espremer)
     m1, m2 = st.columns(2)
     m1.metric("Contas Totais", len(df_leads))
     m2.metric("Decisores", len(df_leads[df_leads['decisor'] == 'Sim']))
@@ -259,7 +286,6 @@ if st.session_state.view_mode == 'dashboard':
     
     font_color = "#ffffff" if st.session_state.theme == 'dark' else "#111111"
     
-    # Gráficos empilhados para responsividade
     st.markdown("### Distribuição de Classes")
     fig1 = px.bar(df_leads['tier'].value_counts().reset_index(), x='count', y='tier', orientation='h', color='tier', color_discrete_sequence=['#3232ff', '#ff1493', '#888890'])
     fig1.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font_color=font_color, showlegend=False, xaxis=dict(showgrid=False), yaxis=dict(showgrid=False), margin=dict(l=0, r=0, t=10, b=0), height=250)
@@ -270,12 +296,11 @@ if st.session_state.view_mode == 'dashboard':
     fig2.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font_color=font_color, margin=dict(l=0, r=0, t=10, b=0), height=250, legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5))
     st.plotly_chart(fig2, use_container_width=True)
 
-# MODO: LISTA DE LEADS (CARTÕES MOBILE-FIRST)
+# MODO: LISTA DE LEADS
 elif st.session_state.view_mode == 'list':
     st.markdown('<h2 style="margin-bottom:0;">Pipeline</h2>', unsafe_allow_html=True)
     st.write("")
     
-    # Filtro adaptativo
     tier_filter = st.selectbox("Filtrar Classe", ["Todos", "Tier 1 - Strategic", "Tier 2 - High Priority", "Tier 3 - Nurturing"])
     st.write("")
     
@@ -289,7 +314,6 @@ elif st.session_state.view_mode == 'list':
         else:
             t_class, b_class, bar = "pill-neutral", "pill-neutral", ''
 
-        # HTML do Cartão (Estrutura Vertical Mobile-Friendly - Colado na margem)
         html_card = f"""<div class="lead-row">
 {bar}
 <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
@@ -312,9 +336,9 @@ elif st.session_state.view_mode == 'list':
             st.session_state.selected_lead_id = l['id']
             st.session_state.view_mode = 'detail'
             st.rerun()
-        st.write("") # Espaço entre cartões e botões
+        st.write("")
 
-# MODO: DETALHES DO LEAD (COM NOTAS)
+# MODO: DETALHES DO LEAD (GRID 2x2 RIGOROSO)
 elif st.session_state.view_mode == 'detail':
     lead = next(l for l in LEADS_BASE if l['id'] == st.session_state.selected_lead_id)
     
@@ -331,20 +355,24 @@ elif st.session_state.view_mode == 'detail':
             
     st.divider()
     
-    # Métricas Empilhadas 2 a 2 para Celular
-    m1, m2 = st.columns(2)
-    m1.metric("Classificação", lead['tier'].split(" - ")[0])
-    m2.metric("Score", f"{lead['score']} pts")
+    # GRADE 2x2 PERFEITA (Mantida via CSS injection no apply_theme)
+    # Linha 1 (Superior)
+    col1, col2 = st.columns(2)
+    col1.metric("Classificação", lead['tier'].split(" - ")[0])
+    col2.metric("Score", f"{lead['score']} pts")
     
-    m3, m4 = st.columns(2)
-    m3.metric("Decisor", lead['decisor'])
-    m4.metric("Potencial", lead['orcamento'])
+    # Adicionando um pequeno espaço vertical nativo
+    st.write("")
+    
+    # Linha 2 (Inferior)
+    col3, col4 = st.columns(2)
+    col3.metric("Decisor", lead['decisor'])
+    col4.metric("Potencial", lead['orcamento'])
     
     st.divider()
     
     st.markdown("### Inteligência")
     
-    # Formulário de Notas (Limpa ao enviar)
     with st.form("nota_form", clear_on_submit=True):
         nova_nota = st.text_area("Adicionar novo insight estratégico:")
         submit = st.form_submit_button("Salvar Registro", use_container_width=True, type="primary")
