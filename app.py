@@ -122,7 +122,10 @@ apply_theme()
 def check_login(user, pwd):
     val_user = st.secrets.get("APP_USER", "admin")
     val_pass = st.secrets.get("APP_PASS", "datilografia")
-    return hmac.compare_digest(user, val_user) and hmac.compare_digest(pwd, val_pass)
+    
+    # O .encode('utf-8') resolve o erro de non-ASCII e mantém a segurança
+    return hmac.compare_digest(user.encode('utf-8'), val_user.encode('utf-8')) and \
+           hmac.compare_digest(pwd.encode('utf-8'), val_pass.encode('utf-8'))
 
 # --- 5. TELA DE LOGIN ---
 if not st.session_state.logado:
