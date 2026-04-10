@@ -8,8 +8,37 @@ import time
 # --- 1. CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(page_title="Artefact Strategy CRM", layout="wide", initial_sidebar_state="expanded")
 
+# --- CSS CUSTOMIZADO (IDENTIDADE ARTEFACT) ---
+st.markdown("""
+    <style>
+    /* Título em Gradiente ATF */
+    .atf-gradient-text {
+        background: linear-gradient(90deg, #3232ff 0%, #ff1493 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-weight: 800;
+        font-size: 2.2rem;
+        margin-bottom: 0rem;
+    }
+    
+    /* Subtítulo charmoso */
+    .atf-subtitle {
+        color: #a0a0a5;
+        font-size: 1rem;
+        margin-bottom: 2rem;
+    }
+    
+    /* Borda sutil nos containers (Cards) */
+    div[data-testid="stVerticalBlock"] > div[style*="flex-direction: column;"] {
+        background-color: #16161a;
+        border: 1px solid #2d2d33;
+        border-radius: 12px;
+        padding: 15px;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # --- 2. BANCO DE DADOS COMPLETO (45 LEADS) ---
-# Alterado 'investimentos' para 'orcamento'
 LEADS_BASE = [
     {"id": 1, "nome": "Bruno Szarf", "empresa": "Stefanini", "cargo": "VP Global", "decisor": "Sim", "linkedin": "https://www.linkedin.com/in/brunoszarf", "score": 55, "orcamento": "N/I"},
     {"id": 2, "nome": "Patrícia Rosado", "empresa": "Tupy", "cargo": "VP de Pessoas, Cultura e SSMA", "decisor": "Sim", "linkedin": "https://www.linkedin.com/in/patricia-rosado-b15ba01a", "score": 52, "orcamento": "N/I"},
@@ -104,17 +133,19 @@ def salvar_nota(repo, lista_notas, sha):
 if 'logado' not in st.session_state:
     st.session_state.logado = False
 if 'view_mode' not in st.session_state:
-    st.session_state.view_mode = 'list' # Começa na visualização de lista
+    st.session_state.view_mode = 'list'
 if 'selected_lead_id' not in st.session_state:
     st.session_state.selected_lead_id = None
 
 # --- 7. TELA DE LOGIN ---
 if not st.session_state.logado:
-    st.title("🔐 Artefact CRM - Acesso Restrito")
+    st.markdown('<p class="atf-gradient-text">Artefact Strategy</p>', unsafe_allow_html=True)
+    st.markdown('<p class="atf-subtitle">Acesso Restrito ao CRM</p>', unsafe_allow_html=True)
+    
     with st.container():
         user_input = st.text_input("Usuário")
         pass_input = st.text_input("Senha", type="password")
-        if st.button("Entrar no Sistema", use_container_width=True):
+        if st.button("Entrar no Sistema", use_container_width=True, type="primary"):
             if check_login(user_input, pass_input):
                 st.session_state.logado = True
                 st.rerun()
@@ -128,7 +159,7 @@ notas_globais, sha_banco = carregar_notas(repo)
 
 # --- SIDEBAR (FILTROS) ---
 with st.sidebar:
-    st.title("🎯 Filtros")
+    st.markdown('<p class="atf-gradient-text" style="font-size: 1.5rem;">Filtros</p>', unsafe_allow_html=True)
     busca_nome = st.text_input("Buscar por nome")
     todas_empresas = sorted(list(set([x['empresa'] for x in LEADS_BASE])))
     filtro_empresa = st.multiselect("Filtrar por Empresa", todas_empresas)
@@ -136,9 +167,8 @@ with st.sidebar:
     filtro_tier = st.multiselect("Filtrar por Tier", todos_tiers)
     
     st.divider()
-    # Botão para forçar a volta para a lista (útil se estiver navegando)
     if st.session_state.view_mode == 'detail':
-        if st.button("📋 Ver Lista de Leads", use_container_width=True):
+        if st.button("📋 Voltar para a Lista", use_container_width=True):
             st.session_state.view_mode = 'list'
             st.rerun()
             
@@ -156,7 +186,8 @@ if filtro_tier:
     leads_exibicao = [l for l in leads_exibicao if l['tier'] in filtro_tier]
 
 # --- RENDERIZAÇÃO DA INTERFACE PRINCIPAL ---
-st.title("🚀 Artefact Strategy CRM")
+st.markdown('<p class="atf-gradient-text">Artefact Strategy CRM</p>', unsafe_allow_html=True)
+st.markdown('<p class="atf-subtitle">Gestão de Lideranças e Decisores</p>', unsafe_allow_html=True)
 
 if not leads_exibicao:
     st.warning("Nenhum lead encontrado com os filtros atuais.")
@@ -165,99 +196,95 @@ else:
     # MODO 1: VISUALIZAÇÃO EM LISTA
     # ---------------------------------------------------------
     if st.session_state.view_mode == 'list':
-        st.subheader("📋 Lista de Leads")
         
-        # Cabeçalhos da Tabela Falsa (Grid)
+        # Grid Header
         h1, h2, h3, h4 = st.columns([3, 3, 2, 2])
         h1.markdown("**Nome**")
         h2.markdown("**Empresa**")
-        h3.markdown("**Tier**")
+        h3.markdown("**Nível**")
         h4.markdown("**Ação**")
         st.divider()
         
         # Linhas da Lista
         for l in leads_exibicao:
-            c1, c2, c3, c4 = st.columns([3, 3, 2, 2])
-            c1.write(l['nome'])
-            c2.write(l['empresa'])
-            c3.write(f"⭐ {l['tier']}")
-            
-            # Quando clica no botão, muda o estado para "detail" e define o lead selecionado
-            if c4.button("👁️ Abrir", key=f"btn_{l['id']}", use_container_width=True):
-                st.session_state.selected_lead_id = l['id']
-                st.session_state.view_mode = 'detail'
-                st.rerun()
+            with st.container():
+                c1, c2, c3, c4 = st.columns([3, 3, 2, 2], vertical_alignment="center")
+                c1.write(f"**{l['nome']}**")
+                c2.write(l['empresa'])
+                
+                # Cores diferentes dependendo do Tier para dar um visual legal
+                cor_tier = "blue" if l['tier'] == "Tier 1" else "normal"
+                c3.write(f"⭐ :{cor_tier}[{l['tier']}]")
+                
+                if c4.button("👁️ Detalhar", key=f"btn_{l['id']}", use_container_width=True):
+                    st.session_state.selected_lead_id = l['id']
+                    st.session_state.view_mode = 'detail'
+                    st.rerun()
+            st.divider()
 
     # ---------------------------------------------------------
     # MODO 2: VISUALIZAÇÃO ÚNICA (DETALHES DO LEAD)
     # ---------------------------------------------------------
     elif st.session_state.view_mode == 'detail':
         
-        # Botão rápido para voltar
-        if st.button("⬅️ Voltar para a Lista"):
-            st.session_state.view_mode = 'list'
-            st.rerun()
-            
-        st.divider()
-
-        # Lógica inteligente do Selectbox (Mantém a navegação pelo dropdown também)
         opcoes_formatadas = [f"[{l['tier']}] {l['nome']} ({l['empresa']})" for l in leads_exibicao]
-        
-        # Descobre qual é o índice do lead atualmente selecionado
         try:
             current_lead = next(l for l in leads_exibicao if l['id'] == st.session_state.selected_lead_id)
             current_formatted = f"[{current_lead['tier']}] {current_lead['nome']} ({current_lead['empresa']})"
             current_index = opcoes_formatadas.index(current_formatted)
         except:
-            current_index = 0 # Fallback de segurança
+            current_index = 0
 
-        # Selectbox sincronizado
-        selecao = st.selectbox("Ou pule para outro perfil diretamente:", opcoes_formatadas, index=current_index)
+        selecao = st.selectbox("Navegue por outros perfis:", opcoes_formatadas, index=current_index)
         lead = next(l for l in leads_exibicao if f"[{l['tier']}] {l['nome']} ({l['empresa']})" == selecao)
-        st.session_state.selected_lead_id = lead['id'] # Mantém o estado atualizado
+        st.session_state.selected_lead_id = lead['id']
         
-        # --- UI DO PERFIL (Highlights) ---
         st.divider()
+        
+        # --- UI DO PERFIL (Highlights com Métricas) ---
         c1, c2 = st.columns([3, 1])
         with c1:
-            st.header(f"{lead['nome']} (ID: {lead['id']})")
-            st.markdown(f"**🏢 Empresa:** {lead['empresa']}")
-            st.markdown(f"**⭐ Tier:** {lead['tier']} *(Score: {lead['score']})*")
-            st.markdown(f"**💰 Orçamento Estimado:** {lead['orcamento']}") # Atualizado!
+            st.header(f"{lead['nome']}")
+            st.caption(f"ID no Sistema: {lead['id']}")
+            
+            # Usando st.metric para um design de Dashboard super profissional
+            m1, m2, m3 = st.columns(3)
+            m1.metric(label="🏢 Empresa", value=lead['empresa'])
+            m2.metric(label="⭐ Classificação", value=lead['tier'], delta=f"Score: {lead['score']}", delta_color="off")
+            m3.metric(label="💰 Orçamento", value=lead['orcamento'])
+            
         with c2:
             if lead['linkedin'] != "#":
-                st.link_button("🔗 Ver Perfil no LinkedIn", lead['linkedin'], use_container_width=True)
+                st.link_button("🔗 Abrir LinkedIn", lead['linkedin'], use_container_width=True)
 
         # Ver Mais
-        with st.expander("👁️ Ver mais detalhes sobre o lead"):
-            st.markdown(f"**💼 Cargo:** {lead['cargo']}")
-            st.markdown(f"**⚖️ Decisor:** {lead['decisor']}")
+        with st.expander("👁️ Informações Complementares"):
+            st.markdown(f"**💼 Cargo Executivo:** {lead['cargo']}")
+            st.markdown(f"**⚖️ Tomador de Decisão:** {lead['decisor']}")
 
         # --- SISTEMA DE ABAS ---
         st.divider()
-        tab_doc, tab_hist = st.tabs(["✍️ Documentário", "📜 Histórico Completo"])
+        tab_doc, tab_hist = st.tabs(["✍️ Novo Documentário", "📜 Histórico Completo"])
 
         with tab_doc:
-            st.markdown("### Adicionar ao Documentário")
             nova_entrada = st.text_area("Descreva a interação:", height=150, key=f"txt_detalhe_{lead['id']}")
-            if st.button("💾 Salvar no Documentário", use_container_width=True):
+            if st.button("💾 Salvar no Documentário", use_container_width=True, type="primary"):
                 if nova_entrada.strip():
                     registro = {"id_lead": lead['id'], "data": datetime.now().strftime("%d/%m/%Y %H:%M"), "texto": nova_entrada}
                     notas_globais.append(registro)
                     with st.spinner("Sincronizando com o GitHub..."):
                         salvar_nota(repo, notas_globais, sha_banco)
-                    st.success("Salvo com sucesso!")
+                    st.success("Anotação salva com sucesso!")
                     time.sleep(1)
                     st.rerun()
 
         with tab_hist:
-            st.markdown("### Histórico")
             historico_lead = [n for n in notas_globais if n.get('id_lead') == lead['id']]
             if not historico_lead:
-                st.info("Sem registros anteriores.")
+                st.info("Nenhuma interação registrada ainda.")
             else:
                 for n in reversed(historico_lead):
                     with st.container():
                         st.caption(f"📅 {n['data']}")
-                        st.info(n['texto'])
+                        st.write(n['texto'])
                         st.divider()
