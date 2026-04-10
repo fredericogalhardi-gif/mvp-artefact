@@ -1,0 +1,7 @@
+[theme]
+# A paleta ATF baseada no seu HTML original
+primaryColor = "#3232ff"
+backgroundColor = "#0a0a0c"
+secondaryBackgroundColor = "#16161a"
+textColor = "#ffffff"
+font = "sans serif"
