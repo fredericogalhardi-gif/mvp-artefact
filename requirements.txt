@@ -2,3 +2,4 @@ streamlit
 PyGithub
 pandas
 openpyxl
+plotly
