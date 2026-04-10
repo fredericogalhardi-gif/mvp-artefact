@@ -2,6 +2,7 @@ import streamlit as st
 import json
 import pandas as pd
 import plotly.express as px
+import hmac
 from datetime import datetime
 
 # --- 1. CONFIGURAÇÃO DE ALTO NÍVEL ---
@@ -13,7 +14,8 @@ st.set_page_config(
 )
 
 # --- 2. CONTROLE DE SESSÃO (STATE) ---
-if 'logado' not in st.session_state: st.session_state.logado = True # Deixei True para facilitar seus testes
+# AGORA O LOGIN É OBRIGATÓRIO (False)
+if 'logado' not in st.session_state: st.session_state.logado = False 
 if 'view_mode' not in st.session_state: st.session_state.view_mode = 'dashboard'
 if 'selected_lead_id' not in st.session_state: st.session_state.selected_lead_id = None
 if 'theme' not in st.session_state: st.session_state.theme = 'dark'
@@ -22,7 +24,6 @@ if 'theme' not in st.session_state: st.session_state.theme = 'dark'
 def apply_theme():
     is_dark = st.session_state.theme == 'dark'
     
-    # Paleta Artefact
     bg_color = "#08080a" if is_dark else "#f4f5f7"
     text_color = "#ffffff" if is_dark else "#111111"
     sub_text = "#888890" if is_dark else "#666666"
@@ -34,7 +35,6 @@ def apply_theme():
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;800&display=swap');
         
-        /* App Background */
         .stApp {{
             background-color: {bg_color};
             color: {text_color};
@@ -44,7 +44,6 @@ def apply_theme():
         h1, h2, h3, p, span {{ color: {text_color} !important; }}
         .subtext {{ color: {sub_text} !important; }}
 
-        /* Artefact Gradient Text */
         .atf-gradient {{
             background: linear-gradient(90deg, #3232ff 0%, #ff1493 100%);
             -webkit-background-clip: text;
@@ -52,7 +51,6 @@ def apply_theme():
             font-weight: 800;
         }}
 
-        /* Status Cards */
         div[data-testid="stMetric"] {{
             background: {card_bg};
             border: 1px solid {card_border};
@@ -61,7 +59,6 @@ def apply_theme():
             box-shadow: 0 4px 6px rgba(0,0,0,0.02);
         }}
 
-        /* Custom Table Rows */
         .lead-row {{
             background: {card_bg};
             border: 1px solid {card_border};
@@ -75,7 +72,6 @@ def apply_theme():
             transform: translateY(-1px);
         }}
         
-        /* Tier 1 Gradient Bar Indicator (Baseado no seu print da seta) */
         .tier-1-bar {{
             height: 4px;
             width: 100%;
@@ -84,19 +80,57 @@ def apply_theme():
             margin-bottom: -4px;
         }}
 
-        /* Color Pills - Artefact Palette */
         .pill-blue {{ color: #3232ff; font-weight: 600; }}
         .pill-magenta {{ color: #ff1493; font-weight: 600; }}
         .pill-neutral {{ color: {sub_text}; font-weight: 500; }}
 
-        /* Custom Dividers */
         hr {{ border-color: {card_border} !important; }}
         </style>
     """, unsafe_allow_html=True)
 
+# Aplica o tema antes de renderizar qualquer coisa (incluindo o Login)
 apply_theme()
 
-# --- 4. DADOS E LÓGICA REFINADA ---
+# --- 4. SISTEMA DE AUTENTICAÇÃO ---
+def check_login(user, pwd):
+    # Tenta pegar do Secrets do Streamlit. Se não achar, usa os valores do seu print.
+    val_user = st.secrets.get("APP_USER", "admin")
+    val_pass = st.secrets.get("APP_PASS", "datilografia")
+    
+    # hmac evita ataques de timing e faz uma comparação segura
+    return hmac.compare_digest(user, val_user) and hmac.compare_digest(pwd, val_pass)
+
+# --- 5. TELA DE LOGIN ---
+if not st.session_state.logado:
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col2:
+        st.write("")
+        st.write("")
+        st.write("")
+        st.markdown('<h1 class="atf-gradient" style="font-size:3rem; text-align:center; margin-bottom:0;">Artefact</h1>', unsafe_allow_html=True)
+        st.markdown('<p class="subtext" style="text-align:center; margin-bottom:2rem;">Acesso Restrito - Executive Intelligence</p>', unsafe_allow_html=True)
+        
+        with st.form("login_form"):
+            user_input = st.text_input("Usuário")
+            pass_input = st.text_input("Senha", type="password")
+            
+            submit_button = st.form_submit_button("Acessar Sistema", use_container_width=True)
+            
+            if submit_button:
+                if check_login(user_input, pass_input):
+                    st.session_state.logado = True
+                    st.rerun()
+                else:
+                    st.error("Credenciais inválidas.")
+    
+    # O st.stop() impede que o resto do código rode se não estiver logado
+    st.stop()
+
+# ==============================================================================
+# DAQUI PARA BAIXO, SÓ RODA SE ESTIVER LOGADO
+# ==============================================================================
+
+# --- 6. DADOS E LÓGICA REFINADA ---
 LEADS_BASE = [
     {"id": 1, "nome": "Thais Cristina de Abreu", "empresa": "G5 Partners", "cargo": "VP - People & Culture", "score": 55},
     {"id": 2, "nome": "Mari Stela Ribeiro", "empresa": "HILTI do Brasil", "cargo": "CHRO", "score": 52},
@@ -121,12 +155,12 @@ for lead in LEADS_BASE:
 
 df_leads = pd.DataFrame(LEADS_BASE)
 
-# --- 5. MENU LATERAL (SIDEBAR) ---
+# --- 7. MENU LATERAL (SIDEBAR) ---
 with st.sidebar:
     st.markdown('<h2 class="atf-gradient" style="font-size:2rem; margin-bottom:0;">Artefact</h2>', unsafe_allow_html=True)
     st.markdown('<p class="subtext" style="margin-bottom:2rem;">Intelligence CRM</p>', unsafe_allow_html=True)
     
-    # Lógica de desabilitar botão ativo (Feedback 1)
+    # Lógica de desabilitar botão ativo
     is_dash = st.session_state.view_mode == 'dashboard'
     is_pipe = st.session_state.view_mode == 'list'
     
@@ -140,13 +174,18 @@ with st.sidebar:
         
     st.divider()
     
-    # Theme Switcher (Feedback 2)
+    # Theme Switcher
     tema_atual = "🌙 Modo Escuro" if st.session_state.theme == 'dark' else "☀️ Modo Claro"
     if st.button(f"Alternar Tema ({tema_atual})", use_container_width=True):
         st.session_state.theme = 'light' if st.session_state.theme == 'dark' else 'dark'
         st.rerun()
 
-# --- 6. RENDERIZAÇÃO DA TELA PRINCIPAL ---
+    st.divider()
+    if st.button("🚪 Sair", use_container_width=True):
+        st.session_state.logado = False
+        st.rerun()
+
+# --- 8. RENDERIZAÇÃO DA TELA PRINCIPAL ---
 
 if st.session_state.view_mode == 'dashboard':
     st.markdown('<h1 style="margin-bottom:0;">Overview Estratégico</h1>', unsafe_allow_html=True)
@@ -164,7 +203,6 @@ if st.session_state.view_mode == 'dashboard':
     
     tier_counts = df_leads['tier'].value_counts().reset_index()
     tier_counts.columns = ['Tier', 'Volume']
-    # Cores Artefact aplicadas no gráfico
     fig = px.bar(tier_counts, x='Volume', y='Tier', orientation='h', color='Tier',
                  color_discrete_sequence=['#3232ff', '#ff1493', '#888890'])
     fig.update_layout(
@@ -177,7 +215,6 @@ elif st.session_state.view_mode == 'list':
     st.markdown('<h1 style="margin-bottom:0;">Lideranças Mapeadas</h1>', unsafe_allow_html=True)
     st.write("")
     
-    # Header da Tabela Customizado
     h1, h2, h3, h4, h5 = st.columns([3, 2, 2, 2, 1])
     h1.markdown('<span class="subtext" style="font-size:0.8rem; font-weight:600;">EXECUTIVO</span>', unsafe_allow_html=True)
     h2.markdown('<span class="subtext" style="font-size:0.8rem; font-weight:600;">EMPRESA</span>', unsafe_allow_html=True)
@@ -185,10 +222,7 @@ elif st.session_state.view_mode == 'list':
     h4.markdown('<span class="subtext" style="font-size:0.8rem; font-weight:600;">ORÇAMENTO</span>', unsafe_allow_html=True)
     st.divider()
     
-    # Linhas de Leads com CSS Injetado
     for l in LEADS_BASE:
-        
-        # Lógica de Cores da Artefact baseada no Tier
         if "Tier 1" in l['tier']:
             tier_class = "pill-blue"
             budget_class = "pill-blue"
@@ -202,7 +236,6 @@ elif st.session_state.view_mode == 'list':
             budget_class = "pill-neutral"
             grad_bar = ''
 
-        # Container visual personalizado
         st.markdown(f"""
         <div class="lead-row">
             {grad_bar}
@@ -218,10 +251,9 @@ elif st.session_state.view_mode == 'list':
         </div>
         """, unsafe_allow_html=True)
         
-        # Botão funcional alinhado à direita
         _, btn_col = st.columns([9, 1])
         with btn_col:
             if st.button("Abrir", key=f"btn_{l['id']}", use_container_width=True):
                 st.session_state.selected_lead_id = l['id']
-                st.session_state.view_mode = 'detail'
+                st.session_state.view_mode = 'detail' # Só não esquece de implementar a tela de detalhes depois
                 st.rerun()
