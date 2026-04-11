@@ -1,10 +1,3 @@
-Você tocou no ponto crucial de qualquer aplicação C-Level moderna: **a portabilidade**. Executivos não ficam presos a monitores ultrawide; eles acessam dashboards no iPad entre voos e no iPhone no banco de trás do carro. Se o app quebra a rolagem horizontal, a experiência "premium" evapora imediatamente.
-
-Eu reverti a trava rígida de 50% que havíamos colocado antes (que forçava o 2x2 no mobile de forma estática) e implementei o sistema de Grid Inteligente (Flexbox com Wrap). Além disso, injetei as *media queries* recomendadas para reescrever o comportamento raiz da classe `.block-container` do Streamlit.
-
-Aqui está o código final, 100% Mobile-First, com o tema Platinum impecável e responsividade total.
-
-```python
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -26,7 +19,7 @@ if 'selected_lead_id' not in st.session_state: st.session_state.selected_lead_id
 if 'theme' not in st.session_state: st.session_state.theme = 'dark'
 if 'notas_locais' not in st.session_state: st.session_state.notas_locais = []
 
-# --- 3. DEFINIÇÃO DA PALETA E INJEÇÃO CSS (RESPONSIVIDADE C-LEVEL) ---
+# --- 3. INJEÇÃO CSS (ZERO-BUG & RESPONSIVE) ---
 def apply_executive_styles():
     is_dark = st.session_state.theme == 'dark'
     
@@ -59,7 +52,7 @@ def apply_executive_styles():
             font-weight: 800;
         }}
 
-        /* --- CORREÇÃO ZERO-BUG DE INPUTS (TEXTAREA/INPUT) --- */
+        /* --- CORREÇÃO DE INPUTS (TEXTAREA/INPUT) --- */
         .stTextArea textarea, .stTextInput input, div[data-baseweb="textarea"] textarea, div[data-baseweb="input"] input {{
             background-color: {C['INPUT_BKG']} !important;
             color: {C['TEXT']} !important;
@@ -68,6 +61,7 @@ def apply_executive_styles():
             caret-color: #3232ff !important;
             padding: 12px !important;
             width: 100% !important;
+            box-sizing: border-box !important;
         }}
         div[data-baseweb="textarea"], div[data-baseweb="input"] {{ background-color: transparent !important; }}
         .stTextArea label p, .stTextInput label p {{ color: {C['TEXT']} !important; font-weight: 500 !important; }}
@@ -81,7 +75,8 @@ def apply_executive_styles():
             border-radius: 8px !important;
             transition: all 0.2s ease !important;
             text-decoration: none !important;
-            width: 100% !important; /* Força 100% no mobile e container */
+            width: 100% !important; 
+            display: inline-flex; align-items: center; justify-content: center;
         }}
         button[kind="secondary"]:hover, .stLinkButton > a:hover {{
             border-color: #3232ff !important;
@@ -102,46 +97,51 @@ def apply_executive_styles():
             transform: translateY(-1px) !important;
         }}
 
-        /* --- CARTÕES & MÉTRICAS (GRID INTELIGENTE) --- */
+        /* --- CARTÕES & MÉTRICAS (FLEX & WRAP RESPONSIVO) --- */
         div[data-testid="stMetric"] {{
             background: {C['CARD']}; border: 1px solid {C['BORDER']};
             border-radius: 12px; padding: 1.2rem !important; height: 100%;
         }}
+        
+        /* Contêiner de colunas flexível (Não trava larguras) */
         div[data-testid="stHorizontalBlock"] {{
-            display: flex; flex-wrap: wrap; gap: 1rem;
+            display: flex !important;
+            flex-wrap: wrap !important;
+            gap: 1rem !important;
+            width: 100% !important;
+        }}
+        
+        /* Colunas ocupam o máximo possível mas quebram se faltar espaço */
+        [data-testid="column"] {{
+            flex: 1 1 min-content !important;
+            min-width: 120px !important; /* Limite mínimo antes de quebrar para baixo */
         }}
 
         .lead-row {{
             background: {C['CARD']}; border: 1px solid {C['BORDER']};
             border-radius: 12px; padding: 1rem; margin-bottom: 0.8rem;
             position: relative; overflow: hidden; transition: all 0.2s ease;
+            width: 100% !important; box-sizing: border-box !important;
         }}
         .lead-row:hover {{ transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.05); }}
         .tier-1-bar {{ position: absolute; top: 0; left: 0; height: 4px; width: 100%; background: linear-gradient(90deg, #3232ff 0%, #ff1493 100%); }}
 
-        /* --- RESPONSIVIDADE TOTAL (MEDIA QUERIES) --- */
-        @media (max-width: 768px) {{
-            /* Ajuste de padding na raiz do Streamlit */
+        /* --- TWEAKS EXTREMOS PARA MOBILE (< 600px) --- */
+        @media (max-width: 600px) {{
             .block-container {{
                 padding-left: 1rem !important;
                 padding-right: 1rem !important;
                 padding-top: 2rem !important;
-                max-width: 100% !important;
-            }}
-            /* Quebra das colunas em telas pequenas */
-            [data-testid="column"] {{
-                width: 100% !important;
-                flex: 1 1 100% !important;
-                min-width: 100% !important;
-            }}
-            div[data-testid="stHorizontalBlock"] {{
-                flex-direction: column !important;
+                max-width: 100vw !important;
+                overflow-x: hidden !important;
             }}
             div[data-testid="stMetric"] {{ padding: 0.8rem !important; }}
-            div[data-testid="stMetricValue"] > div {{ font-size: 1.25rem !important; }}
+            div[data-testid="stMetricValue"] > div {{ font-size: 1.15rem !important; }}
+            /* Se a tela for muito fina, os blocos empilham. Senão, ficam 2x2. */
+            [data-testid="column"] {{ min-width: 40% !important; }} 
         }}
 
-        /* Correção para Selectbox (Filtro) */
+        /* Filtros/Selectbox */
         div[data-baseweb="select"] > div {{ background-color: {C['INPUT_BKG']} !important; color: {C['TEXT']} !important; border: 1px solid {C['BORDER']} !important; width: 100%; }}
         ul[role="listbox"], li[role="option"] {{ background-color: {C['SIDEBAR']} !important; color: {C['TEXT']} !important; }}
         hr {{ border-color: {C['BORDER']} !important; margin: 1.5rem 0 !important; }}
@@ -165,7 +165,7 @@ if not st.session_state.logado:
         st.markdown('<h1 class="atf-gradient" style="font-size:3rem; text-align:center;">Artefact</h1>', unsafe_allow_html=True)
         st.markdown('<p class="subtext" style="text-align:center; margin-bottom:2rem;">Strategy Intelligence</p>', unsafe_allow_html=True)
         with st.form("login"):
-            u = st.text_input("Corporate ID")
+            u = st.text_input("User ID")
             p = st.text_input("Token", type="password")
             if st.form_submit_button("Authenticate", use_container_width=True, type="primary"):
                 if check_login(u, p): st.session_state.logado = True; st.rerun()
@@ -234,7 +234,6 @@ elif st.session_state.view_mode == 'list':
     
     for l in f_leads:
         bar = '<div class="tier-1-bar"></div>' if "Tier 1" in l['t'] else ""
-        # Layout Flex adaptado para quebrar graciosamente se ficar muito apertado
         card = f"""<div class="lead-row">{bar}
         <div style="display:flex; flex-wrap:wrap; justify-content:space-between; margin-bottom: 8px; gap: 8px;">
             <div style="flex: 1 1 auto;"><strong style="font-size: 1.1rem;">{l['nome']}</strong><br><span class="subtext">{l['cargo']}</span></div>
@@ -248,9 +247,7 @@ elif st.session_state.view_mode == 'list':
         st.markdown(card, unsafe_allow_html=True)
         if st.button(f"Abrir Perfil", key=f"b_{l['id']}", use_container_width=True):
             st.session_state.selected_lead_id = l['id']; st.session_state.view_mode = 'detail'; st.rerun()
-        st.write("")
 
-# MODO DETALHES
 elif st.session_state.view_mode == 'detail':
     l = next(item for item in LEADS_BASE if item['id'] == st.session_state.selected_lead_id)
     if st.button("← Voltar ao Pipeline", use_container_width=True): st.session_state.view_mode = 'list'; st.rerun()
@@ -261,16 +258,16 @@ elif st.session_state.view_mode == 'detail':
     
     st.divider()
     
-    # GRADE 2x2 Adaptativa
-    r1_c1, r1_c2 = st.columns(2)
-    r1_c1.metric("Classificação", l['t'])
-    r1_c2.metric("Score", f"{l['score']} pts")
+    # GRADE FLEXÍVEL RESPONSIVA (Grid Inteligente)
+    c1, c2 = st.columns(2)
+    c1.metric("Classificação", l['t'])
+    c2.metric("Score", f"{l['score']} pts")
     
     st.write("")
     
-    r2_c1, r2_c2 = st.columns(2)
-    r2_c1.metric("Decisor", l['decisor'])
-    r2_c2.metric("Potencial", l['o'])
+    c3, c4 = st.columns(2)
+    c3.metric("Decisor", l['decisor'])
+    c4.metric("Potencial", l['o'])
     
     st.divider()
     st.markdown("### Inteligência Estratégica")
@@ -291,4 +288,3 @@ elif st.session_state.view_mode == 'detail':
         bd_card = "rgba(255,255,255,0.08)" if st.session_state.theme == 'dark' else "#E0E0E0"
         for n in notas:
             st.markdown(f"<div style='background:{bg_card}; padding:15px; border-radius:8px; margin-bottom:10px; border:1px solid {bd_card}'><span class='subtext' style='font-size:0.75rem; font-weight:600;'>📅 {n['dt']}</span><p style='margin-top:5px; margin-bottom:0;'>{n['txt']}</p></div>", unsafe_allow_html=True)
-```
