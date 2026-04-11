@@ -19,11 +19,10 @@ if 'selected_lead_id' not in st.session_state: st.session_state.selected_lead_id
 if 'theme' not in st.session_state: st.session_state.theme = 'dark'
 if 'notas_locais' not in st.session_state: st.session_state.notas_locais = []
 
-# --- 3. INJEÇÃO CSS (ZERO-BUG & RESPONSIVE) ---
+# --- 3. DEFINIÇÃO DA PALETA E INJEÇÃO CSS (BRUTE FORCE ZERO-BUG) ---
 def apply_executive_styles():
     is_dark = st.session_state.theme == 'dark'
     
-    # Dicionário Central de Cores
     C = {
         "BKG": "#0A0A0F" if is_dark else "#F7F8FA",
         "SIDEBAR": "#111116" if is_dark else "#FFFFFF",
@@ -37,7 +36,7 @@ def apply_executive_styles():
     
     st.markdown(f"""
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
         /* Aplicação Global */
         .stApp {{ background-color: {C['BKG']}; font-family: 'Inter', sans-serif; color: {C['TEXT']}; }}
@@ -52,16 +51,11 @@ def apply_executive_styles():
             font-weight: 800;
         }}
 
-        /* --- CORREÇÃO DE INPUTS (TEXTAREA/INPUT) --- */
+        /* --- CORREÇÃO DE INPUTS --- */
         .stTextArea textarea, .stTextInput input, div[data-baseweb="textarea"] textarea, div[data-baseweb="input"] input {{
-            background-color: {C['INPUT_BKG']} !important;
-            color: {C['TEXT']} !important;
-            border: 1px solid {C['BORDER']} !important;
-            border-radius: 8px !important;
-            caret-color: #3232ff !important;
-            padding: 12px !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
+            background-color: {C['INPUT_BKG']} !important; color: {C['TEXT']} !important;
+            border: 1px solid {C['BORDER']} !important; border-radius: 8px !important;
+            caret-color: #3232ff !important; padding: 12px !important; width: 100% !important;
         }}
         div[data-baseweb="textarea"], div[data-baseweb="input"] {{ background-color: transparent !important; }}
         .stTextArea label p, .stTextInput label p {{ color: {C['TEXT']} !important; font-weight: 500 !important; }}
@@ -69,76 +63,71 @@ def apply_executive_styles():
 
         /* --- ESTILIZAÇÃO DE BOTÕES --- */
         button[kind="secondary"], button[kind="secondaryAction"], .stLinkButton > a {{
-            background-color: {C['BTN_SEC']} !important;
-            color: {C['TEXT']} !important;
-            border: 1px solid {C['BORDER']} !important;
-            border-radius: 8px !important;
-            transition: all 0.2s ease !important;
-            text-decoration: none !important;
-            width: 100% !important; 
-            display: inline-flex; align-items: center; justify-content: center;
+            background-color: {C['BTN_SEC']} !important; color: {C['TEXT']} !important;
+            border: 1px solid {C['BORDER']} !important; border-radius: 8px !important;
+            transition: all 0.2s ease !important; text-decoration: none !important;
+            width: 100% !important; display: inline-flex; align-items: center; justify-content: center;
         }}
-        button[kind="secondary"]:hover, .stLinkButton > a:hover {{
-            border-color: #3232ff !important;
-            background-color: rgba(50, 50, 255, 0.05) !important;
-        }}
+        button[kind="secondary"]:hover, .stLinkButton > a:hover {{ border-color: #3232ff !important; background-color: rgba(50, 50, 255, 0.05) !important; }}
 
         button[kind="primary"] {{
-            background: linear-gradient(90deg, #3232ff 0%, #ff1493 100%) !important;
-            color: #FFFFFF !important;
-            border: none !important;
-            border-radius: 8px !important;
-            width: 100% !important;
-            transition: all 0.3s ease !important;
+            background: linear-gradient(90deg, #3232ff 0%, #ff1493 100%) !important; color: #FFFFFF !important;
+            border: none !important; border-radius: 8px !important; width: 100% !important; transition: all 0.3s ease !important;
         }}
-        button[kind="primary"]:hover {{
-            background: linear-gradient(90deg, #4d4dff 0%, #ff33a1 100%) !important;
-            box-shadow: 0 4px 15px rgba(50, 50, 255, 0.3) !important;
-            transform: translateY(-1px) !important;
-        }}
+        button[kind="primary"]:hover {{ transform: translateY(-1px) !important; box-shadow: 0 4px 15px rgba(50, 50, 255, 0.3) !important; }}
 
-        /* --- CARTÕES & MÉTRICAS (FLEX & WRAP RESPONSIVO) --- */
-        div[data-testid="stMetric"] {{
-            background: {C['CARD']}; border: 1px solid {C['BORDER']};
-            border-radius: 12px; padding: 1.2rem !important; height: 100%;
-        }}
-        
-        /* Contêiner de colunas flexível (Não trava larguras) */
-        div[data-testid="stHorizontalBlock"] {{
-            display: flex !important;
-            flex-wrap: wrap !important;
-            gap: 1rem !important;
-            width: 100% !important;
-        }}
-        
-        /* Colunas ocupam o máximo possível mas quebram se faltar espaço */
-        [data-testid="column"] {{
-            flex: 1 1 min-content !important;
-            min-width: 120px !important; /* Limite mínimo antes de quebrar para baixo */
-        }}
-
+        /* --- CARDS DE LISTA DE LEADS --- */
         .lead-row {{
-            background: {C['CARD']}; border: 1px solid {C['BORDER']};
-            border-radius: 12px; padding: 1rem; margin-bottom: 0.8rem;
-            position: relative; overflow: hidden; transition: all 0.2s ease;
-            width: 100% !important; box-sizing: border-box !important;
+            background: {C['CARD']}; border: 1px solid {C['BORDER']}; border-radius: 12px;
+            padding: 1rem; margin-bottom: 0.8rem; position: relative; overflow: hidden; transition: all 0.2s ease;
         }}
         .lead-row:hover {{ transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.05); }}
         .tier-1-bar {{ position: absolute; top: 0; left: 0; height: 4px; width: 100%; background: linear-gradient(90deg, #3232ff 0%, #ff1493 100%); }}
 
-        /* --- TWEAKS EXTREMOS PARA MOBILE (< 600px) --- */
-        @media (max-width: 600px) {{
-            .block-container {{
-                padding-left: 1rem !important;
-                padding-right: 1rem !important;
-                padding-top: 2rem !important;
-                max-width: 100vw !important;
-                overflow-x: hidden !important;
-            }}
-            div[data-testid="stMetric"] {{ padding: 0.8rem !important; }}
-            div[data-testid="stMetricValue"] > div {{ font-size: 1.15rem !important; }}
-            /* Se a tela for muito fina, os blocos empilham. Senão, ficam 2x2. */
-            [data-testid="column"] {{ min-width: 40% !important; }} 
+        /* =========================================
+           NOVAS CLASSES: GRID 2X2 & TIMELINE C-LEVEL
+           ========================================= */
+        .custom-metric-card {{
+            background-color: {C['CARD']};
+            padding: 1.2rem;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            border: 1px solid {C['BORDER']};
+            display: flex; flex-direction: column; justify-content: space-between;
+            height: 100%; min-height: 105px;
+        }}
+        .metric-label {{ font-size: 0.85rem; color: {C['SUB']}; font-weight: 500; margin-bottom: 0.3rem; text-transform: uppercase; letter-spacing: 0.5px; }}
+        .metric-value {{ font-size: 1.6rem; font-weight: 700; color: {C['TEXT']}; margin: 0; line-height: 1.2; }}
+        
+        .potential-value {{
+            font-size: 1.6rem; font-weight: 800;
+            background: linear-gradient(90deg, #3232ff 0%, #ff1493 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin: 0; line-height: 1.2;
+        }}
+        
+        .timeline-item {{
+            border-left: 2px solid {C['BORDER']};
+            margin-left: 10px; padding-left: 20px; padding-bottom: 20px;
+            position: relative;
+        }}
+        .timeline-item::before {{
+            content: ''; position: absolute; left: -6px; top: 0;
+            width: 10px; height: 10px; border-radius: 50%;
+            background: #3232ff;
+        }}
+        .timeline-date {{ font-size: 0.8rem; color: {C['SUB']}; font-weight: 600; margin-bottom: 4px; }}
+        .timeline-note {{ font-size: 0.95rem; color: {C['TEXT']}; margin: 0; line-height: 1.5; }}
+
+        /* Ajuste do Radio Button (Pills de Navegação) */
+        div[role="radiogroup"] {{ flex-direction: row !important; gap: 15px; margin-bottom: 15px; }}
+
+        /* --- MEDIA QUERIES RESPONSIVAS --- */
+        @media (max-width: 768px) {{
+            .block-container {{ padding: 2rem 1rem !important; max-width: 100vw !important; overflow-x: hidden !important; }}
+            [data-testid="stHorizontalBlock"] {{ display: flex !important; flex-wrap: nowrap !important; gap: 10px !important; }}
+            [data-testid="column"] {{ flex: 1 1 calc(50% - 5px) !important; min-width: calc(50% - 5px) !important; width: calc(50% - 5px) !important; }}
+            .metric-value, .potential-value {{ font-size: 1.3rem !important; }}
         }}
 
         /* Filtros/Selectbox */
@@ -189,7 +178,7 @@ LEADS_BASE = [
 
 def get_meta(score):
     if score >= 48: return "Tier 1", "> R$ 1 Milhão", "pill-blue"
-    if score >= 39: return "Tier 2", "R$ 500k - R$ 1M", "pill-magenta"
+    if score >= 39: return "Tier 2", "R$ 500k - 1M", "pill-magenta" # Reformatado conforme solicitado
     return "Tier 3", "< R$ 500k", "pill-neutral"
 
 for l in LEADS_BASE:
@@ -214,9 +203,11 @@ with st.sidebar:
 # --- 7. VIEWS ---
 if st.session_state.view_mode == 'dashboard':
     st.markdown('<h1>Visão Executiva</h1>', unsafe_allow_html=True)
-    c1, c2 = st.columns(2)
-    c1.metric("Contas Totais", len(df_leads))
-    c2.metric("Decisores", len(df_leads[df_leads['decisor'] == 'Sim']))
+    
+    # Custom 2x2 grid metrics for Dashboard
+    d1, d2 = st.columns(2)
+    d1.markdown(f'<div class="custom-metric-card"><p class="metric-label">Contas Totais</p><p class="metric-value">{len(df_leads)}</p></div>', unsafe_allow_html=True)
+    d2.markdown(f'<div class="custom-metric-card"><p class="metric-label">Decisores</p><p class="metric-value">{len(df_leads[df_leads["decisor"] == "Sim"])}</p></div>', unsafe_allow_html=True)
     
     st.divider()
     font_color = "#ffffff" if st.session_state.theme == 'dark' else "#111111"
@@ -248,6 +239,7 @@ elif st.session_state.view_mode == 'list':
         if st.button(f"Abrir Perfil", key=f"b_{l['id']}", use_container_width=True):
             st.session_state.selected_lead_id = l['id']; st.session_state.view_mode = 'detail'; st.rerun()
 
+# MODO DETALHES (GRID 2x2 CUSTOMIZADO & TIMELINE)
 elif st.session_state.view_mode == 'detail':
     l = next(item for item in LEADS_BASE if item['id'] == st.session_state.selected_lead_id)
     if st.button("← Voltar ao Pipeline", use_container_width=True): st.session_state.view_mode = 'list'; st.rerun()
@@ -258,33 +250,47 @@ elif st.session_state.view_mode == 'detail':
     
     st.divider()
     
-    # GRADE FLEXÍVEL RESPONSIVA (Grid Inteligente)
-    c1, c2 = st.columns(2)
-    c1.metric("Classificação", l['t'])
-    c2.metric("Score", f"{l['score']} pts")
+    # --- GRID 2x2 C-LEVEL ---
+    st.markdown("### Perfil Detalhado")
     
-    st.write("")
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown(f'<div class="custom-metric-card"><p class="metric-label">Classificação</p><p class="metric-value">{l["t"]}</p></div>', unsafe_allow_html=True)
+    with c2:
+        st.markdown(f'<div class="custom-metric-card"><p class="metric-label">Score</p><p class="metric-value">{l["score"]} pts</p></div>', unsafe_allow_html=True)
     
     c3, c4 = st.columns(2)
-    c3.metric("Decisor", l['decisor'])
-    c4.metric("Potencial", l['o'])
+    with c3:
+        st.markdown(f'<div class="custom-metric-card"><p class="metric-label">Decisor</p><p class="metric-value">{l["decisor"]}</p></div>', unsafe_allow_html=True)
+    with c4:
+        st.markdown(f'<div class="custom-metric-card"><p class="metric-label">Potencial</p><p class="potential-value">{l["o"]}</p></div>', unsafe_allow_html=True)
     
     st.divider()
-    st.markdown("### Inteligência Estratégica")
     
-    with st.form("intel", clear_on_submit=True):
-        txt = st.text_area("Novo Insight Estratégico:")
-        if st.form_submit_button("Salvar Inteligência", type="primary", use_container_width=True):
-            if txt.strip():
-                st.session_state.notas_locais.insert(0, {"id": l['id'], "dt": datetime.now().strftime("%d/%m às %H:%M"), "txt": txt})
-                st.rerun()
+    # --- SEÇÃO REGISTRO & TIMELINE ---
+    st.markdown("### Registro")
     
-    st.markdown("#### Linha do Tempo")
-    notas = [x for x in st.session_state.notas_locais if x['id'] == l['id']]
-    if not notas:
-        st.info("Nenhuma interação registrada.")
+    # Sistema de Navegação (Pills)
+    nav_tab = st.radio("Navegação de Registro", ["Histórico de Interações", "Adicionar Nova Nota"], horizontal=True, label_visibility="collapsed")
+    
+    if nav_tab == "Adicionar Nova Nota":
+        st.write("")
+        with st.form("intel", clear_on_submit=True):
+            txt = st.text_area("Adicionar Novo Registro:", placeholder="Digite o registro estratégico...")
+            if st.form_submit_button("Salvar Nota", type="primary", use_container_width=True):
+                if txt.strip():
+                    st.session_state.notas_locais.insert(0, {"id": l['id'], "dt": datetime.now().strftime("%d/%m/%Y às %H:%M"), "txt": txt})
+                    st.success("Nota salva com sucesso! Mude para o Histórico para visualizar.")
     else:
-        bg_card = "rgba(255,255,255,0.03)" if st.session_state.theme == 'dark' else "#FFFFFF"
-        bd_card = "rgba(255,255,255,0.08)" if st.session_state.theme == 'dark' else "#E0E0E0"
-        for n in notas:
-            st.markdown(f"<div style='background:{bg_card}; padding:15px; border-radius:8px; margin-bottom:10px; border:1px solid {bd_card}'><span class='subtext' style='font-size:0.75rem; font-weight:600;'>📅 {n['dt']}</span><p style='margin-top:5px; margin-bottom:0;'>{n['txt']}</p></div>", unsafe_allow_html=True)
+        st.write("")
+        notas = [x for x in st.session_state.notas_locais if x['id'] == l['id']]
+        if not notas:
+            st.info("Ainda não há registros para este lead.")
+        else:
+            for n in notas:
+                st.markdown(f"""
+                <div class="timeline-item">
+                    <p class="timeline-date">{n['dt']}</p>
+                    <p class="timeline-note">{n['txt']}</p>
+                </div>
+                """, unsafe_allow_html=True)
