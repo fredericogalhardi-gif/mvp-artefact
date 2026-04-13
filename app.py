@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 import hmac
 import json
 import os
@@ -16,8 +15,11 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. MOTOR DE PERSISTÊNCIA FÍSICA (JSON) ---
-DB_FILE = 'banco.json'
+# --- 2. CAMINHOS ABSOLUTOS E PERSISTÊNCIA FÍSICA (JSON) ---
+# Garante que o app sempre encontre os arquivos na pasta correta
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_FILE = os.path.join(SCRIPT_DIR, 'banco.json')
+SABI_DIR = os.path.join(SCRIPT_DIR, 'sabi')
 
 def load_notes():
     if os.path.exists(DB_FILE):
@@ -39,7 +41,7 @@ if 'selected_lead_id' not in st.session_state: st.session_state.selected_lead_id
 if 'theme' not in st.session_state: st.session_state.theme = 'dark'
 if 'notas_locais' not in st.session_state: st.session_state.notas_locais = load_notes()
 
-# --- 4. LÓGICA DE FOTOS DE PERFIL (/sabi) ---
+# --- 4. LÓGICA ROBUSTA DE FOTOS DE PERFIL (/sabi) ---
 def extract_linkedin_id(url):
     if not url or url == "#": return None
     parts = [p for p in url.split('/') if p]
@@ -48,14 +50,21 @@ def extract_linkedin_id(url):
 def get_photo_html(name, url, size_class="large"):
     lid = extract_linkedin_id(url)
     if lid:
-        path = os.path.join('sabi', f"{lid}.png")
-        if os.path.exists(path):
+        # Tenta .png e .jpg
+        path_png = os.path.join(SABI_DIR, f"{lid}.png")
+        path_jpg = os.path.join(SABI_DIR, f"{lid}.jpg")
+        
+        valid_path = path_png if os.path.exists(path_png) else path_jpg if os.path.exists(path_jpg) else None
+        
+        if valid_path:
             try:
-                with open(path, "rb") as f:
+                with open(valid_path, "rb") as f:
                     b64 = base64.b64encode(f.read()).decode()
-                return f'<img src="data:image/png;base64,{b64}" class="profile-pic {size_class}">'
-            except: pass
-    
+                mime = "image/jpeg" if valid_path.endswith(".jpg") else "image/png"
+                return f'<img src="data:{mime};base64,{b64}" class="profile-pic {size_class}">'
+            except Exception as e:
+                pass # Se falhar a leitura, cai no placeholder
+
     # Placeholder Elegante (Iniciais)
     initials = "".join([w[0] for w in name.split()[:2]]).upper()
     return f'<div class="initials-placeholder {size_class}">{initials}</div>'
@@ -93,22 +102,17 @@ def apply_executive_styles():
             font-weight: 800;
         }}
 
-        /* UX de Input (Zero-Bug no Platinum Mode) */
+        /* Inputs & Textareas */
         .stTextArea textarea, .stTextInput input, div[data-baseweb="textarea"] textarea, div[data-baseweb="input"] input {{
-            background-color: {C['INPUT_BKG']} !important; 
-            color: {C['INPUT_TEXT']} !important;
-            border: 1px solid {C['BORDER']} !important; 
-            border-radius: 8px !important;
-            caret-color: #3232ff !important; 
-            padding: 14px !important; 
-            width: 100% !important;
-            box-sizing: border-box !important; 
-            font-size: 0.95rem !important;
+            background-color: {C['INPUT_BKG']} !important; color: {C['INPUT_TEXT']} !important;
+            border: 1px solid {C['BORDER']} !important; border-radius: 8px !important;
+            caret-color: #3232ff !important; padding: 14px !important; width: 100% !important;
+            box-sizing: border-box !important; font-size: 0.95rem !important;
         }}
         div[data-baseweb="textarea"], div[data-baseweb="input"] {{ background-color: transparent !important; border: none !important; }}
         ::placeholder {{ color: {C['SUB']} !important; opacity: 0.6 !important; }}
 
-        /* Botões High-End */
+        /* Botões C-Level */
         button[kind="secondary"], .stLinkButton > a {{
             background-color: {C['BTN_SEC']} !important; color: {C['TEXT']} !important;
             border: 1px solid {C['BORDER']} !important; border-radius: 8px !important;
@@ -126,11 +130,8 @@ def apply_executive_styles():
 
         /* Fotos de Perfil Circulares */
         .profile-pic, .initials-placeholder {{
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #fff;
-            flex-shrink: 0;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            border-radius: 50%; object-fit: cover; border: 2px solid #fff;
+            flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }}
         .profile-pic.large, .initials-placeholder.large {{ width: 100px; height: 100px; }}
         .profile-pic.small, .initials-placeholder.small {{ width: 50px; height: 50px; border-width: 1px; }}
@@ -150,57 +151,43 @@ def apply_executive_styles():
         .tier-1-bar {{ position: absolute; top: 0; left: 0; height: 4px; width: 100%; background: linear-gradient(90deg, #3232ff 0%, #ff1493 100%); }}
 
         /* Grid 2x2 Elástico */
-        .custom-metric-card {{
-            background-color: {C['METRIC_BKG']};
-            padding: 1.2rem; border-radius: 10px; margin-bottom: 10px;
-            border: 1px solid {C['BORDER']}; display: flex; flex-direction: column; justify-content: space-between;
-            height: 100%; min-height: 110px;
+        div[data-testid="stMetric"] {{
+            background: {C['METRIC_BKG']}; border: 1px solid {C['BORDER']};
+            border-radius: 12px; padding: 1.2rem !important; height: 100%;
         }}
-        .metric-label {{ font-size: 0.85rem; color: {C['SUB']}; font-weight: 500; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; }}
-        .metric-value {{ font-size: 1.6rem; font-weight: 700; color: {C['TEXT']}; margin: 0; line-height: 1.2; }}
-        
+        div[data-testid="stHorizontalBlock"] {{
+            display: flex !important; flex-wrap: wrap !important; gap: 1rem !important; width: 100% !important;
+        }}
+        [data-testid="column"] {{
+            flex: 1 1 40% !important; min-width: 140px !important; box-sizing: border-box !important;
+        }}
+
         /* Card Potencial Estilizado (Premium) */
         .potencial-wrapper {{
             position: relative; background: {C['POT_BKG']};
-            border: 1px solid {C['BORDER']}; border-radius: 12px; height: 100%; padding: 1.2rem; margin-bottom: 10px;
+            border: 1px solid {C['BORDER']}; border-radius: 12px; height: 100%; padding: 1.2rem;
             display: flex; flex-direction: column; justify-content: center;
         }}
-        .potential-value {{
-            font-size: 1.8rem; font-weight: 800; margin: 0; line-height: 1.2; letter-spacing: -0.5px;
-            background: linear-gradient(90deg, #3232ff, #ff1493);
+        .potencial-val {{ 
+            font-size: 1.8rem; font-weight: 800; margin: 0; letter-spacing: -0.5px; 
+            background: linear-gradient(90deg, #3232ff 0%, #ff1493 100%);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }}
 
-        /* Timeline de Interações */
-        .timeline-item {{
-            border-left: 2px solid {C['BORDER']};
-            margin-left: 15px; padding-left: 20px; padding-bottom: 20px;
-            position: relative;
+        /* Timeline (Chat Bubbles) */
+        .chat-bubble {{
+            background: {C['INPUT_BKG']}; border: 1px solid {C['BORDER']};
+            border-radius: 2px 16px 16px 16px; padding: 14px 18px; margin-bottom: 16px;
+            max-width: 100%; position: relative;
         }}
-        .timeline-item::before {{
-            content: ''; position: absolute; left: -6px; top: 0;
-            width: 10px; height: 10px; border-radius: 50%;
-            background: #3232ff;
-        }}
-        .timeline-date {{ font-size: 0.8rem; color: {C['SUB']}; font-weight: 600; margin-bottom: 4px; }}
-        .timeline-note {{ font-size: 0.95rem; color: {C['TEXT']}; margin: 0; line-height: 1.5; white-space: pre-wrap; }}
 
         /* Expander Customizado */
-        [data-testid="stExpander"] {{ background-color: {C['CARD']} !important; border: 1px solid {C['BORDER']} !important; border-radius: 12px !important; margin-bottom: 1rem; }}
+        [data-testid="stExpander"] {{ background-color: {C['CARD']} !important; border: 1px solid {C['BORDER']} !important; border-radius: 12px !important; }}
         [data-testid="stExpander"] summary {{ background-color: transparent !important; }}
-        [data-testid="stExpander"] p {{ font-size: 0.95rem !important; }}
 
-        /* Quebra Responsiva (Liquid Design) */
-        div[data-testid="stHorizontalBlock"] {{ display: flex !important; flex-wrap: wrap !important; gap: 10px; }}
-        [data-testid="column"] {{ flex: 1 1 calc(50% - 5px) !important; min-width: 140px !important; width: calc(50% - 5px) !important; }}
-
-        @media (max-width: 768px) {{
-            .block-container {{ padding: 1.5rem 1rem !important; max-width: 100vw !important; overflow-x: hidden !important; }}
-            .profile-pic.large, .initials-placeholder.large {{ width: 80px; height: 80px; font-size: 1.6rem; }}
-        }}
-        @media (max-width: 380px) {{
-            [data-testid="column"] {{ flex: 1 1 100% !important; min-width: 100% !important; width: 100% !important; }}
-        }}
+        /* Quebra Responsiva Extrema */
+        @media (max-width: 380px) {{ [data-testid="column"] {{ flex: 1 1 100% !important; min-width: 100% !important; }} }}
+        @media (max-width: 768px) {{ .block-container {{ padding: 1.5rem 1rem !important; max-width: 100vw !important; overflow-x: hidden !important; }} }}
         
         div[data-baseweb="select"] > div {{ background-color: {C['INPUT_BKG']} !important; color: {C['TEXT']} !important; border: 1px solid {C['BORDER']} !important; width: 100%; }}
         ul[role="listbox"], li[role="option"] {{ background-color: {C['SIDEBAR']} !important; color: {C['TEXT']} !important; }}
@@ -231,7 +218,7 @@ if not st.session_state.logado:
                 else: st.error("Access Denied.")
     st.stop()
 
-# --- 7. DATA ENGINE EXTREMO ---
+# --- 7. DATA ENGINE ---
 LEADS_BASE = [
     {"id": 1, "nome": "Bruno Szarf", "empresa": "Stefanini", "cargo": "VP Global", "decisor": "Sim", "score": 55, "linkedin": "https://www.linkedin.com/in/brunoszarf", "bio": "Executivo sênior focado em inovação global e gestão de performance.", "loc": "São Paulo, SP", "interesse": "IA, Transformação Digital"},
     {"id": 2, "nome": "Patrícia Rosado", "empresa": "Tupy", "cargo": "VP Cultura", "decisor": "Sim", "score": 52, "linkedin": "https://www.linkedin.com/in/patricia-rosado-b15ba01a", "bio": "Especialista em cultura organizacional e SSMA em multinacionais.", "loc": "Joinville, SC", "interesse": "ESG, Cultura Org"},
@@ -270,11 +257,10 @@ with st.sidebar:
 if st.session_state.view_mode == 'dashboard':
     st.markdown('<h1>Executive Overview</h1>', unsafe_allow_html=True)
     
-    # Macro Métricas
     c1, c2, c3 = st.columns(3)
     c1.markdown(f'<div class="custom-metric-card"><p class="metric-label">Contas Mapeadas</p><p class="metric-value">{len(df_leads)}</p></div>', unsafe_allow_html=True)
     c2.markdown(f'<div class="custom-metric-card"><p class="metric-label">Decisores Confirmados</p><p class="metric-value">{len(df_leads[df_leads["decisor"] == "Sim"])}</p></div>', unsafe_allow_html=True)
-    c3.markdown(f'<div class="potencial-wrapper"><span class="metric-label">Volume Pipeline</span><p class="potential-value">> R$ {vol_total / 1000000:.1f}M</p></div>', unsafe_allow_html=True)
+    c3.markdown(f'<div class="potencial-wrapper"><span class="metric-label" style="color:#8E8E93;">Volume Pipeline</span><p class="potencial-val">> R$ {vol_total / 1000000:.1f}M</p></div>', unsafe_allow_html=True)
     
     st.divider()
     font_col = "#ffffff" if st.session_state.theme == 'dark' else "#1A1A1C"
@@ -345,7 +331,7 @@ elif st.session_state.view_mode == 'detail':
     
     c3, c4 = st.columns(2)
     with c3: st.markdown(f'<div class="custom-metric-card"><p class="metric-label">Decisor</p><p class="metric-value">{l["decisor"]}</p></div>', unsafe_allow_html=True)
-    with c4: st.markdown(f'<div class="potencial-wrapper"><p class="metric-label">Potencial</p><p class="potential-value">{l["o"]}</p></div>', unsafe_allow_html=True)
+    with c4: st.markdown(f'<div class="potencial-wrapper"><p class="metric-label" style="color:#8E8E93;">Potencial</p><p class="potencial-val">{l["o"]}</p></div>', unsafe_allow_html=True)
     
     st.write("")
     
@@ -359,14 +345,34 @@ elif st.session_state.view_mode == 'detail':
 
     st.divider()
     
-    # --- SEÇÃO REGISTRO & TIMELINE ---
+    # --- SEÇÃO REGISTRO & TIMELINE COM AUDIO ---
     st.markdown("### Registro")
+    st.markdown("<p class='subtext' style='font-size: 0.9rem; margin-bottom: 10px;'>Adicionar Novo Registro</p>", unsafe_allow_html=True)
     
     with st.form("intel_form", clear_on_submit=True):
-        txt = st.text_area("Adicionar Novo Registro", placeholder="Descreva a interação ou novos insights...", label_visibility="collapsed")
+        txt = st.text_area("Nota", placeholder="Descreva a interação ou novos insights...", label_visibility="collapsed")
+        
+        # Suporte nativo para áudio (Se o ambiente suportar)
+        audio_val = None
+        if hasattr(st, 'audio_input'):
+            audio_val = st.audio_input("Gravar Áudio (Opcional)")
+        elif hasattr(st, 'experimental_audio_input'):
+            audio_val = st.experimental_audio_input("Gravar Áudio (Opcional)")
+
         if st.form_submit_button("Salvar Nota", type="primary", use_container_width=True):
-            if txt.strip():
-                nova_nota = {"id_lead": l['id'], "dt": datetime.now().strftime("%d/%m/%Y %H:%M"), "txt": txt}
+            if txt.strip() or audio_val is not None:
+                audio_b64 = None
+                if audio_val is not None:
+                    # Converte os bytes do áudio em string base64 para salvar no JSON
+                    audio_b64 = base64.b64encode(audio_val.read()).decode()
+                
+                nova_nota = {
+                    "id_lead": l['id'], 
+                    "dt": datetime.now().strftime("%d/%m/%Y %H:%M"), 
+                    "txt": txt.strip(),
+                    "audio": audio_b64
+                }
+                
                 st.session_state.notas_locais.insert(0, nova_nota)
                 save_notes(st.session_state.notas_locais)
                 st.rerun()
@@ -378,9 +384,15 @@ elif st.session_state.view_mode == 'detail':
         st.info("Nenhuma interação registrada no banco de dados.")
     else:
         for n in notas:
+            # Player de áudio HTML5 nativo e elegante se houver áudio salvo
+            audio_player = ""
+            if n.get('audio'):
+                audio_player = f'<audio controls src="data:audio/wav;base64,{n["audio"]}" style="width: 100%; margin-top: 10px; height: 35px; border-radius: 5px;"></audio>'
+            
             st.markdown(f"""
             <div class="timeline-item">
                 <p class="timeline-date">{n['dt']}</p>
                 <p class="timeline-note">{n['txt']}</p>
+                {audio_player}
             </div>
             """, unsafe_allow_html=True)
