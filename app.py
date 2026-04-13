@@ -44,17 +44,14 @@ if 'notas_locais' not in st.session_state: st.session_state.notas_locais = load_
 # --- 4. LÓGICA DE FOTOS DE PERFIL (ENGENHARIA REVERSA DOS NOMES DE ARQUIVO) ---
 def extract_linkedin_id(url):
     if not url or url == "#": return None
-    url = url.rstrip('/') # Remove barra no final se houver
+    url = url.rstrip('/') 
     parts = url.split('/')
     return parts[-1] if parts else None
 
 def get_photo_html(name, url, size_class="large"):
     lid = extract_linkedin_id(url)
     if lid:
-        # Recria o formato exato que está salvo na sua pasta (visto no print)
         file_prefix = f"httpswww.linkedin.comin{lid}"
-        
-        # Procura por extensões de imagem comuns
         valid_path = None
         for ext in ['.png', '.jpg', '.jpeg', '.PNG', '.JPG']:
             test_path = os.path.join(SABI_DIR, f"{file_prefix}{ext}")
@@ -191,6 +188,9 @@ def apply_executive_styles():
         }}
         .timeline-date {{ font-size: 0.8rem; color: {C['SUB']}; font-weight: 600; margin-bottom: 4px; }}
         .timeline-note {{ font-size: 0.95rem; color: {C['TEXT']}; margin: 0; line-height: 1.5; white-space: pre-wrap; }}
+        
+        /* Audio Player Customization */
+        audio {{ width: 100%; height: 35px; margin-top: 10px; border-radius: 8px; outline: none; }}
 
         /* Expander Customizado */
         [data-testid="stExpander"] {{ background-color: {C['CARD']} !important; border: 1px solid {C['BORDER']} !important; border-radius: 12px !important; }}
@@ -343,7 +343,7 @@ elif st.session_state.view_mode == 'detail':
     
     c3, c4 = st.columns(2)
     with c3: st.markdown(f'<div class="custom-metric-card"><p class="metric-label">Decisor</p><p class="metric-value">{l["decisor"]}</p></div>', unsafe_allow_html=True)
-    with c4: st.markdown(f'<div class="potencial-wrapper"><p class="metric-label" style="color:#8E8E93;">Potencial</p><p class="potential-value">{l["o"]}</p></div>', unsafe_allow_html=True)
+    with c4: st.markdown(f'<div class="potencial-wrapper"><p class="metric-label" style="color:#8E8E93;">Potencial</p><p class="potencial-val">{l["o"]}</p></div>', unsafe_allow_html=True)
     
     st.write("")
     
@@ -357,20 +357,34 @@ elif st.session_state.view_mode == 'detail':
 
     st.divider()
     
-    # --- SEÇÃO REGISTRO & TIMELINE COM PERSISTÊNCIA ---
+    # --- SEÇÃO REGISTRO & TIMELINE FÍSICA COM ÁUDIO ---
     st.markdown("### Registro")
-    st.markdown("<p class='subtext' style='font-size: 0.9rem; margin-bottom: 10px;'>Adicionar Novo Registro</p>", unsafe_allow_html=True)
+    st.markdown("<p class='subtext' style='font-size: 0.9rem; margin-bottom: 10px;'>Adicionar Novo Registro (Texto ou Áudio)</p>", unsafe_allow_html=True)
     
     with st.form("intel_form", clear_on_submit=True):
-        txt = st.text_area("Nota", placeholder="Descreva os próximos passos ou insights do contato...", label_visibility="collapsed")
+        txt = st.text_area("Nota", placeholder="Descreva a interação ou novos insights...", label_visibility="collapsed")
         
-        if st.form_submit_button("Salvar Nota", type="primary", use_container_width=True):
-            if txt.strip():
+        # Suporte nativo para áudio no form
+        audio_val = None
+        if hasattr(st, 'audio_input'):
+            audio_val = st.audio_input("Gravar Voice Note (Opcional)")
+        elif hasattr(st, 'experimental_audio_input'):
+            audio_val = st.experimental_audio_input("Gravar Voice Note (Opcional)")
+
+        if st.form_submit_button("Salvar Registro", type="primary", use_container_width=True):
+            if txt.strip() or audio_val is not None:
+                audio_b64 = None
+                if audio_val is not None:
+                    # Converte o buffer de áudio em string base64
+                    audio_b64 = base64.b64encode(audio_val.read()).decode()
+                
                 nova_nota = {
                     "id_lead": l['id'], 
-                    "dt": datetime.now().strftime("%d/%m/%Y às %H:%M"), 
-                    "txt": txt.strip()
+                    "dt": datetime.now().strftime("%d/%m/%Y %H:%M"), 
+                    "txt": txt.strip(),
+                    "audio": audio_b64
                 }
+                
                 st.session_state.notas_locais.insert(0, nova_nota)
                 save_notes(st.session_state.notas_locais)
                 st.rerun()
@@ -382,9 +396,14 @@ elif st.session_state.view_mode == 'detail':
         st.info("Nenhuma interação registrada no banco de dados.")
     else:
         for n in notas:
+            audio_player = ""
+            if n.get('audio'):
+                audio_player = f'<audio controls src="data:audio/wav;base64,{n["audio"]}"></audio>'
+                
             st.markdown(f"""
             <div class="timeline-item">
                 <p class="timeline-date">{n['dt']}</p>
                 <p class="timeline-note">{n['txt']}</p>
+                {audio_player}
             </div>
             """, unsafe_allow_html=True)
