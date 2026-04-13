@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import hmac
 import json
 import os
@@ -15,8 +16,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. CAMINHOS ABSOLUTOS E PERSISTÊNCIA FÍSICA (JSON) ---
-# Garante que o app sempre encontre os arquivos na pasta correta
+# --- 2. MOTOR DE PERSISTÊNCIA FÍSICA (JSON) ---
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_FILE = os.path.join(SCRIPT_DIR, 'banco.json')
 SABI_DIR = os.path.join(SCRIPT_DIR, 'sabi')
@@ -41,30 +41,35 @@ if 'selected_lead_id' not in st.session_state: st.session_state.selected_lead_id
 if 'theme' not in st.session_state: st.session_state.theme = 'dark'
 if 'notas_locais' not in st.session_state: st.session_state.notas_locais = load_notes()
 
-# --- 4. LÓGICA ROBUSTA DE FOTOS DE PERFIL (/sabi) ---
+# --- 4. LÓGICA DE FOTOS DE PERFIL (ENGENHARIA REVERSA DOS NOMES DE ARQUIVO) ---
 def extract_linkedin_id(url):
     if not url or url == "#": return None
-    parts = [p for p in url.split('/') if p]
+    url = url.rstrip('/') # Remove barra no final se houver
+    parts = url.split('/')
     return parts[-1] if parts else None
 
 def get_photo_html(name, url, size_class="large"):
     lid = extract_linkedin_id(url)
     if lid:
-        # Tenta .png e .jpg
-        path_png = os.path.join(SABI_DIR, f"{lid}.png")
-        path_jpg = os.path.join(SABI_DIR, f"{lid}.jpg")
+        # Recria o formato exato que está salvo na sua pasta (visto no print)
+        file_prefix = f"httpswww.linkedin.comin{lid}"
         
-        valid_path = path_png if os.path.exists(path_png) else path_jpg if os.path.exists(path_jpg) else None
-        
+        # Procura por extensões de imagem comuns
+        valid_path = None
+        for ext in ['.png', '.jpg', '.jpeg', '.PNG', '.JPG']:
+            test_path = os.path.join(SABI_DIR, f"{file_prefix}{ext}")
+            if os.path.exists(test_path):
+                valid_path = test_path
+                break
+                
         if valid_path:
             try:
                 with open(valid_path, "rb") as f:
                     b64 = base64.b64encode(f.read()).decode()
-                mime = "image/jpeg" if valid_path.endswith(".jpg") else "image/png"
+                mime = "image/jpeg" if valid_path.lower().endswith(('.jpg', '.jpeg')) else "image/png"
                 return f'<img src="data:{mime};base64,{b64}" class="profile-pic {size_class}">'
-            except Exception as e:
-                pass # Se falhar a leitura, cai no placeholder
-
+            except Exception: pass
+    
     # Placeholder Elegante (Iniciais)
     initials = "".join([w[0] for w in name.split()[:2]]).upper()
     return f'<div class="initials-placeholder {size_class}">{initials}</div>'
@@ -102,7 +107,7 @@ def apply_executive_styles():
             font-weight: 800;
         }}
 
-        /* Inputs & Textareas */
+        /* UX de Input */
         .stTextArea textarea, .stTextInput input, div[data-baseweb="textarea"] textarea, div[data-baseweb="input"] input {{
             background-color: {C['INPUT_BKG']} !important; color: {C['INPUT_TEXT']} !important;
             border: 1px solid {C['BORDER']} !important; border-radius: 8px !important;
@@ -112,7 +117,7 @@ def apply_executive_styles():
         div[data-baseweb="textarea"], div[data-baseweb="input"] {{ background-color: transparent !important; border: none !important; }}
         ::placeholder {{ color: {C['SUB']} !important; opacity: 0.6 !important; }}
 
-        /* Botões C-Level */
+        /* Botões High-End */
         button[kind="secondary"], .stLinkButton > a {{
             background-color: {C['BTN_SEC']} !important; color: {C['TEXT']} !important;
             border: 1px solid {C['BORDER']} !important; border-radius: 8px !important;
@@ -174,16 +179,23 @@ def apply_executive_styles():
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }}
 
-        /* Timeline (Chat Bubbles) */
-        .chat-bubble {{
-            background: {C['INPUT_BKG']}; border: 1px solid {C['BORDER']};
-            border-radius: 2px 16px 16px 16px; padding: 14px 18px; margin-bottom: 16px;
-            max-width: 100%; position: relative;
+        /* Timeline de Interações */
+        .timeline-item {{
+            border-left: 2px solid {C['BORDER']};
+            margin-left: 15px; padding-left: 20px; padding-bottom: 20px;
+            position: relative;
         }}
+        .timeline-item::before {{
+            content: ''; position: absolute; left: -6px; top: 0;
+            width: 10px; height: 10px; border-radius: 50%; background: #3232ff;
+        }}
+        .timeline-date {{ font-size: 0.8rem; color: {C['SUB']}; font-weight: 600; margin-bottom: 4px; }}
+        .timeline-note {{ font-size: 0.95rem; color: {C['TEXT']}; margin: 0; line-height: 1.5; white-space: pre-wrap; }}
 
         /* Expander Customizado */
         [data-testid="stExpander"] {{ background-color: {C['CARD']} !important; border: 1px solid {C['BORDER']} !important; border-radius: 12px !important; }}
         [data-testid="stExpander"] summary {{ background-color: transparent !important; }}
+        [data-testid="stExpander"] p {{ font-size: 0.95rem !important; }}
 
         /* Quebra Responsiva Extrema */
         @media (max-width: 380px) {{ [data-testid="column"] {{ flex: 1 1 100% !important; min-width: 100% !important; }} }}
@@ -331,12 +343,12 @@ elif st.session_state.view_mode == 'detail':
     
     c3, c4 = st.columns(2)
     with c3: st.markdown(f'<div class="custom-metric-card"><p class="metric-label">Decisor</p><p class="metric-value">{l["decisor"]}</p></div>', unsafe_allow_html=True)
-    with c4: st.markdown(f'<div class="potencial-wrapper"><p class="metric-label" style="color:#8E8E93;">Potencial</p><p class="potencial-val">{l["o"]}</p></div>', unsafe_allow_html=True)
+    with c4: st.markdown(f'<div class="potencial-wrapper"><p class="metric-label" style="color:#8E8E93;">Potencial</p><p class="potential-value">{l["o"]}</p></div>', unsafe_allow_html=True)
     
     st.write("")
     
     # --- DOSSIÊ ESTRATÉGICO ---
-    with st.expander("Visualizar Dossiê Completo"):
+    with st.expander("📂 Visualizar Dossiê Completo"):
         ec1, ec2 = st.columns(2)
         ec1.markdown(f"**📍 Localização:** {l.get('loc', 'N/I')}")
         ec1.markdown(f"**🎯 Interesses:** {l.get('interesse', 'N/I')}")
@@ -345,34 +357,20 @@ elif st.session_state.view_mode == 'detail':
 
     st.divider()
     
-    # --- SEÇÃO REGISTRO & TIMELINE COM AUDIO ---
+    # --- SEÇÃO REGISTRO & TIMELINE COM PERSISTÊNCIA ---
     st.markdown("### Registro")
     st.markdown("<p class='subtext' style='font-size: 0.9rem; margin-bottom: 10px;'>Adicionar Novo Registro</p>", unsafe_allow_html=True)
     
     with st.form("intel_form", clear_on_submit=True):
-        txt = st.text_area("Nota", placeholder="Descreva a interação ou novos insights...", label_visibility="collapsed")
+        txt = st.text_area("Nota", placeholder="Descreva os próximos passos ou insights do contato...", label_visibility="collapsed")
         
-        # Suporte nativo para áudio (Se o ambiente suportar)
-        audio_val = None
-        if hasattr(st, 'audio_input'):
-            audio_val = st.audio_input("Gravar Áudio (Opcional)")
-        elif hasattr(st, 'experimental_audio_input'):
-            audio_val = st.experimental_audio_input("Gravar Áudio (Opcional)")
-
         if st.form_submit_button("Salvar Nota", type="primary", use_container_width=True):
-            if txt.strip() or audio_val is not None:
-                audio_b64 = None
-                if audio_val is not None:
-                    # Converte os bytes do áudio em string base64 para salvar no JSON
-                    audio_b64 = base64.b64encode(audio_val.read()).decode()
-                
+            if txt.strip():
                 nova_nota = {
                     "id_lead": l['id'], 
-                    "dt": datetime.now().strftime("%d/%m/%Y %H:%M"), 
-                    "txt": txt.strip(),
-                    "audio": audio_b64
+                    "dt": datetime.now().strftime("%d/%m/%Y às %H:%M"), 
+                    "txt": txt.strip()
                 }
-                
                 st.session_state.notas_locais.insert(0, nova_nota)
                 save_notes(st.session_state.notas_locais)
                 st.rerun()
@@ -384,15 +382,9 @@ elif st.session_state.view_mode == 'detail':
         st.info("Nenhuma interação registrada no banco de dados.")
     else:
         for n in notas:
-            # Player de áudio HTML5 nativo e elegante se houver áudio salvo
-            audio_player = ""
-            if n.get('audio'):
-                audio_player = f'<audio controls src="data:audio/wav;base64,{n["audio"]}" style="width: 100%; margin-top: 10px; height: 35px; border-radius: 5px;"></audio>'
-            
             st.markdown(f"""
             <div class="timeline-item">
                 <p class="timeline-date">{n['dt']}</p>
                 <p class="timeline-note">{n['txt']}</p>
-                {audio_player}
             </div>
             """, unsafe_allow_html=True)
