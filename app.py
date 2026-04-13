@@ -1,10 +1,11 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import hmac
 from datetime import datetime
 
-# --- 1. CONFIGURAÇÃO MOBILE-FIRST ---
+# --- 1. CONFIGURAÇÃO C-LEVEL ---
 st.set_page_config(
     page_title="Artefact | Strategy",
     page_icon="💠",
@@ -12,188 +13,128 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. GESTÃO DE ESTADO E TEMA ---
+# --- 2. GESTÃO DE ESTADO & PERSISTÊNCIA ---
 if 'logado' not in st.session_state: st.session_state.logado = False
 if 'view_mode' not in st.session_state: st.session_state.view_mode = 'dashboard'
 if 'selected_lead_id' not in st.session_state: st.session_state.selected_lead_id = None
 if 'theme' not in st.session_state: st.session_state.theme = 'dark'
 if 'notas_locais' not in st.session_state: st.session_state.notas_locais = []
 
-# --- 3. DEFINIÇÃO DA PALETA E INJEÇÃO CSS (ELÁSTICO & ZERO-BUG) ---
+# --- 3. LIQUID DESIGN ENGINE (CSS ULTRA-RESPONSIVO) ---
 def apply_executive_styles():
     is_dark = st.session_state.theme == 'dark'
     
-    # Dicionário Central de Cores
     C = {
-        "BKG": "#0A0A0F" if is_dark else "#F7F8FA",
-        "SIDEBAR": "#111116" if is_dark else "#FFFFFF",
-        "TEXT": "#FFFFFF" if is_dark else "#1D1D1F",
-        "SUB": "#888890" if is_dark else "#636366",
-        "CARD": "rgba(255, 255, 255, 0.03)" if is_dark else "#FFFFFF",
-        "BORDER": "rgba(255, 255, 255, 0.1)" if is_dark else "#E0E0E0",
-        "INPUT_BKG": "rgba(255, 255, 255, 0.03)" if is_dark else "#FFFFFF",
-        "BTN_SEC": "transparent" if is_dark else "#FFFFFF",
-        "POTENTIAL_CARD": "#05050A" if is_dark else "#F0F0F5" # Cor especial para o card de potencial
+        "BKG": "#050508" if is_dark else "#F4F5F7",
+        "SIDEBAR": "#0A0A0F" if is_dark else "#FFFFFF",
+        "TEXT": "#FFFFFF" if is_dark else "#1A1A1C",
+        "SUB": "#8E8E93" if is_dark else "#636366",
+        "CARD": "rgba(255, 255, 255, 0.02)" if is_dark else "#FFFFFF",
+        "BORDER": "rgba(255, 255, 255, 0.08)" if is_dark else "#D1D1D6",
+        "INPUT_BKG": "rgba(255, 255, 255, 0.04)" if is_dark else "#FFFFFF",
+        "BTN_SEC": "transparent" if is_dark else "#FFFFFF"
     }
     
     st.markdown(f"""
         <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
         
-        /* Aplicação Global */
+        /* Base Global */
         .stApp {{ background-color: {C['BKG']}; font-family: 'Inter', sans-serif; color: {C['TEXT']}; }}
         [data-testid="stSidebar"] {{ background-color: {C['SIDEBAR']} !important; border-right: 1px solid {C['BORDER']}; }}
-        h1, h2, h3, h4, p, span, label {{ color: {C['TEXT']} !important; }}
+        h1, h2, h3, h4, p, span, label, li {{ color: {C['TEXT']} !important; }}
         .subtext {{ color: {C['SUB']} !important; }}
 
-        /* Título Artefact Gradient */
         .atf-gradient {{
             background: linear-gradient(90deg, #3232ff 0%, #ff1493 100%);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             font-weight: 800;
         }}
 
-        /* --- CORREÇÃO DE INPUTS (TEXTAREA/INPUT) --- */
+        /* Inputs & Textareas (Zero-Bug Platinum) */
         .stTextArea textarea, .stTextInput input, div[data-baseweb="textarea"] textarea, div[data-baseweb="input"] input {{
-            background-color: {C['INPUT_BKG']} !important;
-            color: {C['TEXT']} !important;
-            border: 1px solid {C['BORDER']} !important;
-            border-radius: 8px !important;
-            caret-color: #3232ff !important;
-            padding: 12px !important;
-            width: 100% !important;
-            box-sizing: border-box !important;
+            background-color: {C['INPUT_BKG']} !important; color: {C['TEXT']} !important;
+            border: 1px solid {C['BORDER']} !important; border-radius: 8px !important;
+            caret-color: #3232ff !important; padding: 14px !important; width: 100% !important;
+            box-sizing: border-box !important; font-size: 0.95rem !important;
         }}
-        div[data-baseweb="textarea"], div[data-baseweb="input"] {{ background-color: transparent !important; }}
-        .stTextArea label p, .stTextInput label p {{ color: {C['TEXT']} !important; font-weight: 500 !important; }}
-        ::placeholder {{ color: {C['SUB']} !important; opacity: 0.8 !important; }}
+        div[data-baseweb="textarea"], div[data-baseweb="input"] {{ background-color: transparent !important; border: none !important; }}
+        ::placeholder {{ color: {C['SUB']} !important; opacity: 0.6 !important; }}
 
-        /* --- ESTILIZAÇÃO DE BOTÕES --- */
-        button[kind="secondary"], button[kind="secondaryAction"], .stLinkButton > a {{
-            background-color: {C['BTN_SEC']} !important;
-            color: {C['TEXT']} !important;
-            border: 1px solid {C['BORDER']} !important;
-            border-radius: 8px !important;
-            transition: all 0.2s ease !important;
-            text-decoration: none !important;
-            width: 100% !important; 
-            display: inline-flex; align-items: center; justify-content: center;
+        /* Botões C-Level */
+        button[kind="secondary"], .stLinkButton > a {{
+            background-color: {C['BTN_SEC']} !important; color: {C['TEXT']} !important;
+            border: 1px solid {C['BORDER']} !important; border-radius: 8px !important;
+            transition: all 0.2s ease !important; width: 100% !important; 
+            display: inline-flex; align-items: center; justify-content: center; font-weight: 500 !important;
         }}
-        button[kind="secondary"]:hover, .stLinkButton > a:hover {{
-            border-color: #3232ff !important;
-            background-color: rgba(50, 50, 255, 0.05) !important;
-        }}
+        button[kind="secondary"]:hover, .stLinkButton > a:hover {{ border-color: #3232ff !important; background-color: rgba(50, 50, 255, 0.05) !important; }}
 
         button[kind="primary"] {{
-            background: linear-gradient(90deg, #3232ff 0%, #ff1493 100%) !important;
-            color: #FFFFFF !important;
-            border: none !important;
-            border-radius: 8px !important;
-            width: 100% !important;
-            transition: all 0.3s ease !important;
+            background: linear-gradient(90deg, #3232ff 0%, #ff1493 100%) !important; color: #FFFFFF !important;
+            border: none !important; border-radius: 8px !important; width: 100% !important; 
+            font-weight: 600 !important; transition: all 0.3s ease !important;
         }}
-        button[kind="primary"]:hover {{
-            background: linear-gradient(90deg, #4d4dff 0%, #ff33a1 100%) !important;
-            box-shadow: 0 4px 15px rgba(50, 50, 255, 0.3) !important;
-            transform: translateY(-1px) !important;
-        }}
+        button[kind="primary"]:hover {{ transform: translateY(-2px) !important; box-shadow: 0 6px 20px rgba(50, 50, 255, 0.4) !important; }}
 
-        /* --- CARTÕES & MÉTRICAS (FLEX ELÁSTICO) --- */
+        /* Expander Customizado */
+        [data-testid="stExpander"] {{
+            background-color: {C['CARD']} !important; border: 1px solid {C['BORDER']} !important;
+            border-radius: 12px !important; overflow: hidden;
+        }}
+        [data-testid="stExpander"] summary {{ background-color: transparent !important; }}
+
+        /* Grid 2x2 Elástico */
         div[data-testid="stMetric"] {{
             background: {C['CARD']}; border: 1px solid {C['BORDER']};
             border-radius: 12px; padding: 1.2rem !important; height: 100%;
         }}
-        
-        /* O Segredo da Elasticidade: Flexbox Wrap */
         div[data-testid="stHorizontalBlock"] {{
-            display: flex !important;
-            flex-wrap: wrap !important;
-            gap: 1rem !important;
-            width: 100% !important;
+            display: flex !important; flex-wrap: wrap !important; gap: 1rem !important; width: 100% !important;
         }}
-        
-        /* As colunas tentam usar 45% (para manter 2x2), mas tem um mínimo. 
-           Se a tela for menor que 2x 150px, elas empilham 1x4 */
         [data-testid="column"] {{
-            flex: 1 1 45% !important; 
-            min-width: 150px !important;
-            box-sizing: border-box !important;
+            flex: 1 1 40% !important; min-width: 140px !important; box-sizing: border-box !important;
         }}
 
-        .lead-row {{
-            background: {C['CARD']}; border: 1px solid {C['BORDER']};
-            border-radius: 12px; padding: 1rem; margin-bottom: 0.8rem;
-            position: relative; overflow: hidden; transition: all 0.2s ease;
-            width: 100% !important; box-sizing: border-box !important;
+        /* Card Potencial Estilizado */
+        .potencial-wrapper {{
+            position: relative; background: {C['CARD']}; background-clip: padding-box;
+            border: solid 1px transparent; border-radius: 12px; height: 100%; padding: 1.2rem;
+            display: flex; flex-direction: column; justify-content: center;
         }}
-        .lead-row:hover {{ transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.05); }}
-        .tier-1-bar {{ position: absolute; top: 0; left: 0; height: 4px; width: 100%; background: linear-gradient(90deg, #3232ff 0%, #ff1493 100%); }}
+        .potencial-wrapper::before {{
+            content: ''; position: absolute; top: 0; right: 0; bottom: 0; left: 0; z-index: -1;
+            margin: -1px; border-radius: inherit; background: linear-gradient(90deg, #3232ff, #ff1493);
+        }}
+        .potencial-val {{ font-size: 1.6rem; font-weight: 800; color: {C['TEXT']}; margin: 0; letter-spacing: -0.5px; }}
 
-        /* --- TWEAKS EXTREMOS PARA MOBILE --- */
-        @media (max-width: 600px) {{
-            .block-container {{
-                padding-left: 1rem !important;
-                padding-right: 1rem !important;
-                padding-top: 2rem !important;
-                max-width: 100vw !important;
-                overflow-x: hidden !important;
-            }}
-            div[data-testid="stMetric"] {{ padding: 0.8rem !important; }}
-            div[data-testid="stMetricValue"] > div {{ font-size: 1.15rem !important; }}
-            /* Reduz levemente o min-width em telas minúsculas para tentar forçar o 2x2 se possível */
-            [data-testid="column"] {{ min-width: 130px !important; }}
+        /* Timeline (Chat Bubbles) */
+        .chat-bubble {{
+            background: {C['INPUT_BKG']}; border: 1px solid {C['BORDER']};
+            border-radius: 2px 16px 16px 16px; padding: 14px 18px; margin-bottom: 16px;
+            max-width: 90%; position: relative;
+        }}
+        .chat-bubble::before {{
+            content: '💬'; position: absolute; left: -25px; top: 0; font-size: 12px;
         }}
 
-        /* Filtros/Selectbox */
-        div[data-baseweb="select"] > div {{ background-color: {C['INPUT_BKG']} !important; color: {C['TEXT']} !important; border: 1px solid {C['BORDER']} !important; width: 100%; }}
-        ul[role="listbox"], li[role="option"] {{ background-color: {C['SIDEBAR']} !important; color: {C['TEXT']} !important; }}
-        hr {{ border-color: {C['BORDER']} !important; margin: 1.5rem 0 !important; }}
-        
-        /* Customizações Premium */
-        .potential-card {{
-            background-color: {C['POTENTIAL_CARD']};
-            border: 1px solid {C['BORDER']};
-            border-radius: 12px;
-            padding: 1.2rem;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+        /* Quebra Responsiva Extrema (< 380px) */
+        @media (max-width: 380px) {{
+            [data-testid="column"] {{ flex: 1 1 100% !important; min-width: 100% !important; }}
         }}
-        .potential-value {{
-            font-size: 1.5rem;
-            font-weight: 800;
-            color: #3232ff; /* Cor sólida Artefact */
-            margin-top: 0.5rem;
-            white-space: normal;
-            word-wrap: break-word;
+        @media (max-width: 768px) {{
+            .block-container {{ padding: 1.5rem 1rem !important; max-width: 100vw !important; overflow-x: hidden !important; }}
         }}
-        .timeline-note-container {{
-            border-bottom: 1px solid {C['BORDER']};
-            padding: 1rem 0;
-        }}
-        .timeline-date {{
-            font-size: 0.8rem;
-            color: {C['SUB']};
-            margin-bottom: 0.2rem;
-        }}
-        .timeline-text {{
-            font-size: 0.95rem;
-            color: {C['TEXT']};
-            line-height: 1.4;
-        }}
-
         </style>
     """, unsafe_allow_html=True)
 
 apply_executive_styles()
 
-# --- 4. AUTH SEGURO ---
+# --- 4. SEGURANÇA ---
 def check_login(user, pwd):
     try:
         val_u, val_p = st.secrets["APP_USER"], st.secrets["APP_PASS"]
-        return hmac.compare_digest(user.encode('utf-8'), val_u.encode('utf-8')) and \
-               hmac.compare_digest(pwd.encode('utf-8'), val_p.encode('utf-8'))
+        return hmac.compare_digest(user.encode('utf-8'), val_u.encode('utf-8')) and hmac.compare_digest(pwd.encode('utf-8'), val_p.encode('utf-8'))
     except: return False
 
 if not st.session_state.logado:
@@ -201,68 +142,77 @@ if not st.session_state.logado:
     c1, c2, c3 = st.columns([1, 2, 1])
     with c2:
         st.markdown('<h1 class="atf-gradient" style="font-size:3rem; text-align:center;">Artefact</h1>', unsafe_allow_html=True)
-        st.markdown('<p class="subtext" style="text-align:center; margin-bottom:2rem;">Strategy Intelligence</p>', unsafe_allow_html=True)
+        st.markdown('<p class="subtext" style="text-align:center; margin-bottom:2rem;">Intelligence CRM V4.0</p>', unsafe_allow_html=True)
         with st.form("login"):
-            u = st.text_input("User ID")
-            p = st.text_input("Token", type="password")
+            u = st.text_input("Corporate ID")
+            p = st.text_input("Security Token", type="password")
             if st.form_submit_button("Authenticate", use_container_width=True, type="primary"):
                 if check_login(u, p): st.session_state.logado = True; st.rerun()
                 else: st.error("Access Denied.")
     st.stop()
 
-# --- 5. DATA ENGINE ---
+# --- 5. DATA ENGINE EXTREMO (MOCK ENRIQUECIDO) ---
 LEADS_BASE = [
-    {"id": 1, "nome": "Bruno Szarf", "empresa": "Stefanini", "cargo": "VP Global", "decisor": "Sim", "linkedin": "https://www.linkedin.com/in/brunoszarf", "score": 55},
-    {"id": 2, "nome": "Patrícia Rosado", "empresa": "Tupy", "cargo": "VP Cultura", "decisor": "Sim", "linkedin": "https://www.linkedin.com/in/patricia-rosado-b15ba01a", "score": 52},
-    {"id": 3, "nome": "Aldo Silva", "empresa": "HCOSTA", "cargo": "CHRO", "decisor": "Sim", "linkedin": "https://www.linkedin.com/in/aldo-santos-a4985353/", "score": 50},
-    {"id": 4, "nome": "Thais Ferreira", "empresa": "G5 Partners", "cargo": "VP People", "decisor": "Sim", "linkedin": "https://www.linkedin.com/in/thais-vendramini/", "score": 49},
-    {"id": 5, "nome": "Mari Stela", "empresa": "HILTI", "cargo": "CHRO", "decisor": "Sim", "linkedin": "https://www.linkedin.com/in/mariribeiro", "score": 48},
-    {"id": 6, "nome": "Brenda Endo", "empresa": "Embracon", "cargo": "Diretora RH", "decisor": "Sim", "linkedin": "https://www.linkedin.com/in/brenda-donato-endo-78275041", "score": 47},
-    {"id": 7, "nome": "Soraya Bahde", "empresa": "Bradesco", "cargo": "Diretora", "decisor": "Parcial", "linkedin": "https://www.linkedin.com/in/sorayabahde", "score": 46},
-    {"id": 8, "nome": "Ana Luiza Brasil", "empresa": "Fortbras", "cargo": "Diretor Gente/Gestão", "decisor": "Sim", "linkedin": "https://www.linkedin.com/in/brasilana", "score": 45},
-    {"id": 9, "nome": "Daniela Faria", "empresa": "Zamp", "cargo": "Dir. Talentos", "decisor": "Sim", "linkedin": "https://www.linkedin.com/in/daniela-matos-faria", "score": 44},
-    {"id": 10, "nome": "Patricia Bobbato", "empresa": "Natura", "cargo": "Dir. Cultura DE&I", "decisor": "Parcial", "linkedin": "https://www.linkedin.com/in/patriciabobbato", "score": 43},
-    {"id": 40, "nome": "Frederico Galhardi", "empresa": "Artefact", "cargo": "Lead Estratégico", "decisor": "Não", "linkedin": "#", "score": 13}
+    {"id": 1, "nome": "Bruno Szarf", "empresa": "Stefanini", "cargo": "VP Global", "decisor": "Sim", "score": 55, "linkedin": "https://www.linkedin.com/in/brunoszarf", "bio": "Executivo sênior focado em inovação global e gestão de performance.", "loc": "São Paulo, SP", "interesse": "IA, Transformação Digital"},
+    {"id": 2, "nome": "Patrícia Rosado", "empresa": "Tupy", "cargo": "VP Cultura", "decisor": "Sim", "score": 52, "linkedin": "https://www.linkedin.com/in/patricia-rosado-b15ba01a", "bio": "Especialista em cultura organizacional e SSMA em multinacionais.", "loc": "Joinville, SC", "interesse": "ESG, Cultura Org"},
+    {"id": 3, "nome": "Aldo Silva", "empresa": "HCOSTA", "cargo": "CHRO", "decisor": "Sim", "score": 50, "linkedin": "#", "bio": "Líder de Gente & Gestão focado em otimização de equipes.", "loc": "Bauru, SP", "interesse": "Data-Driven HR"},
+    {"id": 4, "nome": "Thais Ferreira", "empresa": "G5 Partners", "cargo": "VP People", "decisor": "Sim", "score": 49, "linkedin": "#", "bio": "Gestão de talentos em M&A e mercados financeiros.", "loc": "São Paulo, SP", "interesse": "Retenção de Talentos"},
+    {"id": 5, "nome": "Mari Stela", "empresa": "HILTI", "cargo": "CHRO", "decisor": "Sim", "score": 48, "linkedin": "#", "bio": "HR em indústria de alta tecnologia e construção.", "loc": "São Paulo, SP", "interesse": "Leadership Development"},
+    {"id": 6, "nome": "Brenda Endo", "empresa": "Embracon", "cargo": "Diretora RH", "decisor": "Sim", "score": 47, "linkedin": "#", "bio": "Diretora focada em bem-estar e consórcios.", "loc": "Campinas, SP", "interesse": "Employee Experience"},
+    {"id": 7, "nome": "Soraya Bahde", "empresa": "Bradesco", "cargo": "Diretora", "decisor": "Parcial", "score": 46, "linkedin": "#", "bio": "Liderança executiva em grandes bancos.", "loc": "Osasco, SP", "interesse": "Inovação Financeira"},
+    {"id": 8, "nome": "Ana Luiza Brasil", "empresa": "Fortbras", "cargo": "Dir. Gente", "decisor": "Sim", "score": 45, "linkedin": "#", "bio": "Gestão de pessoas no setor automotivo.", "loc": "São Paulo, SP", "interesse": "Integração Pós-M&A"},
+    {"id": 9, "nome": "Patricia Bobbato", "empresa": "Natura", "cargo": "Dir. Cultura", "decisor": "Parcial", "score": 43, "linkedin": "#", "bio": "Foco profundo em Diversidade, Equidade e Inclusão.", "loc": "São Paulo, SP", "interesse": "DE&I, Sustentabilidade"}
 ]
 
-def get_meta(score):
-    if score >= 48: return "Tier 1", "> R$ 1 Milhão", "pill-blue"
-    if score >= 39: return "Tier 2", "R$ 500k - R$ 1M", "pill-magenta"
-    return "Tier 3", "< R$ 500k", "pill-neutral"
+def calc_est(score):
+    if score >= 48: return "Tier 1", "> R$ 1 MILHÃO", "pill-blue", 1500000
+    if score >= 39: return "Tier 2", "R$ 500k - 1M", "pill-magenta", 750000
+    return "Tier 3", "< R$ 500k", "pill-neutral", 250000
 
+vol_total = 0
 for l in LEADS_BASE:
-    l['t'], l['o'], l['c'] = get_meta(l['score'])
+    l['t'], l['o'], l['c'], val = calc_est(l['score'])
+    vol_total += val
 
 df_leads = pd.DataFrame(LEADS_BASE)
 
 # --- 6. SIDEBAR ---
 with st.sidebar:
     st.markdown('<h2 class="atf-gradient">Artefact</h2>', unsafe_allow_html=True)
-    if st.button("📊 Overview", use_container_width=True, disabled=(st.session_state.view_mode=='dashboard')):
-        st.session_state.view_mode='dashboard'; st.rerun()
-    if st.button("👥 Pipeline", use_container_width=True, disabled=(st.session_state.view_mode=='list')):
-        st.session_state.view_mode='list'; st.rerun()
+    if st.button("📊 Executive Dash", use_container_width=True, disabled=(st.session_state.view_mode=='dashboard')): st.session_state.view_mode='dashboard'; st.rerun()
+    if st.button("👥 Pipeline", use_container_width=True, disabled=(st.session_state.view_mode=='list')): st.session_state.view_mode='list'; st.rerun()
     st.divider()
-    t_label = "🌙 Midnight Mode" if st.session_state.theme == 'dark' else "☀️ Platinum Mode"
-    if st.button(t_label, use_container_width=True):
-        st.session_state.theme = 'light' if st.session_state.theme == 'dark' else 'dark'; st.rerun()
-    if st.button("🚪 Logout", use_container_width=True):
-        st.session_state.logado = False; st.rerun()
+    if st.button("🌓 Toggle Theme", use_container_width=True): st.session_state.theme = 'light' if st.session_state.theme == 'dark' else 'dark'; st.rerun()
+    if st.button("🚪 Logout", use_container_width=True): st.session_state.logado = False; st.rerun()
 
 # --- 7. VIEWS ---
 if st.session_state.view_mode == 'dashboard':
-    st.markdown('<h1>Visão Executiva</h1>', unsafe_allow_html=True)
-    c1, c2 = st.columns(2)
-    c1.metric("Contas Totais", len(df_leads))
-    c2.metric("Decisores", len(df_leads[df_leads['decisor'] == 'Sim']))
+    st.markdown('<h1>Executive Overview</h1>', unsafe_allow_html=True)
+    
+    # Insight Cards
+    c1, c2, c3 = st.columns(3)
+    top_lead = df_leads.iloc[df_leads['score'].idxmax()]['nome']
+    c1.metric("Top Lead do Mês", top_lead)
+    c2.metric("Decisores Mapeados", len(df_leads[df_leads['decisor'] == 'Sim']))
+    c3.metric("Volume em Pipeline", f"> R$ {vol_total / 1000000:.1f}M")
     
     st.divider()
-    font_color = "#ffffff" if st.session_state.theme == 'dark' else "#111111"
+    font_col = "#ffffff" if st.session_state.theme == 'dark' else "#1A1A1C"
     
-    st.markdown("### Distribuição de Classes")
-    fig1 = px.bar(df_leads['t'].value_counts().reset_index(), x='count', y='t', orientation='h', color='t', color_discrete_sequence=['#3232ff', '#ff1493', '#888890'])
-    fig1.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font_color=font_color, showlegend=False, xaxis=dict(showgrid=False), yaxis=dict(showgrid=False), margin=dict(l=0,r=0,t=10,b=0), height=250)
-    st.plotly_chart(fig1, use_container_width=True)
+    g1, g2 = st.columns([1.5, 1])
+    
+    with g1:
+        st.markdown("### Pipeline Health (Funil)")
+        funnel_data = dict(number=[len(df_leads), len(df_leads[df_leads['t'] != 'Tier 3']), len(df_leads[df_leads['t'] == 'Tier 1'])], stage=["Total Mapeado", "Qualificados (T1/T2)", "Estratégicos (T1)"])
+        fig_funnel = go.Figure(go.Funnel(y=funnel_data["stage"], x=funnel_data["number"], marker={"color": ["#888890", "#ff1493", "#3232ff"]}))
+        fig_funnel.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font_color=font_col, margin=dict(l=0,r=0,t=10,b=0), height=300)
+        st.plotly_chart(fig_funnel, use_container_width=True)
+        
+    with g2:
+        st.markdown("### Distribuição de Tiers")
+        fig_donut = px.pie(df_leads, names='t', hole=0.7, color_discrete_sequence=['#3232ff', '#ff1493', '#888890'])
+        fig_donut.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font_color=font_col, margin=dict(l=0,r=0,t=10,b=0), height=300, showlegend=True, legend=dict(orientation="h", y=-0.2))
+        st.plotly_chart(fig_donut, use_container_width=True)
 
 elif st.session_state.view_mode == 'list':
     st.markdown('<h1>Strategic Pipeline</h1>', unsafe_allow_html=True)
@@ -271,70 +221,88 @@ elif st.session_state.view_mode == 'list':
     st.write("")
     
     for l in f_leads:
-        bar = '<div class="tier-1-bar"></div>' if "Tier 1" in l['t'] else ""
-        card = f"""<div class="lead-row">{bar}
-        <div style="display:flex; flex-wrap:wrap; justify-content:space-between; margin-bottom: 8px; gap: 8px;">
-            <div style="flex: 1 1 auto;"><strong style="font-size: 1.1rem;">{l['nome']}</strong><br><span class="subtext">{l['cargo']}</span></div>
+        bg = "rgba(255, 255, 255, 0.02)" if st.session_state.theme == 'dark' else "#FFFFFF"
+        bd = "rgba(255, 255, 255, 0.08)" if st.session_state.theme == 'dark' else "#D1D1D6"
+        card = f"""<div style="background:{bg}; border:1px solid {bd}; border-radius:12px; padding:1rem; margin-bottom:1rem;">
+        <div style="display:flex; justify-content:space-between; margin-bottom: 8px;">
+            <div><strong style="font-size: 1.1rem;">{l['nome']}</strong><br><span class="subtext">{l['cargo']}</span></div>
             <div style="text-align:right;"><span class="{l['c']}">{l['t']}</span></div>
         </div>
-        <div style="display:flex; justify-content:space-between; align-items: center; border-top: 1px solid { '#333' if st.session_state.theme == 'dark' else '#eee' }; padding-top: 8px;">
-            <span style="font-weight: 500; font-size: 0.95rem;">{l['empresa']}</span>
-            <span class="{l['c']}" style="font-size: 0.95rem;">{l['o']}</span>
-        </div>
-        </div>"""
+        <div style="display:flex; justify-content:space-between; align-items: center; border-top: 1px solid {bd}; padding-top: 8px;">
+            <span style="font-weight: 500;">{l['empresa']}</span>
+            <span class="{l['c']}">{l['o']}</span>
+        </div></div>"""
         st.markdown(card, unsafe_allow_html=True)
-        if st.button(f"Abrir Perfil", key=f"b_{l['id']}", use_container_width=True):
+        if st.button(f"Analisar Perfil", key=f"b_{l['id']}", use_container_width=True):
             st.session_state.selected_lead_id = l['id']; st.session_state.view_mode = 'detail'; st.rerun()
 
 elif st.session_state.view_mode == 'detail':
     l = next(item for item in LEADS_BASE if item['id'] == st.session_state.selected_lead_id)
-    if st.button("← Voltar ao Pipeline", use_container_width=True): st.session_state.view_mode = 'list'; st.rerun()
+    if st.button("← Voltar ao Funil", use_container_width=True): st.session_state.view_mode = 'list'; st.rerun()
     
     st.write("")
-    st.markdown(f"<h2 style='margin-bottom:0;'>{l['nome']}</h2><p class='subtext' style='font-size:1.1rem;'>{l['cargo']} @ <strong>{l['empresa']}</strong></p>", unsafe_allow_html=True)
-    if l['linkedin'] != "#": st.link_button("↗ Abrir LinkedIn", l['linkedin'], use_container_width=True)
+    st.markdown(f"<h1 style='margin-bottom:0;'>{l['nome']}</h1><p class='subtext' style='font-size:1.2rem;'>{l['cargo']} @ <strong>{l['empresa']}</strong></p>", unsafe_allow_html=True)
     
-    st.divider()
-    
-    # --- GRID 2x2 ELÁSTICO ---
+    # --- GRID 2x2 ELÁSTICO & POTENCIAL REFINADO ---
     c1, c2 = st.columns(2)
     c1.metric("Classificação", l['t'])
     c2.metric("Score", f"{l['score']} pts")
     
     c3, c4 = st.columns(2)
     c3.metric("Decisor", l['decisor'])
-    
-    # Renderização customizada para o Potencial (Design Premium)
     with c4:
         st.markdown(f"""
-            <div class="potential-card">
-                <span class="subtext" style="font-size: 0.85rem; font-weight: 500; text-transform: uppercase;">Potencial</span>
-                <div class="potential-value">{l['o']}</div>
+            <div class="potencial-wrapper">
+                <span style="font-size: 0.8rem; color: #8E8E93; text-transform: uppercase; font-weight: 600;">Potencial Est.</span>
+                <p class="potencial-val">{l['o']}</p>
             </div>
         """, unsafe_allow_html=True)
     
+    st.write("")
+    
+    # --- EXPANSOR HIGH-END ---
+    with st.expander("📂 Expandir Detalhes Estratégicos"):
+        ec1, ec2 = st.columns(2)
+        ec1.markdown(f"**📍 Localização:** {l.get('loc', 'N/I')}")
+        ec1.markdown(f"**🎯 Interesses:** {l.get('interesse', 'N/I')}")
+        ec2.markdown(f"**📝 Bio/Briefing:** {l.get('bio', 'N/I')}")
+        if l['linkedin'] != "#": st.link_button("Abrir LinkedIn", l['linkedin'])
+    
     st.divider()
     
-    # --- SEÇÃO REGISTRO & TIMELINE ---
-    st.markdown("### Registro")
+    # --- REGISTRO & TIMELINE ETERNA ---
+    st.markdown("### Timeline de Interações")
     
-    with st.form("intel", clear_on_submit=True):
-        txt = st.text_area("Adicionar Nova Nota:", placeholder="Descreva os próximos passos ou insights do contato...")
-        if st.form_submit_button("Salvar Nota", type="primary", use_container_width=True):
-            if txt.strip():
-                st.session_state.notas_locais.insert(0, {"id": l['id'], "dt": datetime.now().strftime("%d/%m/%Y às %H:%M"), "txt": txt})
+    with st.form("intel_form", clear_on_submit=True):
+        txt = st.text_area("Descreva a interação ou briefing:", placeholder="Ex: Call realizada. Orçamento pré-aprovado.")
+        audio_link = st.text_input("Anexar Link de Áudio/Drive (Opcional):", placeholder="https://drive.google.com/...")
+        
+        if st.form_submit_button("Registrar Insight", type="primary", use_container_width=True):
+            if txt.strip() or audio_link.strip():
+                st.session_state.notas_locais.insert(0, {
+                    "id": l['id'], 
+                    "dt": datetime.now().strftime("%d/%m/%Y às %H:%M"), 
+                    "txt": txt,
+                    "audio": audio_link
+                })
                 st.rerun()
     
     st.write("")
     
     notas = [x for x in st.session_state.notas_locais if x['id'] == l['id']]
     if not notas:
-        st.info("Nenhuma interação registrada no momento.")
+        st.info("Nenhum log registrado para esta conta.")
     else:
         for n in notas:
+            audio_html = f"<div class='chat-audio'>🔗 Anexo de Áudio/Ref: <a href='{n['audio']}' target='_blank'>Abrir Link</a></div>" if n.get('audio') else ""
+            txt_html = f"<p class='chat-text'>{n['txt']}</p>" if n.get('txt') else ""
+            
             st.markdown(f"""
-            <div class="timeline-note-container">
-                <div class="timeline-date">{n['dt']}</div>
-                <div class="timeline-text">{n['txt']}</div>
+            <div style="padding-left: 25px;">
+                <div class="chat-bubble">
+                    <div class="chat-date">{n['dt']}</div>
+                    {txt_html}
+                    {audio_html}
+                </div>
             </div>
             """, unsafe_allow_html=True)
