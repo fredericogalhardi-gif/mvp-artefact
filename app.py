@@ -1,6 +1,8 @@
+```python
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 import hmac
 import json
 import os
@@ -38,7 +40,28 @@ if 'selected_lead_id' not in st.session_state: st.session_state.selected_lead_id
 if 'theme' not in st.session_state: st.session_state.theme = 'dark'
 if 'notas_locais' not in st.session_state: st.session_state.notas_locais = load_notes()
 
-# --- 4. LIQUID DESIGN ENGINE (CSS ULTRA-RESPONSIVO) ---
+# --- 4. LÓGICA DE FOTOS DE PERFIL (/sabi) ---
+def extract_linkedin_id(url):
+    if not url or url == "#": return None
+    parts = [p for p in url.split('/') if p]
+    return parts[-1] if parts else None
+
+def get_photo_html(name, url, size_class="large"):
+    lid = extract_linkedin_id(url)
+    if lid:
+        path = os.path.join('sabi', f"{lid}.png")
+        if os.path.exists(path):
+            try:
+                with open(path, "rb") as f:
+                    b64 = base64.b64encode(f.read()).decode()
+                return f'<img src="data:image/png;base64,{b64}" class="profile-pic {size_class}">'
+            except: pass
+    
+    # Placeholder Elegante (Iniciais)
+    initials = "".join([w[0] for w in name.split()[:2]]).upper()
+    return f'<div class="initials-placeholder {size_class}">{initials}</div>'
+
+# --- 5. DESIGN SYSTEM & CSS (LIQUID RESPONSIVENESS) ---
 def apply_executive_styles():
     is_dark = st.session_state.theme == 'dark'
     
@@ -50,8 +73,9 @@ def apply_executive_styles():
         "CARD": "rgba(255, 255, 255, 0.02)" if is_dark else "#FFFFFF",
         "BORDER": "rgba(255, 255, 255, 0.08)" if is_dark else "#D1D1D6",
         "INPUT_BKG": "rgba(255, 255, 255, 0.04)" if is_dark else "#FFFFFF",
+        "INPUT_TEXT": "#FFFFFF" if is_dark else "#000000",
         "BTN_SEC": "transparent" if is_dark else "#FFFFFF",
-        "POT_BKG": "#030305" if is_dark else "#EAEBEE"
+        "METRIC_BKG": "#0A0A0F" if is_dark else "#FFFFFF"
     }
     
     st.markdown(f"""
@@ -69,17 +93,22 @@ def apply_executive_styles():
             font-weight: 800;
         }}
 
-        /* Inputs & Textareas */
+        /* UX de Input (Zero-Bug no Platinum Mode) */
         .stTextArea textarea, .stTextInput input, div[data-baseweb="textarea"] textarea, div[data-baseweb="input"] input {{
-            background-color: {C['INPUT_BKG']} !important; color: {C['TEXT']} !important;
-            border: 1px solid {C['BORDER']} !important; border-radius: 8px !important;
-            caret-color: #3232ff !important; padding: 14px !important; width: 100% !important;
-            box-sizing: border-box !important; font-size: 0.95rem !important;
+            background-color: {C['INPUT_BKG']} !important; 
+            color: {C['INPUT_TEXT']} !important;
+            border: 1px solid {C['BORDER']} !important; 
+            border-radius: 8px !important;
+            caret-color: #3232ff !important; 
+            padding: 14px !important; 
+            width: 100% !important;
+            box-sizing: border-box !important; 
+            font-size: 0.95rem !important;
         }}
         div[data-baseweb="textarea"], div[data-baseweb="input"] {{ background-color: transparent !important; border: none !important; }}
         ::placeholder {{ color: {C['SUB']} !important; opacity: 0.6 !important; }}
 
-        /* Botões C-Level */
+        /* Botões High-End */
         button[kind="secondary"], .stLinkButton > a {{
             background-color: {C['BTN_SEC']} !important; color: {C['TEXT']} !important;
             border: 1px solid {C['BORDER']} !important; border-radius: 8px !important;
@@ -95,88 +124,76 @@ def apply_executive_styles():
         }}
         button[kind="primary"]:hover {{ transform: translateY(-2px) !important; box-shadow: 0 6px 20px rgba(50, 50, 255, 0.4) !important; }}
 
-        /* Grid 2x2 Elástico */
-        div[data-testid="stMetric"] {{
-            background: {C['CARD']}; border: 1px solid {C['BORDER']};
-            border-radius: 12px; padding: 1.2rem !important; height: 100%;
+        /* Fotos de Perfil Circulares */
+        .profile-pic, .initials-placeholder {{
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #fff;
+            flex-shrink: 0;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }}
-        div[data-testid="stHorizontalBlock"] {{
-            display: flex !important; flex-wrap: wrap !important; gap: 1rem !important; width: 100% !important;
+        .profile-pic.large, .initials-placeholder.large {{ width: 120px; height: 120px; }}
+        .profile-pic.small, .initials-placeholder.small {{ width: 50px; height: 50px; border-width: 1px; }}
+        .initials-placeholder {{
+            background: linear-gradient(135deg, #3232ff, #ff1493);
+            color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800;
         }}
-        [data-testid="column"] {{
-            flex: 1 1 40% !important; min-width: 140px !important; box-sizing: border-box !important;
-        }}
+        .initials-placeholder.large {{ font-size: 2.5rem; }}
+        .initials-placeholder.small {{ font-size: 1.2rem; }}
 
-        /* Card Potencial Estilizado (Premium) */
-        .potencial-wrapper {{
-            position: relative; background: {C['POT_BKG']};
-            border: 1px solid {C['BORDER']}; border-radius: 12px; height: 100%; padding: 1.2rem;
-            display: flex; flex-direction: column; justify-content: center;
+        /* Layout Cards (Pipeline) */
+        .lead-row {{
+            background: {C['CARD']}; border: 1px solid {C['BORDER']}; border-radius: 12px;
+            padding: 1.2rem; margin-bottom: 1rem; position: relative; overflow: hidden; transition: all 0.2s ease;
         }}
-        .potencial-val {{ 
-            font-size: 1.8rem; font-weight: 800; margin: 0; letter-spacing: -0.5px; 
-            background: linear-gradient(90deg, #3232ff 0%, #ff1493 100%);
+        .lead-row:hover {{ transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.05); }}
+        .tier-1-bar {{ position: absolute; top: 0; left: 0; height: 4px; width: 100%; background: linear-gradient(90deg, #3232ff 0%, #ff1493 100%); }}
+
+        /* Grid 2x2 Elástico */
+        .custom-metric-card {{
+            background-color: {C['METRIC_BKG']};
+            padding: 1.2rem; border-radius: 10px; margin-bottom: 10px;
+            border: 1px solid {C['BORDER']}; display: flex; flex-direction: column; justify-content: space-between;
+            height: 100%; min-height: 110px;
+        }}
+        .metric-label {{ font-size: 0.85rem; color: {C['SUB']}; font-weight: 500; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; }}
+        .metric-value {{ font-size: 1.6rem; font-weight: 700; color: {C['TEXT']}; margin: 0; line-height: 1.2; }}
+        
+        .potential-value {{
+            font-size: 1.6rem; font-weight: 800; margin: 0; line-height: 1.2;
+            background: linear-gradient(90deg, #3232ff, #ff1493);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }}
 
-        /* Profile Picture (Circular) */
-        .profile-wrapper {{ display: flex; align-items: center; gap: 20px; margin-bottom: 20px; }}
-        .profile-pic {{ 
-            width: 80px; height: 80px; border-radius: 50%; object-fit: cover; 
-            border: 2px solid {C['BORDER']}; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        /* Timeline de Interações */
+        .timeline-item {{
+            border-left: 2px solid {C['BORDER']};
+            margin-left: 15px; padding-left: 20px; padding-bottom: 20px;
+            position: relative;
         }}
-
-        /* Timeline (Chat Bubbles) */
-        .chat-bubble {{
-            background: {C['INPUT_BKG']}; border: 1px solid {C['BORDER']};
-            border-radius: 2px 16px 16px 16px; padding: 14px 18px; margin-bottom: 16px;
-            max-width: 90%; position: relative;
+        .timeline-item::before {{
+            content: ''; position: absolute; left: -6px; top: 0;
+            width: 10px; height: 10px; border-radius: 50%;
+            background: #3232ff;
         }}
+        .timeline-date {{ font-size: 0.8rem; color: {C['SUB']}; font-weight: 600; margin-bottom: 4px; }}
+        .timeline-note {{ font-size: 0.95rem; color: {C['TEXT']}; margin: 0; line-height: 1.5; white-space: pre-wrap; }}
 
-        /* Expander Customizado */
-        [data-testid="stExpander"] {{ background-color: {C['CARD']} !important; border: 1px solid {C['BORDER']} !important; border-radius: 12px !important; }}
-        [data-testid="stExpander"] summary {{ background-color: transparent !important; }}
+        /* Quebra Responsiva (Liquid Design) */
+        div[data-testid="stHorizontalBlock"] {{ display: flex !important; flex-wrap: wrap !important; gap: 10px; }}
+        [data-testid="column"] {{ flex: 1 1 calc(50% - 5px) !important; min-width: 140px !important; width: calc(50% - 5px) !important; }}
 
-        /* Quebra Responsiva Extrema */
-        @media (max-width: 380px) {{ [data-testid="column"] {{ flex: 1 1 100% !important; min-width: 100% !important; }} }}
-        @media (max-width: 768px) {{ .block-container {{ padding: 1.5rem 1rem !important; max-width: 100vw !important; overflow-x: hidden !important; }} }}
-        
-        div[data-baseweb="select"] > div {{ background-color: {C['INPUT_BKG']} !important; color: {C['TEXT']} !important; border: 1px solid {C['BORDER']} !important; width: 100%; }}
-        ul[role="listbox"], li[role="option"] {{ background-color: {C['SIDEBAR']} !important; color: {C['TEXT']} !important; }}
-        hr {{ border-color: {C['BORDER']} !important; margin: 1.5rem 0 !important; }}
+        @media (max-width: 768px) {{
+            .block-container {{ padding: 1.5rem 1rem !important; max-width: 100vw !important; overflow-x: hidden !important; }}
+            .profile-pic.large, .initials-placeholder.large {{ width: 90px; height: 90px; font-size: 1.8rem; }}
+        }}
+        @media (max-width: 380px) {{
+            [data-testid="column"] {{ flex: 1 1 100% !important; min-width: 100% !important; width: 100% !important; }}
+        }}
         </style>
     """, unsafe_allow_html=True)
 
 apply_executive_styles()
-
-# --- 5. LÓGICA DE IMAGEM LOCAL ---
-def get_image_base64(filepath):
-    try:
-        with open(filepath, "rb") as img_file:
-            return base64.b64encode(img_file.read()).decode()
-    except Exception: return None
-
-def render_profile_header(nome, cargo, empresa, linkedin_url):
-    img_html = ""
-    if linkedin_url and linkedin_url != "#":
-        parts = [p for p in linkedin_url.split('/') if p]
-        if parts:
-            link_id = parts[-1]
-            filepath = f"sabi/{link_id}.png"
-            if os.path.exists(filepath):
-                b64 = get_image_base64(filepath)
-                if b64:
-                    img_html = f'<img src="data:image/png;base64,{b64}" class="profile-pic">'
-    
-    st.markdown(f"""
-        <div class="profile-wrapper">
-            {img_html}
-            <div>
-                <h1 style="margin-bottom:0;">{nome}</h1>
-                <p class="subtext" style="font-size:1.2rem; margin:0;">{cargo} @ <strong>{empresa}</strong></p>
-            </div>
-        </div>
-    """, unsafe_allow_html=True)
 
 # --- 6. SEGURANÇA ---
 def check_login(user, pwd):
@@ -190,7 +207,7 @@ if not st.session_state.logado:
     c1, c2, c3 = st.columns([1, 2, 1])
     with c2:
         st.markdown('<h1 class="atf-gradient" style="font-size:3rem; text-align:center;">Artefact</h1>', unsafe_allow_html=True)
-        st.markdown('<p class="subtext" style="text-align:center; margin-bottom:2rem;">Intelligence CRM V4.0</p>', unsafe_allow_html=True)
+        st.markdown('<p class="subtext" style="text-align:center; margin-bottom:2rem;">Intelligence CRM Golden</p>', unsafe_allow_html=True)
         with st.form("login"):
             u = st.text_input("Corporate ID")
             p = st.text_input("Security Token", type="password")
@@ -199,21 +216,22 @@ if not st.session_state.logado:
                 else: st.error("Access Denied.")
     st.stop()
 
-# --- 7. DATA ENGINE EXTREMO ---
+# --- 7. DATA ENGINE ---
 LEADS_BASE = [
-    {"id": 1, "nome": "Bruno Szarf", "empresa": "Stefanini", "cargo": "VP Global", "decisor": "Sim", "score": 55, "linkedin": "https://www.linkedin.com/in/brunoszarf", "bio": "Executivo sênior focado em inovação global e gestão de performance.", "loc": "São Paulo, SP", "interesse": "IA, Transformação Digital"},
-    {"id": 2, "nome": "Patrícia Rosado", "empresa": "Tupy", "cargo": "VP Cultura", "decisor": "Sim", "score": 52, "linkedin": "https://www.linkedin.com/in/patricia-rosado-b15ba01a", "bio": "Especialista em cultura organizacional e SSMA em multinacionais.", "loc": "Joinville, SC", "interesse": "ESG, Cultura Org"},
-    {"id": 3, "nome": "Aldo Silva", "empresa": "HCOSTA", "cargo": "CHRO", "decisor": "Sim", "score": 50, "linkedin": "https://www.linkedin.com/in/aldo-santos-a4985353", "bio": "Líder de Gente & Gestão focado em otimização de equipes.", "loc": "Bauru, SP", "interesse": "Data-Driven HR"},
-    {"id": 4, "nome": "Thais Ferreira", "empresa": "G5 Partners", "cargo": "VP People", "decisor": "Sim", "score": 49, "linkedin": "https://www.linkedin.com/in/thais-vendramini", "bio": "Gestão de talentos em M&A e mercados financeiros.", "loc": "São Paulo, SP", "interesse": "Retenção de Talentos"},
-    {"id": 5, "nome": "Mari Stela", "empresa": "HILTI", "cargo": "CHRO", "decisor": "Sim", "score": 48, "linkedin": "https://www.linkedin.com/in/mariribeiro", "bio": "HR em indústria de alta tecnologia e construção.", "loc": "São Paulo, SP", "interesse": "Leadership Development"},
-    {"id": 6, "nome": "Brenda Endo", "empresa": "Embracon", "cargo": "Diretora RH", "decisor": "Sim", "score": 47, "linkedin": "https://www.linkedin.com/in/brenda-donato-endo-78275041", "bio": "Diretora focada em bem-estar e consórcios.", "loc": "Campinas, SP", "interesse": "Employee Experience"},
-    {"id": 7, "nome": "Soraya Bahde", "empresa": "Bradesco", "cargo": "Diretora", "decisor": "Parcial", "score": 46, "linkedin": "https://www.linkedin.com/in/sorayabahde", "bio": "Liderança executiva em grandes bancos.", "loc": "Osasco, SP", "interesse": "Inovação Financeira"},
-    {"id": 8, "nome": "Ana Luiza Brasil", "empresa": "Fortbras", "cargo": "Dir. Gente", "decisor": "Sim", "score": 45, "linkedin": "https://www.linkedin.com/in/brasilana", "bio": "Gestão de pessoas no setor automotivo.", "loc": "São Paulo, SP", "interesse": "Integração Pós-M&A"},
-    {"id": 9, "nome": "Patricia Bobbato", "empresa": "Natura", "cargo": "Dir. Cultura", "decisor": "Parcial", "score": 43, "linkedin": "https://www.linkedin.com/in/patriciabobbato", "bio": "Foco profundo em Diversidade, Equidade e Inclusão.", "loc": "São Paulo, SP", "interesse": "DE&I, Sustentabilidade"}
+    {"id": 1, "nome": "Bruno Szarf", "empresa": "Stefanini", "cargo": "VP Global", "decisor": "Sim", "score": 55, "linkedin": "https://www.linkedin.com/in/brunoszarf"},
+    {"id": 2, "nome": "Patrícia Rosado", "empresa": "Tupy", "cargo": "VP Cultura", "decisor": "Sim", "score": 52, "linkedin": "https://www.linkedin.com/in/patricia-rosado-b15ba01a"},
+    {"id": 3, "nome": "Aldo Silva", "empresa": "HCOSTA", "cargo": "CHRO", "decisor": "Sim", "score": 50, "linkedin": "https://www.linkedin.com/in/aldo-santos-a4985353"},
+    {"id": 4, "nome": "Thais Ferreira", "empresa": "G5 Partners", "cargo": "VP People", "decisor": "Sim", "score": 49, "linkedin": "https://www.linkedin.com/in/thais-vendramini"},
+    {"id": 5, "nome": "Mari Stela", "empresa": "HILTI", "cargo": "CHRO", "decisor": "Sim", "score": 48, "linkedin": "https://www.linkedin.com/in/mariribeiro"},
+    {"id": 6, "nome": "Brenda Endo", "empresa": "Embracon", "cargo": "Diretora RH", "decisor": "Sim", "score": 47, "linkedin": "https://www.linkedin.com/in/brenda-donato-endo-78275041"},
+    {"id": 7, "nome": "Soraya Bahde", "empresa": "Bradesco", "cargo": "Diretora", "decisor": "Parcial", "score": 46, "linkedin": "https://www.linkedin.com/in/sorayabahde"},
+    {"id": 8, "nome": "Ana Luiza Brasil", "empresa": "Fortbras", "cargo": "Dir. Gente", "decisor": "Sim", "score": 45, "linkedin": "https://www.linkedin.com/in/brasilana"},
+    {"id": 9, "nome": "Daniela Faria", "empresa": "Zamp", "cargo": "Dir. Talentos", "decisor": "Sim", "score": 44, "linkedin": "https://www.linkedin.com/in/daniela-matos-faria"},
+    {"id": 10, "nome": "Patricia Bobbato", "empresa": "Natura", "cargo": "Dir. Cultura", "decisor": "Parcial", "score": 43, "linkedin": "https://www.linkedin.com/in/patriciabobbato"}
 ]
 
 def calc_est(score):
-    if score >= 48: return "Tier 1", "> R$ 1 MILHÃO", "pill-blue", 1500000
+    if score >= 48: return "Tier 1", "> R$ 1 Milhão", "pill-blue", 1500000
     if score >= 39: return "Tier 2", "R$ 500k - 1M", "pill-magenta", 750000
     return "Tier 3", "< R$ 500k", "pill-neutral", 250000
 
@@ -226,7 +244,7 @@ df_leads = pd.DataFrame(LEADS_BASE)
 
 # --- 8. SIDEBAR ---
 with st.sidebar:
-    st.markdown('<h2 class="atf-gradient">Artefact</h2>', unsafe_allow_html=True)
+    st.markdown('<h2 class="atf-gradient" style="margin-bottom: 2rem;">Artefact</h2>', unsafe_allow_html=True)
     if st.button("📊 Executive Dash", use_container_width=True, disabled=(st.session_state.view_mode=='dashboard')): st.session_state.view_mode='dashboard'; st.rerun()
     if st.button("👥 Pipeline", use_container_width=True, disabled=(st.session_state.view_mode=='list')): st.session_state.view_mode='list'; st.rerun()
     st.divider()
@@ -237,93 +255,94 @@ with st.sidebar:
 if st.session_state.view_mode == 'dashboard':
     st.markdown('<h1>Executive Overview</h1>', unsafe_allow_html=True)
     
-    # Macro Métricas
     c1, c2, c3 = st.columns(3)
-    c1.metric("Contas Estratégicas", len(df_leads))
-    c2.metric("Decisores Mapeados", len(df_leads[df_leads['decisor'] == 'Sim']))
-    c3.metric("Volume em Pipeline", f"> R$ {vol_total / 1000000:.1f}M")
+    c1.markdown(f'<div class="custom-metric-card"><p class="metric-label">Contas Mapeadas</p><p class="metric-value">{len(df_leads)}</p></div>', unsafe_allow_html=True)
+    c2.markdown(f'<div class="custom-metric-card"><p class="metric-label">Decisores Confirmados</p><p class="metric-value">{len(df_leads[df_leads["decisor"] == "Sim"])}</p></div>', unsafe_allow_html=True)
+    c3.markdown(f'<div class="custom-metric-card"><p class="metric-label">Volume Pipeline</p><p class="potential-value">> R$ {vol_total / 1000000:.1f}M</p></div>', unsafe_allow_html=True)
     
     st.divider()
     font_col = "#ffffff" if st.session_state.theme == 'dark' else "#1A1A1C"
     
-    st.markdown("### Distribuição Estratégica (Tiers)")
-    fig_donut = px.pie(df_leads, names='t', hole=0.7, color_discrete_sequence=['#3232ff', '#ff1493', '#888890'])
-    fig_donut.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font_color=font_col, margin=dict(l=0,r=0,t=10,b=0), height=350, showlegend=True, legend=dict(orientation="h", y=-0.2))
-    st.plotly_chart(fig_donut, use_container_width=True)
+    g1, g2 = st.columns(2)
+    with g1:
+        st.markdown("### Pipeline Health")
+        df_sorted = df_leads.sort_values(by='score', ascending=False).head(10)
+        fig_bar = px.bar(df_sorted, x='score', y='nome', orientation='h', color='t', color_discrete_sequence=['#3232ff', '#ff1493', '#888890'])
+        fig_bar.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font_color=font_col, margin=dict(l=0,r=0,t=10,b=0), height=300, yaxis={'categoryorder':'total ascending'})
+        st.plotly_chart(fig_bar, use_container_width=True)
+        
+    with g2:
+        st.markdown("### Distribuição Estratégica")
+        fig_donut = px.pie(df_leads, names='t', hole=0.7, color_discrete_sequence=['#3232ff', '#ff1493', '#888890'])
+        fig_donut.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font_color=font_col, margin=dict(l=0,r=0,t=10,b=0), height=300, showlegend=True, legend=dict(orientation="h", y=-0.2))
+        st.plotly_chart(fig_donut, use_container_width=True)
 
 elif st.session_state.view_mode == 'list':
     st.markdown('<h1>Strategic Pipeline</h1>', unsafe_allow_html=True)
-    sel = st.selectbox("Filtrar Classe", ["Todos", "Tier 1", "Tier 2", "Tier 3"])
+    sel = st.selectbox("Filtrar", ["Todos", "Tier 1", "Tier 2", "Tier 3"], label_visibility="collapsed")
     f_leads = LEADS_BASE if sel == "Todos" else [l for l in LEADS_BASE if sel in l['t']]
     st.write("")
     
     for l in f_leads:
-        bg = "rgba(255, 255, 255, 0.02)" if st.session_state.theme == 'dark' else "#FFFFFF"
-        bd = "rgba(255, 255, 255, 0.08)" if st.session_state.theme == 'dark' else "#D1D1D6"
-        card = f"""<div style="background:{bg}; border:1px solid {bd}; border-radius:12px; padding:1rem; margin-bottom:1rem;">
-        <div style="display:flex; justify-content:space-between; margin-bottom: 8px;">
-            <div><strong style="font-size: 1.1rem;">{l['nome']}</strong><br><span class="subtext">{l['cargo']}</span></div>
+        bar = '<div class="tier-1-bar"></div>' if "Tier 1" in l['t'] else ""
+        photo_html = get_photo_html(l['nome'], l.get('linkedin', '#'), "small")
+        
+        card = f"""<div class="lead-row">{bar}
+        <div style="display:flex; align-items:center; gap:15px; margin-bottom:12px;">
+            {photo_html}
+            <div style="flex:1;">
+                <strong style="font-size:1.15rem;">{l['nome']}</strong><br>
+                <span class="subtext">{l['cargo']}</span>
+            </div>
             <div style="text-align:right;"><span class="{l['c']}">{l['t']}</span></div>
         </div>
-        <div style="display:flex; justify-content:space-between; align-items: center; border-top: 1px solid {bd}; padding-top: 8px;">
-            <span style="font-weight: 500;">{l['empresa']}</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; padding-top:10px; border-top:1px solid rgba(128,128,128,0.2);">
+            <span style="font-weight:600;">{l['empresa']}</span>
             <span class="{l['c']}">{l['o']}</span>
         </div></div>"""
+        
         st.markdown(card, unsafe_allow_html=True)
         if st.button(f"Analisar Perfil", key=f"b_{l['id']}", use_container_width=True):
             st.session_state.selected_lead_id = l['id']; st.session_state.view_mode = 'detail'; st.rerun()
 
 elif st.session_state.view_mode == 'detail':
     l = next(item for item in LEADS_BASE if item['id'] == st.session_state.selected_lead_id)
-    if st.button("← Voltar ao Funil", use_container_width=True): st.session_state.view_mode = 'list'; st.rerun()
-    
+    if st.button("← Voltar ao Pipeline", use_container_width=True): st.session_state.view_mode = 'list'; st.rerun()
     st.write("")
-    render_profile_header(l['nome'], l['cargo'], l['empresa'], l.get('linkedin', '#'))
     
-    # --- GRID 2x2 ELÁSTICO & POTENCIAL REFINADO ---
+    # Header com Foto Circular
+    photo_html = get_photo_html(l['nome'], l.get('linkedin', '#'), "large")
+    st.markdown(f"""
+        <div style="display:flex; align-items:center; gap:20px; margin-bottom:20px; flex-wrap:wrap;">
+            {photo_html}
+            <div>
+                <h1 style="margin-bottom:0; font-size:2.2rem;">{l['nome']}</h1>
+                <p class="subtext" style="font-size:1.1rem; margin-top:5px;">{l['cargo']} @ <strong>{l['empresa']}</strong></p>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    # --- GRID 2x2 ---
     c1, c2 = st.columns(2)
-    c1.metric("Classificação", l['t'])
-    c2.metric("Score", f"{l['score']} pts")
+    with c1: st.markdown(f'<div class="custom-metric-card"><p class="metric-label">Classificação</p><p class="metric-value">{l["t"]}</p></div>', unsafe_allow_html=True)
+    with c2: st.markdown(f'<div class="custom-metric-card"><p class="metric-label">Score</p><p class="metric-value">{l["score"]} pts</p></div>', unsafe_allow_html=True)
     
     c3, c4 = st.columns(2)
-    c3.metric("Decisor", l['decisor'])
-    with c4:
-        st.markdown(f"""
-            <div class="potencial-wrapper">
-                <span class="subtext" style="font-size: 0.8rem; text-transform: uppercase; font-weight: 600; margin-bottom: 5px;">Potencial Est.</span>
-                <p class="potencial-val">{l['o']}</p>
-            </div>
-        """, unsafe_allow_html=True)
-    
-    st.write("")
-    
-    # --- EXPANSOR HIGH-END ---
-    with st.expander("📂 Expandir Detalhes Estratégicos"):
-        ec1, ec2 = st.columns(2)
-        ec1.markdown(f"**📍 Localização:** {l.get('loc', 'N/I')}")
-        ec1.markdown(f"**🎯 Interesses:** {l.get('interesse', 'N/I')}")
-        ec2.markdown(f"**📝 Bio/Briefing:** {l.get('bio', 'N/I')}")
-        if l.get('linkedin') and l['linkedin'] != "#": st.link_button("Abrir LinkedIn", l['linkedin'])
+    with c3: st.markdown(f'<div class="custom-metric-card"><p class="metric-label">Decisor</p><p class="metric-value">{l["decisor"]}</p></div>', unsafe_allow_html=True)
+    with c4: st.markdown(f'<div class="custom-metric-card"><p class="metric-label">Potencial</p><p class="potential-value">{l["o"]}</p></div>', unsafe_allow_html=True)
     
     st.divider()
     
-    # --- REGISTRO & TIMELINE (COM PERSISTÊNCIA FÍSICA) ---
+    # --- SEÇÃO REGISTRO & TIMELINE FÍSICA ---
     st.markdown("### Registro")
-    st.markdown("<p class='subtext' style='font-size: 0.9rem;'>Adicionar Novo Registro</p>", unsafe_allow_html=True)
+    st.markdown("<p class='subtext' style='font-size: 0.9rem; margin-bottom: 10px;'>Adicionar Novo Registro</p>", unsafe_allow_html=True)
     
     with st.form("intel_form", clear_on_submit=True):
-        txt = st.text_area("Nota:", placeholder="Descreva os próximos passos ou insights do contato...", label_visibility="collapsed")
-        
+        txt = st.text_area("Nota", placeholder="Descreva a interação ou novos insights...", label_visibility="collapsed")
         if st.form_submit_button("Salvar Nota", type="primary", use_container_width=True):
             if txt.strip():
-                # Adiciona no topo da lista
-                nova_nota = {
-                    "id_lead": l['id'], 
-                    "dt": datetime.now().strftime("%d/%m/%Y %H:%M"), 
-                    "txt": txt
-                }
+                nova_nota = {"id_lead": l['id'], "dt": datetime.now().strftime("%d/%m/%Y %H:%M"), "txt": txt}
                 st.session_state.notas_locais.insert(0, nova_nota)
-                # Salva no arquivo físico instantaneamente
                 save_notes(st.session_state.notas_locais)
                 st.rerun()
     
@@ -331,14 +350,13 @@ elif st.session_state.view_mode == 'detail':
     
     notas = [x for x in st.session_state.notas_locais if x.get('id_lead') == l['id']]
     if not notas:
-        st.info("Nenhum log registrado para esta conta.")
+        st.info("Nenhuma interação registrada no banco de dados.")
     else:
         for n in notas:
             st.markdown(f"""
-            <div style="padding-left: 10px;">
-                <div class="chat-bubble">
-                    <div style="font-size: 0.75rem; color: #8E8E93; font-weight: 600; margin-bottom: 5px;">{n['dt']}</div>
-                    <p style="margin: 0; line-height: 1.4; font-size: 0.95rem;">{n['txt']}</p>
-                </div>
+            <div class="timeline-item">
+                <p class="timeline-date">{n['dt']}</p>
+                <p class="timeline-note">{n['txt']}</p>
             </div>
             """, unsafe_allow_html=True)
+```
