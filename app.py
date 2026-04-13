@@ -1,10 +1,3 @@
-Entendido. Como Engenheiro de Software Sênior e Especialista em UI/UX, recebo o comando para a **Golden Version 6.0**. 
-
-Este é o *deploy* definitivo. O código a seguir consolida todas as exigências de alta performance, design responsivo "Liquid", persistência física (I/O em JSON) e a reengenharia completa das imagens de perfil locais (`/sabi`), integradas tanto na listagem (Pipeline) quanto no detalhamento executivo. O "Dossiê Estratégico" foi restaurado com elegância logo abaixo do Grid 2x2.
-
-O código está higienizado, livre de vazamentos de texto e pronto para ir para produção.
-
-```python
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -391,4 +384,3 @@ elif st.session_state.view_mode == 'detail':
                 <p class="timeline-note">{n['txt']}</p>
             </div>
             """, unsafe_allow_html=True)
-```
