@@ -358,4 +358,3 @@ elif st.session_state.view_mode == 'detail':
                 <p class="timeline-note">{n['txt']}</p>
             </div>
             """, unsafe_allow_html=True)
-```
