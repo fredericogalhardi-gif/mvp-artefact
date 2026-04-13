@@ -1,3 +1,10 @@
+Entendido. Como Engenheiro de Software Sênior e Especialista em UI/UX, recebo o comando para a **Golden Version 6.0**. 
+
+Este é o *deploy* definitivo. O código a seguir consolida todas as exigências de alta performance, design responsivo "Liquid", persistência física (I/O em JSON) e a reengenharia completa das imagens de perfil locais (`/sabi`), integradas tanto na listagem (Pipeline) quanto no detalhamento executivo. O "Dossiê Estratégico" foi restaurado com elegância logo abaixo do Grid 2x2.
+
+O código está higienizado, livre de vazamentos de texto e pronto para ir para produção.
+
+```python
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -74,7 +81,8 @@ def apply_executive_styles():
         "INPUT_BKG": "rgba(255, 255, 255, 0.04)" if is_dark else "#FFFFFF",
         "INPUT_TEXT": "#FFFFFF" if is_dark else "#000000",
         "BTN_SEC": "transparent" if is_dark else "#FFFFFF",
-        "METRIC_BKG": "#0A0A0F" if is_dark else "#FFFFFF"
+        "METRIC_BKG": "#0A0A0F" if is_dark else "#FFFFFF",
+        "POT_BKG": "#030305" if is_dark else "#EAEBEE"
     }
     
     st.markdown(f"""
@@ -131,13 +139,13 @@ def apply_executive_styles():
             flex-shrink: 0;
             box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }}
-        .profile-pic.large, .initials-placeholder.large {{ width: 120px; height: 120px; }}
+        .profile-pic.large, .initials-placeholder.large {{ width: 100px; height: 100px; }}
         .profile-pic.small, .initials-placeholder.small {{ width: 50px; height: 50px; border-width: 1px; }}
         .initials-placeholder {{
             background: linear-gradient(135deg, #3232ff, #ff1493);
             color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800;
         }}
-        .initials-placeholder.large {{ font-size: 2.5rem; }}
+        .initials-placeholder.large {{ font-size: 2.2rem; }}
         .initials-placeholder.small {{ font-size: 1.2rem; }}
 
         /* Layout Cards (Pipeline) */
@@ -158,8 +166,14 @@ def apply_executive_styles():
         .metric-label {{ font-size: 0.85rem; color: {C['SUB']}; font-weight: 500; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; }}
         .metric-value {{ font-size: 1.6rem; font-weight: 700; color: {C['TEXT']}; margin: 0; line-height: 1.2; }}
         
+        /* Card Potencial Estilizado (Premium) */
+        .potencial-wrapper {{
+            position: relative; background: {C['POT_BKG']};
+            border: 1px solid {C['BORDER']}; border-radius: 12px; height: 100%; padding: 1.2rem; margin-bottom: 10px;
+            display: flex; flex-direction: column; justify-content: center;
+        }}
         .potential-value {{
-            font-size: 1.6rem; font-weight: 800; margin: 0; line-height: 1.2;
+            font-size: 1.8rem; font-weight: 800; margin: 0; line-height: 1.2; letter-spacing: -0.5px;
             background: linear-gradient(90deg, #3232ff, #ff1493);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }}
@@ -178,17 +192,26 @@ def apply_executive_styles():
         .timeline-date {{ font-size: 0.8rem; color: {C['SUB']}; font-weight: 600; margin-bottom: 4px; }}
         .timeline-note {{ font-size: 0.95rem; color: {C['TEXT']}; margin: 0; line-height: 1.5; white-space: pre-wrap; }}
 
+        /* Expander Customizado */
+        [data-testid="stExpander"] {{ background-color: {C['CARD']} !important; border: 1px solid {C['BORDER']} !important; border-radius: 12px !important; margin-bottom: 1rem; }}
+        [data-testid="stExpander"] summary {{ background-color: transparent !important; }}
+        [data-testid="stExpander"] p {{ font-size: 0.95rem !important; }}
+
         /* Quebra Responsiva (Liquid Design) */
         div[data-testid="stHorizontalBlock"] {{ display: flex !important; flex-wrap: wrap !important; gap: 10px; }}
         [data-testid="column"] {{ flex: 1 1 calc(50% - 5px) !important; min-width: 140px !important; width: calc(50% - 5px) !important; }}
 
         @media (max-width: 768px) {{
             .block-container {{ padding: 1.5rem 1rem !important; max-width: 100vw !important; overflow-x: hidden !important; }}
-            .profile-pic.large, .initials-placeholder.large {{ width: 90px; height: 90px; font-size: 1.8rem; }}
+            .profile-pic.large, .initials-placeholder.large {{ width: 80px; height: 80px; font-size: 1.6rem; }}
         }}
         @media (max-width: 380px) {{
             [data-testid="column"] {{ flex: 1 1 100% !important; min-width: 100% !important; width: 100% !important; }}
         }}
+        
+        div[data-baseweb="select"] > div {{ background-color: {C['INPUT_BKG']} !important; color: {C['TEXT']} !important; border: 1px solid {C['BORDER']} !important; width: 100%; }}
+        ul[role="listbox"], li[role="option"] {{ background-color: {C['SIDEBAR']} !important; color: {C['TEXT']} !important; }}
+        hr {{ border-color: {C['BORDER']} !important; margin: 1.5rem 0 !important; }}
         </style>
     """, unsafe_allow_html=True)
 
@@ -215,18 +238,18 @@ if not st.session_state.logado:
                 else: st.error("Access Denied.")
     st.stop()
 
-# --- 7. DATA ENGINE ---
+# --- 7. DATA ENGINE EXTREMO ---
 LEADS_BASE = [
-    {"id": 1, "nome": "Bruno Szarf", "empresa": "Stefanini", "cargo": "VP Global", "decisor": "Sim", "score": 55, "linkedin": "https://www.linkedin.com/in/brunoszarf"},
-    {"id": 2, "nome": "Patrícia Rosado", "empresa": "Tupy", "cargo": "VP Cultura", "decisor": "Sim", "score": 52, "linkedin": "https://www.linkedin.com/in/patricia-rosado-b15ba01a"},
-    {"id": 3, "nome": "Aldo Silva", "empresa": "HCOSTA", "cargo": "CHRO", "decisor": "Sim", "score": 50, "linkedin": "https://www.linkedin.com/in/aldo-santos-a4985353"},
-    {"id": 4, "nome": "Thais Ferreira", "empresa": "G5 Partners", "cargo": "VP People", "decisor": "Sim", "score": 49, "linkedin": "https://www.linkedin.com/in/thais-vendramini"},
-    {"id": 5, "nome": "Mari Stela", "empresa": "HILTI", "cargo": "CHRO", "decisor": "Sim", "score": 48, "linkedin": "https://www.linkedin.com/in/mariribeiro"},
-    {"id": 6, "nome": "Brenda Endo", "empresa": "Embracon", "cargo": "Diretora RH", "decisor": "Sim", "score": 47, "linkedin": "https://www.linkedin.com/in/brenda-donato-endo-78275041"},
-    {"id": 7, "nome": "Soraya Bahde", "empresa": "Bradesco", "cargo": "Diretora", "decisor": "Parcial", "score": 46, "linkedin": "https://www.linkedin.com/in/sorayabahde"},
-    {"id": 8, "nome": "Ana Luiza Brasil", "empresa": "Fortbras", "cargo": "Dir. Gente", "decisor": "Sim", "score": 45, "linkedin": "https://www.linkedin.com/in/brasilana"},
-    {"id": 9, "nome": "Daniela Faria", "empresa": "Zamp", "cargo": "Dir. Talentos", "decisor": "Sim", "score": 44, "linkedin": "https://www.linkedin.com/in/daniela-matos-faria"},
-    {"id": 10, "nome": "Patricia Bobbato", "empresa": "Natura", "cargo": "Dir. Cultura", "decisor": "Parcial", "score": 43, "linkedin": "https://www.linkedin.com/in/patriciabobbato"}
+    {"id": 1, "nome": "Bruno Szarf", "empresa": "Stefanini", "cargo": "VP Global", "decisor": "Sim", "score": 55, "linkedin": "https://www.linkedin.com/in/brunoszarf", "bio": "Executivo sênior focado em inovação global e gestão de performance.", "loc": "São Paulo, SP", "interesse": "IA, Transformação Digital"},
+    {"id": 2, "nome": "Patrícia Rosado", "empresa": "Tupy", "cargo": "VP Cultura", "decisor": "Sim", "score": 52, "linkedin": "https://www.linkedin.com/in/patricia-rosado-b15ba01a", "bio": "Especialista em cultura organizacional e SSMA em multinacionais.", "loc": "Joinville, SC", "interesse": "ESG, Cultura Org"},
+    {"id": 3, "nome": "Aldo Silva", "empresa": "HCOSTA", "cargo": "CHRO", "decisor": "Sim", "score": 50, "linkedin": "https://www.linkedin.com/in/aldo-santos-a4985353", "bio": "Líder de Gente & Gestão focado em otimização de equipes.", "loc": "Bauru, SP", "interesse": "Data-Driven HR"},
+    {"id": 4, "nome": "Thais Ferreira", "empresa": "G5 Partners", "cargo": "VP People", "decisor": "Sim", "score": 49, "linkedin": "https://www.linkedin.com/in/thais-vendramini", "bio": "Gestão de talentos em M&A e mercados financeiros.", "loc": "São Paulo, SP", "interesse": "Retenção de Talentos"},
+    {"id": 5, "nome": "Mari Stela", "empresa": "HILTI", "cargo": "CHRO", "decisor": "Sim", "score": 48, "linkedin": "https://www.linkedin.com/in/mariribeiro", "bio": "HR em indústria de alta tecnologia e construção.", "loc": "São Paulo, SP", "interesse": "Leadership Development"},
+    {"id": 6, "nome": "Brenda Endo", "empresa": "Embracon", "cargo": "Diretora RH", "decisor": "Sim", "score": 47, "linkedin": "https://www.linkedin.com/in/brenda-donato-endo-78275041", "bio": "Diretora focada em bem-estar e consórcios.", "loc": "Campinas, SP", "interesse": "Employee Experience"},
+    {"id": 7, "nome": "Soraya Bahde", "empresa": "Bradesco", "cargo": "Diretora", "decisor": "Parcial", "score": 46, "linkedin": "https://www.linkedin.com/in/sorayabahde", "bio": "Liderança executiva em grandes bancos.", "loc": "Osasco, SP", "interesse": "Inovação Financeira"},
+    {"id": 8, "nome": "Ana Luiza Brasil", "empresa": "Fortbras", "cargo": "Dir. Gente", "decisor": "Sim", "score": 45, "linkedin": "https://www.linkedin.com/in/brasilana", "bio": "Gestão de pessoas no setor automotivo.", "loc": "São Paulo, SP", "interesse": "Integração Pós-M&A"},
+    {"id": 9, "nome": "Daniela Faria", "empresa": "Zamp", "cargo": "Dir. Talentos", "decisor": "Sim", "score": 44, "linkedin": "https://www.linkedin.com/in/daniela-matos-faria", "bio": "Foco profundo em Diversidade, Equidade e Inclusão.", "loc": "São Paulo, SP", "interesse": "DE&I, Sustentabilidade"},
+    {"id": 10, "nome": "Patricia Bobbato", "empresa": "Natura", "cargo": "Dir. Cultura", "decisor": "Parcial", "score": 43, "linkedin": "https://www.linkedin.com/in/patriciabobbato", "bio": "Liderança em Cultura e desenvolvimento sustentável.", "loc": "Cajamar, SP", "interesse": "Sustentabilidade Corporativa"}
 ]
 
 def calc_est(score):
@@ -254,10 +277,11 @@ with st.sidebar:
 if st.session_state.view_mode == 'dashboard':
     st.markdown('<h1>Executive Overview</h1>', unsafe_allow_html=True)
     
+    # Macro Métricas
     c1, c2, c3 = st.columns(3)
     c1.markdown(f'<div class="custom-metric-card"><p class="metric-label">Contas Mapeadas</p><p class="metric-value">{len(df_leads)}</p></div>', unsafe_allow_html=True)
     c2.markdown(f'<div class="custom-metric-card"><p class="metric-label">Decisores Confirmados</p><p class="metric-value">{len(df_leads[df_leads["decisor"] == "Sim"])}</p></div>', unsafe_allow_html=True)
-    c3.markdown(f'<div class="custom-metric-card"><p class="metric-label">Volume Pipeline</p><p class="potential-value">> R$ {vol_total / 1000000:.1f}M</p></div>', unsafe_allow_html=True)
+    c3.markdown(f'<div class="potencial-wrapper"><span class="metric-label">Volume Pipeline</span><p class="potential-value">> R$ {vol_total / 1000000:.1f}M</p></div>', unsafe_allow_html=True)
     
     st.divider()
     font_col = "#ffffff" if st.session_state.theme == 'dark' else "#1A1A1C"
@@ -267,7 +291,7 @@ if st.session_state.view_mode == 'dashboard':
         st.markdown("### Pipeline Health")
         df_sorted = df_leads.sort_values(by='score', ascending=False).head(10)
         fig_bar = px.bar(df_sorted, x='score', y='nome', orientation='h', color='t', color_discrete_sequence=['#3232ff', '#ff1493', '#888890'])
-        fig_bar.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font_color=font_col, margin=dict(l=0,r=0,t=10,b=0), height=300, yaxis={'categoryorder':'total ascending'})
+        fig_bar.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font_color=font_col, margin=dict(l=0,r=0,t=10,b=0), height=300, yaxis={'categoryorder':'total ascending'}, showlegend=False)
         st.plotly_chart(fig_bar, use_container_width=True)
         
     with g2:
@@ -328,16 +352,25 @@ elif st.session_state.view_mode == 'detail':
     
     c3, c4 = st.columns(2)
     with c3: st.markdown(f'<div class="custom-metric-card"><p class="metric-label">Decisor</p><p class="metric-value">{l["decisor"]}</p></div>', unsafe_allow_html=True)
-    with c4: st.markdown(f'<div class="custom-metric-card"><p class="metric-label">Potencial</p><p class="potential-value">{l["o"]}</p></div>', unsafe_allow_html=True)
+    with c4: st.markdown(f'<div class="potencial-wrapper"><p class="metric-label">Potencial</p><p class="potential-value">{l["o"]}</p></div>', unsafe_allow_html=True)
     
+    st.write("")
+    
+    # --- DOSSIÊ ESTRATÉGICO ---
+    with st.expander("Visualizar Dossiê Completo"):
+        ec1, ec2 = st.columns(2)
+        ec1.markdown(f"**📍 Localização:** {l.get('loc', 'N/I')}")
+        ec1.markdown(f"**🎯 Interesses:** {l.get('interesse', 'N/I')}")
+        ec2.markdown(f"**📝 Bio:** {l.get('bio', 'N/I')}")
+        if l.get('linkedin') and l['linkedin'] != "#": st.link_button("Abrir LinkedIn", l['linkedin'])
+
     st.divider()
     
-    # --- SEÇÃO REGISTRO & TIMELINE FÍSICA ---
+    # --- SEÇÃO REGISTRO & TIMELINE ---
     st.markdown("### Registro")
-    st.markdown("<p class='subtext' style='font-size: 0.9rem; margin-bottom: 10px;'>Adicionar Novo Registro</p>", unsafe_allow_html=True)
     
     with st.form("intel_form", clear_on_submit=True):
-        txt = st.text_area("Nota", placeholder="Descreva a interação ou novos insights...", label_visibility="collapsed")
+        txt = st.text_area("Adicionar Novo Registro", placeholder="Descreva a interação ou novos insights...", label_visibility="collapsed")
         if st.form_submit_button("Salvar Nota", type="primary", use_container_width=True):
             if txt.strip():
                 nova_nota = {"id_lead": l['id'], "dt": datetime.now().strftime("%d/%m/%Y %H:%M"), "txt": txt}
@@ -358,3 +391,4 @@ elif st.session_state.view_mode == 'detail':
                 <p class="timeline-note">{n['txt']}</p>
             </div>
             """, unsafe_allow_html=True)
+```
