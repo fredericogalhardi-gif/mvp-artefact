@@ -1,5 +1,5 @@
 import streamlit as st
-import pandas as pda
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import hmac
