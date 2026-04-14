@@ -293,7 +293,7 @@ LEADS_BASE = [
         'comentarios_caio': ''
     },
     {
-        'id": 2,
+        'id': 2,
         'nome': 'Brenda Donato Endo',
         'empresa': 'Embracon',
         'cargo': 'Diretora de RH',
