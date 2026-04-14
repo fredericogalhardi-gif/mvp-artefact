@@ -3,3 +3,4 @@ PyGithub
 pandas
 openpyxl
 plotly
+supabase
