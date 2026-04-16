@@ -143,17 +143,11 @@ def apply_executive_styles():
             font-weight: 800;
         }}
 
-        /* UX de Input (100% Contraste Modo Claro) */
         .stTextArea textarea, .stTextInput input, div[data-baseweb="textarea"] textarea, div[data-baseweb="input"] input {{
-            background-color: {C['INPUT_BKG']} !important; 
-            color: {C['INPUT_TEXT']} !important;
-            border: 1px solid {C['BORDER']} !important; 
-            border-radius: 8px !important;
-            caret-color: #3232ff !important; 
-            padding: 14px !important; 
-            width: 100% !important;
-            box-sizing: border-box !important; 
-            font-size: 0.95rem !important;
+            background-color: {C['INPUT_BKG']} !important; color: {C['INPUT_TEXT']} !important;
+            border: 1px solid {C['BORDER']} !important; border-radius: 8px !important;
+            caret-color: #3232ff !important; padding: 14px !important; width: 100% !important;
+            box-sizing: border-box !important; font-size: 0.95rem !important;
         }}
         div[data-baseweb="textarea"], div[data-baseweb="input"] {{ background-color: transparent !important; border: none !important; }}
         ::placeholder {{ color: {C['SUB']} !important; opacity: 0.6 !important; }}
@@ -173,7 +167,6 @@ def apply_executive_styles():
         }}
         button[kind="primary"]:hover {{ transform: translateY(-2px) !important; box-shadow: 0 6px 20px rgba(50, 50, 255, 0.4) !important; }}
 
-        /* Fotos Circulares */
         .profile-pic, .initials-placeholder {{
             border-radius: 50%; object-fit: cover; border: 2px solid #fff;
             flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
@@ -194,7 +187,6 @@ def apply_executive_styles():
         .lead-row:hover {{ transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.05); }}
         .tier-1-bar {{ position: absolute; top: 0; left: 0; height: 4px; width: 100%; background: linear-gradient(90deg, #3232ff 0%, #ff1493 100%); }}
 
-        /* Grid 2x2 Elástico */
         div[data-testid="stMetric"] {{
             background: {C['METRIC_BKG']}; border: 1px solid {C['BORDER']};
             border-radius: 12px; padding: 1.2rem !important; height: 100%;
@@ -212,12 +204,11 @@ def apply_executive_styles():
             display: flex; flex-direction: column; justify-content: center;
         }}
         .potencial-val {{ 
-            font-size: 1.8rem; font-weight: 800; margin: 0; letter-spacing: -0.5px; 
+            font-size: 1.4rem; font-weight: 800; margin: 0; letter-spacing: -0.5px; 
             background: linear-gradient(90deg, #3232ff 0%, #ff1493 100%);
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }}
 
-        /* Timeline Premium */
         .timeline-item {{
             border-left: 2px solid {C['BORDER']};
             margin-left: 15px; padding-left: 20px; padding-bottom: 20px;
@@ -229,6 +220,8 @@ def apply_executive_styles():
         }}
         .timeline-date {{ font-size: 0.8rem; color: {C['SUB']}; font-weight: 600; margin-bottom: 4px; }}
         .timeline-note {{ font-size: 0.95rem; color: {C['TEXT']}; margin: 0; line-height: 1.5; white-space: pre-wrap; }}
+        
+        audio {{ width: 100%; height: 35px; margin-top: 10px; border-radius: 8px; outline: none; }}
 
         [data-testid="stExpander"] {{ background-color: {C['CARD']} !important; border: 1px solid {C['BORDER']} !important; border-radius: 12px !important; }}
         [data-testid="stExpander"] summary {{ background-color: transparent !important; }}
@@ -266,47 +259,1047 @@ if not st.session_state.logado:
                 else: st.error("Access Denied.")
     st.stop()
 
-# --- 7. DATA ENGINE REAL (MOCK) ---
+# --- 7. DATA ENGINE ---
 LEADS_BASE = [
     {
-        'id': 17, 'nome': 'Camila Alves Massaro', 'empresa': 'ArcelorMittal Gonvarri', 
-        'cargo': 'Director of People, Strategy & IT', 'decisor': 'Sim', 'score': 58, 
-        'linkedin': 'https://www.linkedin.com/in/camilamassaro-rh', 
-        'bio': 'Processamento e distribuição de aço.', 
-        'interesse': 'Novos Modelos de Trabalho, Automação de Processos no RH, Gestão da Mudança, Cultura Organizacional', 
-        'desafios': 'Retenção de Talentos e Rotatividade (Turnover), Saúde Mental e Bem-Estar, Gestão da Cultura Híbrida...', 
-        'orcamento_real': 'De 50 milhões até 100 milhões', 'receita': 'Acima de 1bilhao', 
-        'funcionarios': 'De 500 a 1000 funcionários', 'prazo': '13 - 18 meses', 
-        'solucao': 'Gestão de Mudança e Cultura Organizacional', 
-        'comentarios_caio': 'Temos contato, fizemos várias propostas negadas mas nunca foi vendido.'
+        "ID": 18,
+        "Nome": "Elizabeth Sousa Rodrigues",
+        "Empresa": "Emal Empresa de Mineração Aripuanã LTDA",
+        "Cargo": "Diretor Executivo de Gente e Cultura",
+        "Quais desafios te trouxeram até aqui?": "Retenção de Talentos e Rotatividade (Turnover), Saúde Mental e Bem-Estar, Gestão da Cultura Híbrida, Desenvolvimento de Lideranças",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Aquisição e Retenção de Talentos, Gestão da Mudança",
+        "Qual é o prazo estimado para a sua": "7 - 12 meses",
+        "Qual solução você gostaria de enten": "Todas",
+        "Sou responsável pela decisão e budg": "Eu sou o principal decisor (a) sobre a escolha",
+        "Qual é a estimativa do orçamento an": "Acima de 100 milhões",
+        "Número de funcionários:": "De 5000 a 10000 funcionários",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 60,
+        "LinkedIn": "",
+        "Descrição Empresa": "Extração e processamento de minérios.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "SIM (Novo)",
+        "Tier Final": "Tier 1"
     },
     {
-        'id': 1, 'nome': 'Bruno Szarf', 'empresa': 'Stefanini', 'cargo': 'VP Global', 'decisor': 'Sim', 'score': 56, 
-        'linkedin': 'https://www.linkedin.com/in/brunoszarf', 'bio': 'Consultoria e soluções em TI.', 
-        'interesse': 'Treinamento e Desenvolvimento, Aquisição e Retenção de Talentos', 
-        'desafios': 'Desenvolvimento de Lideranças, Adoção e Integração de IA', 
-        'orcamento_real': 'De 10 milhões até 50 milhões', 'receita': 'Acima de 1bilhao', 
-        'funcionarios': 'Acima de 10000', 'prazo': '4 - 6 meses', 'solucao': '-', 'comentarios_caio': ''
+        "ID": 9,
+        "Nome": "Carolina Bussadori",
+        "Empresa": "Grupo St Marche",
+        "Cargo": "Head de Gente & Cultura",
+        "Quais desafios te trouxeram até aqui?": "Retenção de Talentos e Rotatividade (Turnover), Saúde Mental e Bem-Estar, Desenvolvimento de Lideranças",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Automação de Processos no RH, Aquisição e Retenção de Talentos, Recrutamento e Seleção",
+        "Qual é o prazo estimado para a sua": "7 - 12 meses",
+        "Qual solução você gostaria de enten": "IA e Automação",
+        "Sou responsável pela decisão e budg": "Eu sou o principal decisor (a) sobre a escolha",
+        "Qual é a estimativa do orçamento an": "Acima de 100 milhões",
+        "Número de funcionários:": "De 1000 a 5000 funcionários",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 60,
+        "LinkedIn": "",
+        "Descrição Empresa": "Rede de supermercados premium.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "SIM (Novo)",
+        "Tier Final": "Tier 1"
     },
     {
-        'id': 2, 'nome': 'Brenda Donato Endo', 'empresa': 'Embracon', 'cargo': 'Diretora de RH', 'decisor': 'Sim', 'score': 56, 
-        'linkedin': 'https://www.linkedin.com/in/brenda-donato-endo-78275041', 'bio': 'Administradora de consórcios de bens.', 
-        'interesse': 'Treinamento e Desenvolvimento, Novos Modelos de Trabalho', 
-        'desafios': 'Saúde Mental e Bem-Estar, Gestão da Cultura Híbrida', 
-        'orcamento_real': 'De 10 milhões até 50 milhões', 'receita': 'Acima de 1bilhao', 
-        'funcionarios': 'De 1000 a 5000 funcionários', 'prazo': '0 - 3 meses', 'solucao': '-', 'comentarios_caio': ''
+        "ID": 7,
+        "Nome": "Camila Alves Massaro",
+        "Empresa": "ArcelorMittal Gonvarri",
+        "Cargo": "Director of People, Strategy & IT",
+        "Quais desafios te trouxeram até aqui?": "Retenção de Talentos e Rotatividade (Turnover), Saúde Mental e Bem-Estar, Gestão da Cultura Híbrida, Diversidade, Equidade e Inclusão (DE&I), Adoção e Integração de IA/Automação, People Analytics e Decisão Baseada em Dados, Alinhamento Estratégico com a Alta Direção, Gestão de Mudança Organizacional, Construção de uma Proposta de Valor ao Empregado (EVP) Forte",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Novos Modelos de Trabalho, Automação de Processos no RH, Gestão da Mudança, Cultura Organizacional",
+        "Qual é o prazo estimado para a sua": "13 - 18 meses",
+        "Qual solução você gostaria de enten": "Gestão de Mudança e Cultura Organizacional",
+        "Sou responsável pela decisão e budg": "Eu sou o principal decisor (a) sobre a escolha",
+        "Qual é a estimativa do orçamento an": "De 50 milhões até 100 milhões",
+        "Número de funcionários:": "De 500 a 1000 funcionários",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 58,
+        "LinkedIn": "https://www.linkedin.com/in/camilamassaro-rh",
+        "Descrição Empresa": "Processamento e distribuição de aço.",
+        "Comentários Caio": "Temos contato, fizemos várias propostas negadas mas nunca foi vendido. quem tem contato lá é o victor pontello",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 1"
+    },
+    {
+        "ID": 5,
+        "Nome": "Brenda Donato Endo",
+        "Empresa": "Embracon",
+        "Cargo": "Diretora de RH",
+        "Quais desafios te trouxeram até aqui?": "Saúde Mental e Bem-Estar, Gestão da Cultura Híbrida, Diversidade, Equidade e Inclusão (DE&I), Alinhamento Estratégico com a Alta Direção, Sustentabilidade e ESG no RH",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Novos Modelos de Trabalho, Cultura Organizacional, Saúde Corporativa e Bem Estar, Diversidade e Inclusão",
+        "Qual é o prazo estimado para a sua": "0 - 3 meses",
+        "Qual solução você gostaria de enten": "-",
+        "Sou responsável pela decisão e budg": "Eu sou o principal decisor (a) sobre a escolha",
+        "Qual é a estimativa do orçamento an": "De 10 milhões até 50 milhões",
+        "Número de funcionários:": "De 1000 a 5000 funcionários",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 56,
+        "LinkedIn": "https://www.linkedin.com/in/brenda-donato-endo-78275041",
+        "Descrição Empresa": "Administradora de consórcios de bens.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 1"
+    },
+    {
+        "ID": 6,
+        "Nome": "Bruno Szarf",
+        "Empresa": "Stefanini",
+        "Cargo": "VP Global",
+        "Quais desafios te trouxeram até aqui?": "Desenvolvimento de Lideranças, Adoção e Integração de IA/Automação, People Analytics e Decisão Baseada em Dados",
+        "Tem interesse em conhecer parceiros": "Não",
+        "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Aquisição e Retenção de Talentos, Cultura Organizacional",
+        "Qual é o prazo estimado para a sua": "4 - 6 meses",
+        "Qual solução você gostaria de enten": "-",
+        "Sou responsável pela decisão e budg": "Eu sou o principal decisor (a) sobre a escolha",
+        "Qual é a estimativa do orçamento an": "De 10 milhões até 50 milhões",
+        "Número de funcionários:": "Acima de 10000",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 56,
+        "LinkedIn": "https://www.linkedin.com/in/brunoszarf",
+        "Descrição Empresa": "Consultoria e soluções em TI.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 1"
+    },
+    {
+        "ID": 33,
+        "Nome": "Patrícia Rosado",
+        "Empresa": "Tupy",
+        "Cargo": "VP de Pessoas, Cultura e SSMA",
+        "Quais desafios te trouxeram até aqui?": "Gestão da Cultura Híbrida, Adoção e Integração de IA/Automação, Atualização Constante de Habilidades (Skills Gap), Gestão de Mudança Organizacional",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Automação de Processos no RH, Gestão da Mudança, Cultura Organizacional",
+        "Qual é o prazo estimado para a sua": "4 - 6 meses",
+        "Qual solução você gostaria de enten": "Nada específico, quero conhecer o que tiver relacionado",
+        "Sou responsável pela decisão e budg": "Eu sou o principal decisor (a) sobre a escolha",
+        "Qual é a estimativa do orçamento an": "De 2 milhões até 10 milhões",
+        "Número de funcionários:": "Acima de 10000",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 54,
+        "LinkedIn": "https://www.linkedin.com/in/patricia-rosado-b15ba01a",
+        "Descrição Empresa": "Metalúrgica e fundição de componentes.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 1"
+    },
+    {
+        "ID": 20,
+        "Nome": "Franciele Ropelato",
+        "Empresa": "Merck",
+        "Cargo": "Diretora De RH",
+        "Quais desafios te trouxeram até aqui?": "Retenção de Talentos e Rotatividade (Turnover), Saúde Mental e Bem-Estar, Desenvolvimento de Lideranças",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Novos Modelos de Trabalho, Automação de Processos no RH, Saúde Corporativa e Bem Estar, Diversidade e Inclusão",
+        "Qual é o prazo estimado para a sua": "7 - 12 meses",
+        "Qual solução você gostaria de enten": "Todas",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "Acima de 100 milhões",
+        "Número de funcionários:": "Acima de 10000",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 54,
+        "LinkedIn": "",
+        "Descrição Empresa": "Indústria farmacêutica e química global.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "SIM (Novo)",
+        "Tier Final": "Tier 1"
+    },
+    {
+        "ID": 35,
+        "Nome": "RITA SOUZA",
+        "Empresa": "Bunge Alimentos",
+        "Cargo": "Diretora Gestão Mudança Organizacional",
+        "Quais desafios te trouxeram até aqui?": "Adoção e Integração de IA/Automação, Gestão de Mudança Organizacional",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Gestão da Mudança, Cultura Organizacional",
+        "Qual é o prazo estimado para a sua": "7 - 12 meses",
+        "Qual solução você gostaria de enten": "Adoção IA",
+        "Sou responsável pela decisão e budg": "Eu sou o principal decisor (a) sobre a escolha",
+        "Qual é a estimativa do orçamento an": "De 2 milhões até 10 milhões",
+        "Número de funcionários:": "Acima de 10000",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 54,
+        "LinkedIn": "https://www.linkedin.com/in/rita-souza-neurochange/",
+        "Descrição Empresa": "Processamento de grãos e óleos.",
+        "Comentários Caio": "É cliente atual. Quem lidera a conta é o Mauricio e o Lourenço. Principal buyer é o Felipe Miana",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 1"
+    },
+    {
+        "ID": 38,
+        "Nome": "Soraya Bahde",
+        "Empresa": "Bradesco",
+        "Cargo": "Diretora",
+        "Quais desafios te trouxeram até aqui?": "Desenvolvimento de Lideranças, Adoção e Integração de IA/Automação, Atualização Constante de Habilidades (Skills Gap), Gestão de Mudança Organizacional",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Gestão da Mudança, Cultura Organizacional, Saúde Corporativa e Bem Estar, Diversidade e Inclusão",
+        "Qual é o prazo estimado para a sua": "Mais 18 meses",
+        "Qual solução você gostaria de enten": "Treinamento e desenvolvimento",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "Acima de 100 milhões",
+        "Número de funcionários:": "Acima de 10000",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 54,
+        "LinkedIn": "https://www.linkedin.com/in/sorayabahde",
+        "Descrição Empresa": "Serviços bancários e financeiros completos.",
+        "Comentários Caio": "A finor conhece o pessoal de lá, acho que é o Tiago. é um cliente atual",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 1"
+    },
+    {
+        "ID": 32,
+        "Nome": "Patricia Bobbato",
+        "Empresa": "Natura",
+        "Cargo": "Diretora de Cultura, Desenvolvimento, Bem estar e DE&I",
+        "Quais desafios te trouxeram até aqui?": "Adoção e Integração de IA/Automação, Atualização Constante de Habilidades (Skills Gap), Construção de uma Proposta de Valor ao Empregado (EVP) Forte",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Novos Modelos de Trabalho, Cultura Organizacional, Saúde Corporativa e Bem Estar",
+        "Qual é o prazo estimado para a sua": "7 - 12 meses",
+        "Qual solução você gostaria de enten": "EVP é Skill based",
+        "Sou responsável pela decisão e budg": "Eu sou o principal decisor (a) sobre a escolha",
+        "Qual é a estimativa do orçamento an": "Abaixo de 2 milhões",
+        "Número de funcionários:": "Acima de 10000",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 52,
+        "LinkedIn": "https://www.linkedin.com/in/patriciabobbato",
+        "Descrição Empresa": "Cosméticos e produtos de higiene.",
+        "Comentários Caio": "Acho que tamo fazendo proposta lá. Quem tá liderando é o Mauricio aparentemente, mas acho que o Selli tem contexto. não é cliente, apenas lead",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 1"
+    },
+    {
+        "ID": 8,
+        "Nome": "Camilla Padua",
+        "Empresa": "KPMG Consultoria Ltda",
+        "Cargo": "Sócia",
+        "Quais desafios te trouxeram até aqui?": "Alinhamento Estratégico com a Alta Direção",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Novos Modelos de Trabalho",
+        "Qual é o prazo estimado para a sua": "0 - 3 meses",
+        "Qual solução você gostaria de enten": "Palestrante",
+        "Sou responsável pela decisão e budg": "Eu sou o principal decisor (a) sobre a escolha",
+        "Qual é a estimativa do orçamento an": "Palestrante",
+        "Número de funcionários:": "De 5000 a 10000 funcionários",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 50,
+        "LinkedIn": "",
+        "Descrição Empresa": "Consultoria e auditoria corporativa.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "SIM (Novo)",
+        "Tier Final": "Tier 1"
+    },
+    {
+        "ID": 13,
+        "Nome": "Daniela Monteiro",
+        "Empresa": "Editora do Brasil",
+        "Cargo": "Diretora de RH & Marca",
+        "Quais desafios te trouxeram até aqui?": "Adoção e Integração de IA/Automação",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Automação de Processos no RH",
+        "Qual é o prazo estimado para a sua": "0 - 3 meses",
+        "Qual solução você gostaria de enten": "-",
+        "Sou responsável pela decisão e budg": "Eu sou o principal decisor (a) sobre a escolha",
+        "Qual é a estimativa do orçamento an": "De 50 milhões até 100 milhões",
+        "Número de funcionários:": "Abaixo de 500 funcionários",
+        "Receita anual da empresa (em Reais)": "De 250 milhoes até 500 milhoes",
+        "Score": 49,
+        "LinkedIn": "https://br.linkedin.com/in/daniela-monteiro-a3125970",
+        "Descrição Empresa": "Publicação de livros didáticos e literários.",
+        "Comentários Caio": "Tamo tentando vender um projeto de agentes lá. Quem tem contato é o Selli",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 2"
+    },
+    {
+        "ID": 16,
+        "Nome": "Diná Ribeiro de Carvalho",
+        "Empresa": "Superlógica",
+        "Cargo": "Diretora de Gente e Gestão",
+        "Quais desafios te trouxeram até aqui?": "Retenção de Talentos e Rotatividade (Turnover), Saúde Mental e Bem-Estar, Gestão da Cultura Híbrida, Adoção e Integração de IA/Automação",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Novos Modelos de Trabalho, Automação de Processos no RH, Aquisição e Retenção de Talentos, Saúde Corporativa e Bem Estar",
+        "Qual é o prazo estimado para a sua": "4 - 6 meses",
+        "Qual solução você gostaria de enten": "Saúde Mental / IA para G&G",
+        "Sou responsável pela decisão e budg": "Eu sou o principal decisor (a) sobre a escolha",
+        "Qual é a estimativa do orçamento an": "De 2 milhões até 10 milhões",
+        "Número de funcionários:": "De 1000 a 5000 funcionários",
+        "Receita anual da empresa (em Reais)": "De 500 milhoes até 750 milhoes",
+        "Score": 48,
+        "LinkedIn": "https://br.linkedin.com/in/din%C3%A1-ribeiro-de-carvalho-a1a184348",
+        "Descrição Empresa": "Software de gestão para condomínios.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 2"
+    },
+    {
+        "ID": 31,
+        "Nome": "Neto Mello",
+        "Empresa": "Adimax",
+        "Cargo": "Diretor de RH / CHRO",
+        "Quais desafios te trouxeram até aqui?": "Saúde Mental e Bem-Estar, Desenvolvimento de Lideranças, Gestão de Mudança Organizacional",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Recrutamento e Seleção, Cultura Organizacional",
+        "Qual é o prazo estimado para a sua": "7 - 12 meses",
+        "Qual solução você gostaria de enten": "Liderança e Cultura",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "De 2 milhões até 10 milhões",
+        "Número de funcionários:": "De 1000 a 5000 funcionários",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 48,
+        "LinkedIn": "https://www.linkedin.com/in/netomello",
+        "Descrição Empresa": "Fabricação de alimentos para pets.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 2"
+    },
+    {
+        "ID": 42,
+        "Nome": "Willian Souza",
+        "Empresa": "EMS",
+        "Cargo": "Diretor de Governança e Treinamento",
+        "Quais desafios te trouxeram até aqui?": "Retenção de Talentos e Rotatividade (Turnover), Saúde Mental e Bem-Estar, Desenvolvimento de Lideranças, People Analytics e Decisão Baseada em Dados, Alinhamento Estratégico com a Alta Direção, Gestão de Mudança Organizacional",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Aquisição e Retenção de Talentos, Gestão da Mudança",
+        "Qual é o prazo estimado para a sua": "4 - 6 meses",
+        "Qual solução você gostaria de enten": "Treinamento e tomada de decisão apoiada por dados",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "De 2 milhões até 10 milhões",
+        "Número de funcionários:": "Acima de 10000",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 48,
+        "LinkedIn": "https://www.linkedin.com/in/willian-souza-63874147",
+        "Descrição Empresa": "Indústria farmacêutica e medicamentos genéricos.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 2"
+    },
+    {
+        "ID": 15,
+        "Nome": "Danila Pires Carsoso",
+        "Empresa": "Motiva",
+        "Cargo": "Diretor",
+        "Quais desafios te trouxeram até aqui?": "Retenção de Talentos e Rotatividade (Turnover), Desenvolvimento de Lideranças, Adoção e Integração de IA/Automação, Gestão de Mudança Organizacional",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Automação de Processos no RH, Aquisição e Retenção de Talentos, Cultura Organizacional",
+        "Qual é o prazo estimado para a sua": "4 - 6 meses",
+        "Qual solução você gostaria de enten": "Aquisição e retenção de talentos",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "Abaixo de 2 milhões",
+        "Número de funcionários:": "Acima de 10000",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 46,
+        "LinkedIn": "",
+        "Descrição Empresa": "Soluções de atendimento e telemarketing.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 2"
+    },
+    {
+        "ID": 21,
+        "Nome": "Frederico Consetino Neto",
+        "Empresa": "Afya",
+        "Cargo": "Diretor de Recursos Humanos",
+        "Quais desafios te trouxeram até aqui?": "Retenção de Talentos e Rotatividade (Turnover), Saúde Mental e Bem-Estar, Gestão da Cultura Híbrida, Desenvolvimento de Lideranças, Diversidade, Equidade e Inclusão (DE&I), Adoção e Integração de IA/Automação, Cibersegurança e Privacidade de Dados, People Analytics e Decisão Baseada em Dados, Atualização Constante de Habilidades (Skills Gap), Alinhamento Estratégico com a Alta Direção, Gestão de Mudança Organizacional, Construção de uma Proposta de Valor ao Empregado (EVP) Forte, Sustentabilidade e ESG no RH",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Benefícios Flexíveis, Saúde Corporativa e Bem Estar",
+        "Qual é o prazo estimado para a sua": "7 - 12 meses",
+        "Qual solução você gostaria de enten": "Adoção e Integração de IA/Automação",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "Abaixo de 2 milhões",
+        "Número de funcionários:": "De 5000 a 10000 funcionários",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 46,
+        "LinkedIn": "https://www.linkedin.com/in/frederico-cosentino-b67b1a20",
+        "Descrição Empresa": "Educação médica e tecnologias digitais.",
+        "Comentários Caio": "Contato antigo, que morreu faz tempo. acho que não temos mais contato hoje",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 2"
+    },
+    {
+        "ID": 22,
+        "Nome": "Gerson Cosme santos",
+        "Empresa": "GHT",
+        "Cargo": "Diretor gente & performance",
+        "Quais desafios te trouxeram até aqui?": "Adoção e Integração de IA/Automação, Atualização Constante de Habilidades (Skills Gap), Alinhamento Estratégico com a Alta Direção",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Automação de Processos no RH",
+        "Qual é o prazo estimado para a sua": "0 - 3 meses",
+        "Qual solução você gostaria de enten": "Automação",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "Abaixo de 2 milhões",
+        "Número de funcionários:": "De 500 a 1000 funcionários",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 46,
+        "LinkedIn": "https://www.linkedin.com/in/gerson-cosme-santos",
+        "Descrição Empresa": "Peças para máquinas pesadas (mineração).",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 2"
+    },
+    {
+        "ID": 2,
+        "Nome": "Ana Luiza Guimarães Brasil",
+        "Empresa": "Fortbras",
+        "Cargo": "Diretor de Gente e Gestão",
+        "Quais desafios te trouxeram até aqui?": "Retenção de Talentos e Rotatividade (Turnover), Gestão da Cultura Híbrida, Desenvolvimento de Lideranças, Alinhamento Estratégico com a Alta Direção, Gestão de Mudança Organizacional",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Automação de Processos no RH",
+        "Qual é o prazo estimado para a sua": "7 - 12 meses",
+        "Qual solução você gostaria de enten": "neste momento não tenho nenhuma",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "Abaixo de 2 milhões",
+        "Número de funcionários:": "De 5000 a 10000 funcionários",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 46,
+        "LinkedIn": "https://www.linkedin.com/in/brasilana",
+        "Descrição Empresa": "Distribuição de autopeças e serviços.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 2"
+    },
+    {
+        "ID": 36,
+        "Nome": "Rosangela Schneider",
+        "Empresa": "Karsten SA",
+        "Cargo": "CHRO",
+        "Quais desafios te trouxeram até aqui?": "Desenvolvimento de Lideranças, Adoção e Integração de IA/Automação, People Analytics e Decisão Baseada em Dados, Atualização Constante de Habilidades (Skills Gap), Gestão de Mudança Organizacional, Construção de uma Proposta de Valor ao Empregado (EVP) Forte",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Aquisição e Retenção de Talentos, Cultura Organizacional, Saúde Corporativa e Bem Estar",
+        "Qual é o prazo estimado para a sua": "13 - 18 meses",
+        "Qual solução você gostaria de enten": "IA e automação no RH e na empresa",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "De 2 milhões até 10 milhões",
+        "Número de funcionários:": "De 1000 a 5000 funcionários",
+        "Receita anual da empresa (em Reais)": "De 750 milhoes até 1bilhao",
+        "Score": 45,
+        "LinkedIn": "",
+        "Descrição Empresa": "Indústria têxtil (cama, mesa e banho).",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "SIM (Novo)",
+        "Tier Final": "Tier 2"
+    },
+    {
+        "ID": 40,
+        "Nome": "Thais Cristina de Abreu Vendramini Ferreira",
+        "Empresa": "G5 Partners",
+        "Cargo": "Vice President - People and Culture Manager",
+        "Quais desafios te trouxeram até aqui?": "Desenvolvimento de Lideranças, Adoção e Integração de IA/Automação, People Analytics e Decisão Baseada em Dados, Atualização Constante de Habilidades (Skills Gap), Alinhamento Estratégico com a Alta Direção, Gestão de Mudança Organizacional",
+        "Tem interesse em conhecer parceiros": "Não",
+        "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Automação de Processos no RH, Gestão da Mudança, Cultura Organizacional, Software de Gestão para RH",
+        "Qual é o prazo estimado para a sua": "7 - 12 meses",
+        "Qual solução você gostaria de enten": "Gostaria de entender melhor temas e possibilidades de como aplicar e ficar mais próximo dos exceutivos e decisores",
+        "Sou responsável pela decisão e budg": "Eu sou o principal decisor (a) sobre a escolha",
+        "Qual é a estimativa do orçamento an": "Abaixo de 2 milhões",
+        "Número de funcionários:": "Abaixo de 500 funcionários",
+        "Receita anual da empresa (em Reais)": "Abaixo de 250milhoes",
+        "Score": 43,
+        "LinkedIn": "https://www.linkedin.com/in/thais-vendramini/",
+        "Descrição Empresa": "Gestão de patrimônio e investimentos.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 2"
+    },
+    {
+        "ID": 4,
+        "Nome": "Angelo Fanti",
+        "Empresa": "Sorocaba Refrescos S/A",
+        "Cargo": "Diretor Recursos Humanos",
+        "Quais desafios te trouxeram até aqui?": "Retenção de Talentos e Rotatividade (Turnover), Saúde Mental e Bem-Estar, Adoção e Integração de IA/Automação, Gestão de Mudança Organizacional",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Aquisição e Retenção de Talentos",
+        "Qual é o prazo estimado para a sua": "7 - 12 meses",
+        "Qual solução você gostaria de enten": "Impactos da IA na cultura organizacional",
+        "Sou responsável pela decisão e budg": "Eu sou o principal decisor (a) sobre a escolha",
+        "Qual é a estimativa do orçamento an": "abaixo de 1 milhão",
+        "Número de funcionários:": "De 1000 a 5000 funcionários",
+        "Receita anual da empresa (em Reais)": "De 250 milhoes até 500 milhoes",
+        "Score": 43,
+        "LinkedIn": "https://br.linkedin.com/in/angelo-fanti-58a4a821",
+        "Descrição Empresa": "Fabricação e distribuição de bebidas.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 2"
+    },
+    {
+        "ID": 25,
+        "Nome": "Juliana Dorigo",
+        "Empresa": "Grupo Ecoagro",
+        "Cargo": "Diretora de RH",
+        "Quais desafios te trouxeram até aqui?": "Sustentabilidade e ESG no RH",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Cultura Organizacional, Gestão de Desempenho e Talentos",
+        "Qual é o prazo estimado para a sua": "0 - 3 meses",
+        "Qual solução você gostaria de enten": "Alinhamento Estratégico com a Alta Direção",
+        "Sou responsável pela decisão e budg": "Eu sou o principal decisor (a) sobre a escolha",
+        "Qual é a estimativa do orçamento an": "Abaixo de 2 milhões",
+        "Número de funcionários:": "Abaixo de 500 funcionários",
+        "Receita anual da empresa (em Reais)": "Abaixo de 250milhoes",
+        "Score": 43,
+        "LinkedIn": "https://www.linkedin.com/in/julianadorigorh",
+        "Descrição Empresa": "Consultoria e estruturação de agronegócio.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 2"
+    },
+    {
+        "ID": 39,
+        "Nome": "Tâmara Costa",
+        "Empresa": "SantoDigital",
+        "Cargo": "Diretora de RH",
+        "Quais desafios te trouxeram até aqui?": "Gestão da Cultura Híbrida, Desenvolvimento de Lideranças, Adoção e Integração de IA/Automação, People Analytics e Decisão Baseada em Dados, Atualização Constante de Habilidades (Skills Gap), Gestão de Mudança Organizacional",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Novos Modelos de Trabalho, Automação de Processos no RH, Recrutamento e Seleção, Cultura Organizacional",
+        "Qual é o prazo estimado para a sua": "4 - 6 meses",
+        "Qual solução você gostaria de enten": "Desenvolvimento de líderes, automação para RH",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "Abaixo de 2 milhões",
+        "Número de funcionários:": "Abaixo de 500 funcionários",
+        "Receita anual da empresa (em Reais)": "De 500 milhoes até 750 milhoes",
+        "Score": 40,
+        "LinkedIn": "https://www.linkedin.com/in/tamiscosta",
+        "Descrição Empresa": "Consultoria em nuvem (Google Cloud).",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 2"
+    },
+    {
+        "ID": 28,
+        "Nome": "Mariana Macedo Gaida",
+        "Empresa": "Uncover",
+        "Cargo": "Head of People",
+        "Quais desafios te trouxeram até aqui?": "Desenvolvimento de Lideranças, Adoção e Integração de IA/Automação, Alinhamento Estratégico com a Alta Direção",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Automação de Processos no RH, Aquisição e Retenção de Talentos, Software de Gestão para RH",
+        "Qual é o prazo estimado para a sua": "4 - 6 meses",
+        "Qual solução você gostaria de enten": "Automacao de RH",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "De 2 milhões até 10 milhões",
+        "Número de funcionários:": "Abaixo de 500 funcionários",
+        "Receita anual da empresa (em Reais)": "Abaixo de 250milhoes",
+        "Score": 39,
+        "LinkedIn": "",
+        "Descrição Empresa": "Tecnologia e otimização de dados.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "SIM (Novo)",
+        "Tier Final": "Tier 2"
+    },
+    {
+        "ID": 1,
+        "Nome": "Aldo Silva dos Santos",
+        "Empresa": "HCOSTA",
+        "Cargo": "CHRO Gente e Gestão",
+        "Quais desafios te trouxeram até aqui?": "Retenção de Talentos e Rotatividade (Turnover), Saúde Mental e Bem-Estar, Gestão da Cultura Híbrida, Desenvolvimento de Lideranças, People Analytics e Decisão Baseada em Dados, Alinhamento Estratégico com a Alta Direção, Gestão de Mudança Organizacional, Sustentabilidade e ESG no RH",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Novos Modelos de Trabalho, Automação de Processos no RH, Gestão da Mudança, Cultura Organizacional, Software de Gestão para RH",
+        "Qual é o prazo estimado para a sua": "13 - 18 meses",
+        "Qual solução você gostaria de enten": "Saude Metal (NR1), DHO, Sistemas de Gestão RH",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "Abaixo de 2 milhões",
+        "Número de funcionários:": "De 1000 a 5000 funcionários",
+        "Receita anual da empresa (em Reais)": "Abaixo de 250milhoes",
+        "Score": 37,
+        "LinkedIn": "https://www.linkedin.com/in/aldo-santos-a4985353/",
+        "Descrição Empresa": "Escritório de advocacia e cobrança.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 2"
+    },
+    {
+        "ID": 23,
+        "Nome": "GIOVANI CARRA",
+        "Empresa": "ADF ONDULADOS E LOGISTICA",
+        "Cargo": "DIRETOR DE RH",
+        "Quais desafios te trouxeram até aqui?": "Desenvolvimento de Lideranças, Alinhamento Estratégico com a Alta Direção, Gestão de Mudança Organizacional, Sustentabilidade e ESG no RH",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Cultura Organizacional",
+        "Qual é o prazo estimado para a sua": "13 - 18 meses",
+        "Qual solução você gostaria de enten": "ALINHAMENTO ESTRATEGICO",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "Abaixo de 2 milhões",
+        "Número de funcionários:": "Abaixo de 500 funcionários",
+        "Receita anual da empresa (em Reais)": "Abaixo de 250milhoes",
+        "Score": 37,
+        "LinkedIn": "https://www.linkedin.com/in/giovani-carra-65858a33",
+        "Descrição Empresa": "Embalagens de papelão e logística.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 2"
+    },
+    {
+        "ID": 10,
+        "Nome": "Caroline Faki de Miranda",
+        "Empresa": "Vigor Alimentos",
+        "Cargo": "Head de Business Partner",
+        "Quais desafios te trouxeram até aqui?": "Retenção de Talentos e Rotatividade (Turnover), Gestão da Cultura Híbrida, Desenvolvimento de Lideranças, Diversidade, Equidade e Inclusão (DE&I), Adoção e Integração de IA/Automação, Atualização Constante de Habilidades (Skills Gap), Alinhamento Estratégico com a Alta Direção",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Novos Modelos de Trabalho, Automação de Processos no RH, Aquisição e Retenção de Talentos, Cultura Organizacional, Software de Gestão para RH",
+        "Qual é o prazo estimado para a sua": "7 - 12 meses",
+        "Qual solução você gostaria de enten": "Sobre de IA",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "Abaixo de 2 milhões",
+        "Número de funcionários:": "De 1000 a 5000 funcionários",
+        "Receita anual da empresa (em Reais)": "Abaixo de 250milhoes",
+        "Score": 37,
+        "LinkedIn": "https://www.linkedin.com/in/caroline-faki-68338285",
+        "Descrição Empresa": "Produção de laticínios e derivados.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 2"
+    },
+    {
+        "ID": 17,
+        "Nome": "Diogo Dourado Soares",
+        "Empresa": "Festo Brasil",
+        "Cargo": "Head of HR CoE SAM",
+        "Quais desafios te trouxeram até aqui?": "Gestão da Cultura Híbrida, Desenvolvimento de Lideranças, Diversidade, Equidade e Inclusão (DE&I), Adoção e Integração de IA/Automação, People Analytics e Decisão Baseada em Dados, Atualização Constante de Habilidades (Skills Gap), Alinhamento Estratégico com a Alta Direção, Gestão de Mudança Organizacional",
+        "Tem interesse em conhecer parceiros": "Não",
+        "Quais são as prioridades de investi": "Automação de Processos no RH, Gestão da Mudança, Cultura Organizacional",
+        "Qual é o prazo estimado para a sua": "4 - 6 meses",
+        "Qual solução você gostaria de enten": "Automação de processos para RH",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "Abaixo de 2 milhões",
+        "Número de funcionários:": "De 500 a 1000 funcionários",
+        "Receita anual da empresa (em Reais)": "De 250 milhoes até 500 milhoes",
+        "Score": 37,
+        "LinkedIn": "",
+        "Descrição Empresa": "Automação industrial e pneumática.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "SIM (Novo)",
+        "Tier Final": "Tier 2"
+    },
+    {
+        "ID": 27,
+        "Nome": "Leonardo Rodrigues Gaspar",
+        "Empresa": "SIMPRESS COMERCIO LOCACAO E SERVICOS LTDA",
+        "Cargo": "Gerente Executivo de Recursos Humanos",
+        "Quais desafios te trouxeram até aqui?": "Retenção de Talentos e Rotatividade (Turnover), Saúde Mental e Bem-Estar, Desenvolvimento de Lideranças, Adoção e Integração de IA/Automação, Cibersegurança e Privacidade de Dados, People Analytics e Decisão Baseada em Dados, Atualização Constante de Habilidades (Skills Gap)",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Novos Modelos de Trabalho, Automação de Processos no RH, Aquisição e Retenção de Talentos, Recrutamento e Seleção, Gestão da Mudança, Cultura Organizacional, Saúde Corporativa e Bem Estar",
+        "Qual é o prazo estimado para a sua": "7 - 12 meses",
+        "Qual solução você gostaria de enten": "Entender melhor soluções que integrem Inteligência Artificial aplicada a People Analytics, com foco em descentralização da informação para gestores e tomada de decisão mais ágil e orientada a dados.",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "De 50 milhões até 100 milhões",
+        "Número de funcionários:": "De 1000 a 5000 funcionários",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 32,
+        "LinkedIn": "",
+        "Descrição Empresa": "Outsourcing de equipamentos de TI e impressão.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "SIM (Novo)",
+        "Tier Final": "Tier 3"
+    },
+    {
+        "ID": 24,
+        "Nome": "Jader Eder Bleil",
+        "Empresa": "Greenbrier Maxion Equipamentos e Serviços Ferroviários S/A",
+        "Cargo": "Gerente RT",
+        "Quais desafios te trouxeram até aqui?": "Retenção de Talentos e Rotatividade (Turnover), Desenvolvimento de Lideranças, People Analytics e Decisão Baseada em Dados, Alinhamento Estratégico com a Alta Direção, Gestão de Mudança Organizacional, Sustentabilidade e ESG no RH",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Automação de Processos no RH, Aquisição e Retenção de Talentos, Gestão da Mudança, Cultura Organizacional, Saúde Corporativa e Bem Estar",
+        "Qual é o prazo estimado para a sua": "13 - 18 meses",
+        "Qual solução você gostaria de enten": "Aquisições e Retenção de Talentos",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "De 10 milhões até 50 milhões",
+        "Número de funcionários:": "De 500 a 1000 funcionários",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 30,
+        "LinkedIn": "https://www.linkedin.com/in/jader-%C3%A9der-bleil-41115225",
+        "Descrição Empresa": "Vagões ferroviários e serviços industriais.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 3"
+    },
+    {
+        "ID": 14,
+        "Nome": "Daniela Nishimoto",
+        "Empresa": "Grupo L'Oréal",
+        "Cargo": "Diretora/ Executiva de Relações Humanas",
+        "Quais desafios te trouxeram até aqui?": "",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "",
+        "Qual é o prazo estimado para a sua": "7 - 12 meses",
+        "Qual solução você gostaria de enten": "",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "",
+        "Número de funcionários:": "Acima de 10000",
+        "Receita anual da empresa (em Reais)": "Outro",
+        "Score": 29,
+        "LinkedIn": "https://www.linkedin.com/in/daniela-nishimoto-00b63b1",
+        "Descrição Empresa": "Fabricação global de produtos cosméticos.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 3"
+    },
+    {
+        "ID": 43,
+        "Nome": "Daniele Intrebartoli Costa",
+        "Empresa": "Heineken",
+        "Cargo": "Gerente Sr People",
+        "Quais desafios te trouxeram até aqui?": "Saúde Mental e Bem-Estar, Inteligencia Artificial, Saude Mental e Bem estar, Produtividade, Date Analytics",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Saúde Corporativa e Bem Estar, Gestao treinamentos funcionais",
+        "Qual é o prazo estimado para a sua": "7 - 12 meses",
+        "Qual solução você gostaria de enten": "Gestao treinamentos funcionais",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "De 2 milhões até 10 milhões",
+        "Número de funcionários:": "Acima de 10000",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 28,
+        "LinkedIn": "",
+        "Descrição Empresa": "Cervejaria e produção de bebidas.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "SIM (Novo)",
+        "Tier Final": "Tier 3"
+    },
+    {
+        "ID": 41,
+        "Nome": "Thamires Cristina Alves Pedro Justino",
+        "Empresa": "Alcoa Alumínio",
+        "Cargo": "Gerente de RH",
+        "Quais desafios te trouxeram até aqui?": "Desenvolvimento de Lideranças, Adoção e Integração de IA/Automação, Cibersegurança e Privacidade de Dados, People Analytics e Decisão Baseada em Dados, Alinhamento Estratégico com a Alta Direção",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Automação de Processos no RH",
+        "Qual é o prazo estimado para a sua": "7 - 12 meses",
+        "Qual solução você gostaria de enten": "Soluções global da gestão de ponto e folha de pagamento.",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "De 2 milhões até 10 milhões",
+        "Número de funcionários:": "De 5000 a 10000 funcionários",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 28,
+        "LinkedIn": "https://www.linkedin.com/in/thamires-pedro-15287611b/",
+        "Descrição Empresa": "Produção mundial de bauxita e alumínio.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 3"
+    },
+    {
+        "ID": 11,
+        "Nome": "Daniel Peruchi",
+        "Empresa": "Alcoa",
+        "Cargo": "Gerente Sênior RH",
+        "Quais desafios te trouxeram até aqui?": "Desenvolvimento de Lideranças, Adoção e Integração de IA/Automação, Cibersegurança e Privacidade de Dados, People Analytics e Decisão Baseada em Dados, Atualização Constante de Habilidades (Skills Gap), Alinhamento Estratégico com a Alta Direção, Gestão de Mudança Organizacional",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Automação de Processos no RH, Gestão da Mudança, Cultura Organizacional, Software de Gestão para RH",
+        "Qual é o prazo estimado para a sua": "7 - 12 meses",
+        "Qual solução você gostaria de enten": "IA como serviço de atendimento aos funcionários",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "De 2 milhões até 10 milhões",
+        "Número de funcionários:": "De 5000 a 10000 funcionários",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 28,
+        "LinkedIn": "https://www.linkedin.com/in/daniel-peruchi-6a09a0b9",
+        "Descrição Empresa": "Produção mundial de bauxita e alumínio.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 3"
+    },
+    {
+        "ID": 37,
+        "Nome": "Sabrina Geraldo Rosa Lemes",
+        "Empresa": "GBMX",
+        "Cargo": "Gerente EHS",
+        "Quais desafios te trouxeram até aqui?": "Saúde Mental e Bem-Estar, Sustentabilidade e ESG no RH",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Saúde Corporativa e Bem Estar",
+        "Qual é o prazo estimado para a sua": "13 - 18 meses",
+        "Qual solução você gostaria de enten": "Programas de saúde corporativos",
+        "Sou responsável pela decisão e budg": "Eu sou o principal decisor (a) sobre a escolha",
+        "Qual é a estimativa do orçamento an": "De 2 milhões até 10 milhões",
+        "Número de funcionários:": "De 5000 a 10000 funcionários",
+        "Receita anual da empresa (em Reais)": "De 500 milhoes até 750 milhoes",
+        "Score": 28,
+        "LinkedIn": "https://www.linkedin.com/in/sabrina-rosa-lemes-mba-4ba065107",
+        "Descrição Empresa": "Vagões ferroviários e serviços industriais.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 3"
+    },
+    {
+        "ID": 34,
+        "Nome": "Ricardo Malvestite",
+        "Empresa": "GBMX",
+        "Cargo": "Gerente Sr RH",
+        "Quais desafios te trouxeram até aqui?": "Desenvolvimento de Lideranças, Construção de uma Proposta de Valor ao Empregado (EVP) Forte",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Aquisição e Retenção de Talentos, Saúde Corporativa e Bem Estar",
+        "Qual é o prazo estimado para a sua": "13 - 18 meses",
+        "Qual solução você gostaria de enten": "Adoção e Integração de IA/Automação",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "De 2 milhões até 10 milhões",
+        "Número de funcionários:": "De 1000 a 5000 funcionários",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 28,
+        "LinkedIn": "https://www.linkedin.com/in/ricardo-malvestite-74b1936",
+        "Descrição Empresa": "Vagões ferroviários e serviços industriais.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 3"
+    },
+    {
+        "ID": 26,
+        "Nome": "Lenita David Gilioli Pedreira de Freitas",
+        "Empresa": "Flora Produtos",
+        "Cargo": "Gerente executiva de RH",
+        "Quais desafios te trouxeram até aqui?": "Desenvolvimento de Lideranças, Diversidade, Equidade e Inclusão (DE&I), Adoção e Integração de IA/Automação, People Analytics e Decisão Baseada em Dados, Alinhamento Estratégico com a Alta Direção",
+        "Tem interesse em conhecer parceiros": "Não",
+        "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Automação de Processos no RH, Saúde Corporativa e Bem Estar, Diversidade e Inclusão",
+        "Qual é o prazo estimado para a sua": "4 - 6 meses",
+        "Qual solução você gostaria de enten": "Automação de processos e desenvolvimento continuo da liderança sem mais do mesmo",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "De 2 milhões até 10 milhões",
+        "Número de funcionários:": "De 1000 a 5000 funcionários",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 28,
+        "LinkedIn": "https://www.linkedin.com/in/lenita-gilioli-freitas",
+        "Descrição Empresa": "Cosméticos e limpeza doméstica (Minuano).",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 3"
+    },
+    {
+        "ID": 29,
+        "Nome": "Michele Ferreira",
+        "Empresa": "Confiança Supermercados",
+        "Cargo": "Coordenadora de DHO",
+        "Quais desafios te trouxeram até aqui?": "Saúde Mental e Bem-Estar, Desenvolvimento de Lideranças",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Saúde Corporativa e Bem Estar",
+        "Qual é o prazo estimado para a sua": "Mais 18 meses",
+        "Qual solução você gostaria de enten": "Desenvolvimento de liderança e bem-estar",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "Abaixo de 2 milhões",
+        "Número de funcionários:": "De 5000 a 10000 funcionários",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 26,
+        "LinkedIn": "https://www.linkedin.com/in/michele-ferreira-16401083",
+        "Descrição Empresa": "Rede varejista de alimentos.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 3"
+    },
+    {
+        "ID": 44,
+        "Nome": "Marianna Biagi Pache",
+        "Empresa": "Emal - Empresa de Mineração Aripuanã",
+        "Cargo": "Gerente de Gestão de Pessoas e Administrativo",
+        "Quais desafios te trouxeram até aqui?": "Fui indicada a conhecer o evento.",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Recrutamento e Seleção, Software de Gestão para RH",
+        "Qual é o prazo estimado para a sua": "0 - 3 meses",
+        "Qual solução você gostaria de enten": "A eficiência das empresas.",
+        "Sou responsável pela decisão e budg": "Eu sou o principal decisor (a) sobre a escolha",
+        "Qual é a estimativa do orçamento an": "Abaixo de 2 milhões",
+        "Número de funcionários:": "De 500 a 1000 funcionários",
+        "Receita anual da empresa (em Reais)": "De 250 milhoes até 500 milhoes",
+        "Score": 23,
+        "LinkedIn": "",
+        "Descrição Empresa": "Extração e processamento de minérios.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "SIM (Novo)",
+        "Tier Final": "Tier 3"
+    },
+    {
+        "ID": 3,
+        "Nome": "ANDRE LUIZ EXPEDITO ARANHA",
+        "Empresa": "SUPERLOGICA",
+        "Cargo": "GERENTE DE REMUNERAÇÃO",
+        "Quais desafios te trouxeram até aqui?": "Adoção e Integração de IA/Automação, People Analytics e Decisão Baseada em Dados",
+        "Tem interesse em conhecer parceiros": "Não",
+        "Quais são as prioridades de investi": "Benefícios Flexíveis, Automação de Processos no RH, Saúde Corporativa e Bem Estar, Software de Gestão para RH",
+        "Qual é o prazo estimado para a sua": "0 - 3 meses",
+        "Qual solução você gostaria de enten": "AUTOMAÇÃO E IA",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "De 2 milhões até 10 milhões",
+        "Número de funcionários:": "De 500 a 1000 funcionários",
+        "Receita anual da empresa (em Reais)": "De 500 milhoes até 750 milhoes",
+        "Score": 22,
+        "LinkedIn": "https://www.linkedin.com/in/andrelearanha",
+        "Descrição Empresa": "Software de gestão para condomínios.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 3"
+    },
+    {
+        "ID": 30,
+        "Nome": "Nelson Simeoni Junior",
+        "Empresa": "Superlógica",
+        "Cargo": "Gerente de DHO",
+        "Quais desafios te trouxeram até aqui?": "Desenvolvimento de Lideranças, Adoção e Integração de IA/Automação, People Analytics e Decisão Baseada em Dados, Atualização Constante de Habilidades (Skills Gap), Alinhamento Estratégico com a Alta Direção, Gestão de Mudança Organizacional",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Automação de Processos no RH, Cultura Organizacional",
+        "Qual é o prazo estimado para a sua": "7 - 12 meses",
+        "Qual solução você gostaria de enten": "DHO",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "Abaixo de 2 milhões",
+        "Número de funcionários:": "Acima de 10000",
+        "Receita anual da empresa (em Reais)": "De 500 milhoes até 750 milhoes",
+        "Score": 20,
+        "LinkedIn": "https://www.linkedin.com/in/nelsonsimeoni",
+        "Descrição Empresa": "Software de gestão para condomínios.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 3"
+    },
+    {
+        "ID": 12,
+        "Nome": "Daniela Matos Faria",
+        "Empresa": "Zamp",
+        "Cargo": "Dir de Talentos e Cultura",
+        "Quais desafios te trouxeram até aqui?": "Retenção de Talentos e Rotatividade (Turnover), Desenvolvimento de Lideranças, People Analytics e Decisão Baseada em Dados",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Automação de Processos no RH, Aquisição e Retenção de Talentos",
+        "Qual é o prazo estimado para a sua": "0 - 3 meses",
+        "Qual solução você gostaria de enten": "",
+        "Sou responsável pela decisão e budg": "Eu sou o principal decisor (a) sobre a escolha",
+        "Qual é a estimativa do orçamento an": "De 2 milhões até 10 milhões",
+        "Número de funcionários:": "Acima de 10000",
+        "Receita anual da empresa (em Reais)": "Outro",
+        "Score": 19,
+        "LinkedIn": "https://www.linkedin.com/in/daniela-matos-faria",
+        "Descrição Empresa": "Operadora do Burger King e Popeyes.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "",
+        "Tier Final": "Tier 4"
+    },
+    {
+        "ID": 19,
+        "Nome": "FERNANDO SPINELLI",
+        "Empresa": "COMPANHIA DE CONCESSÕES RODOVIÁRIAS DO NOVO LITORAL DE SÃO PAULO - CNL Rodovias",
+        "Cargo": "Gerente de RH e SSO",
+        "Quais desafios te trouxeram até aqui?": "Retenção de Talentos e Rotatividade (Turnover), Desenvolvimento de Lideranças, Adoção e Integração de IA/Automação, Construção de uma Proposta de Valor ao Empregado (EVP) Forte",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Automação de Processos no RH, Aquisição e Retenção de Talentos, Recrutamento e Seleção, Cultura Organizacional",
+        "Qual é o prazo estimado para a sua": "0 - 3 meses",
+        "Qual solução você gostaria de enten": "Melhorar nossos processos de R&S, em especial a captação de candidatos.",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "De 10 milhões até 50 milhões",
+        "Número de funcionários:": "De 1000 a 5000 funcionários",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 19,
+        "LinkedIn": "",
+        "Descrição Empresa": "Concessionária de rodovias (Grupo CCR).",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "SIM (Novo)",
+        "Tier Final": "Tier 4"
+    },
+    {
+        "ID": 45,
+        "Nome": "Graziella Albuquerque",
+        "Empresa": "Emal Empresa de Mineração Aripuanã LTDA",
+        "Cargo": "Supervisora de RH",
+        "Quais desafios te trouxeram até aqui?": "Retenção de Talentos e Rotatividade (Turnover), Saúde Mental e Bem-Estar, Desenvolvimento de Lideranças",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Automação de Processos no RH, Aquisição e Retenção de Talentos, Recrutamento e Seleção, Cultura Organizacional",
+        "Qual é o prazo estimado para a sua": "0 - 3 meses",
+        "Qual solução você gostaria de enten": "Automações de processos, aquisição de software.",
+        "Sou responsável pela decisão e budg": "Eu não tenho influência nem participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "De 2 milhões até 10 milhões",
+        "Número de funcionários:": "De 500 a 1000 funcionários",
+        "Receita anual da empresa (em Reais)": "De 250 milhoes até 500 milhoes",
+        "Score": 17,
+        "LinkedIn": "",
+        "Descrição Empresa": "Extração e processamento de minérios.",
+        "Comentários Caio": "",
+        "Foto": "",
+        "Novo Lead": "SIM (Novo)",
+        "Tier Final": "Tier 4"
     }
 ]
 
-def calc_meta(score):
-    if score >= 48: return "Tier 1", "> R$ 1 Milhão", "pill-blue", 1500000
-    if score >= 39: return "Tier 2", "R$ 500k - 1M", "pill-magenta", 750000
-    return "Tier 3", "< R$ 500k", "pill-neutral", 250000
-
 vol_total = 0
+
 for l in LEADS_BASE:
-    l['t'], l['o'], l['c'], val = calc_meta(l['score'])
-    vol_total += val
+    l['id'] = l.get('ID')
+    l['nome'] = l.get('Nome', 'N/I')
+    l['empresa'] = l.get('Empresa', 'N/I')
+    l['cargo'] = l.get('Cargo', 'N/I')
+    
+    # Processar nível de decisão
+    raw_decisor = str(l.get('Sou responsável pela decisão e budg', '')).lower()
+    if 'principal decisor' in raw_decisor or 'sim' in raw_decisor:
+        l['decisor'] = 'Sim'
+    elif 'influenciador' in raw_decisor or 'participo' in raw_decisor:
+        l['decisor'] = 'Parcial'
+    else:
+        l['decisor'] = 'Não'
+        
+    l['score'] = l.get('Score', 0)
+    l['linkedin'] = l.get('LinkedIn', '#') if l.get('LinkedIn') else '#'
+    
+    # Mapeamento do Dossiê
+    l['bio'] = l.get('Descrição Empresa', 'N/I')
+    l['interesse'] = l.get('Quais são as prioridades de investi', 'N/I')
+    l['desafios'] = l.get('Quais desafios te trouxeram até aqui?', 'N/I')
+    l['orcamento_real'] = l.get('Qual é a estimativa do orçamento an', 'N/I')
+    l['receita'] = l.get('Receita anual da empresa (em Reais)', 'N/I')
+    l['funcionarios'] = l.get('Número de funcionários:', 'N/I')
+    l['prazo'] = l.get('Qual é o prazo estimado para a sua', 'N/I')
+    l['solucao'] = l.get('Qual solução você gostaria de enten', 'N/I')
+    l['comentarios_caio'] = l.get('Comentários Caio', '')
+    
+    # Obter Tier e Potencial diretamente do JSON
+    l['t'] = str(l.get('Tier Final', 'Tier 4')).strip()
+    l['o'] = str(l.get('Qual é a estimativa do orçamento an', 'N/I')).strip()
+    
+    # Cores da Etiqueta
+    if '1' in l['t']: l['c'] = 'pill-blue'
+    elif '2' in l['t']: l['c'] = 'pill-magenta'
+    else: l['c'] = 'pill-neutral'
+    
+    # Lógica de cálculo do Volume Pipeline para o Dashboard Executivo
+    o_lower = str(l.get('Qual é a estimativa do orçamento an', '')).lower()
+    if 'acima de 100' in o_lower: vol_total += 100_000_000
+    elif '50 milhões até 100' in o_lower: vol_total += 75_000_000
+    elif '10 milhões até 50' in o_lower: vol_total += 30_000_000
+    elif '2 milhões até 10' in o_lower: vol_total += 6_000_000
+    elif 'abaixo de 2' in o_lower or 'abaixo de 1' in o_lower: vol_total += 1_000_000
 
 df_leads = pd.DataFrame(LEADS_BASE)
 
@@ -347,7 +1340,7 @@ if st.session_state.view_mode == 'dashboard':
 
 elif st.session_state.view_mode == 'list':
     st.markdown('<h1>Strategic Pipeline</h1>', unsafe_allow_html=True)
-    sel = st.selectbox("Filtrar", ["Todos", "Tier 1", "Tier 2", "Tier 3"], label_visibility="collapsed")
+    sel = st.selectbox("Filtrar", ["Todos", "Tier 1", "Tier 2", "Tier 3", "Tier 4"], label_visibility="collapsed")
     f_leads = LEADS_BASE if sel == "Todos" else [l for l in LEADS_BASE if sel in l['t']]
     st.write("")
     
@@ -366,7 +1359,7 @@ elif st.session_state.view_mode == 'list':
         </div>
         <div style="display:flex; justify-content:space-between; align-items:center; padding-top:10px; border-top:1px solid rgba(128,128,128,0.2);">
             <span style="font-weight:600;">{l['empresa']}</span>
-            <span class="{l['c']}">{l['o']}</span>
+            <span class="{l['c']}" style="font-size: 0.85rem;">{l['o']}</span>
         </div></div>"""
         
         st.markdown(card, unsafe_allow_html=True)
@@ -389,18 +1382,16 @@ elif st.session_state.view_mode == 'detail':
         </div>
     """, unsafe_allow_html=True)
     
-    # Grid 2x2
     c1, c2 = st.columns(2)
     with c1: st.markdown(f'<div class="custom-metric-card"><p class="metric-label">Classificação</p><p class="metric-value">{l["t"]}</p></div>', unsafe_allow_html=True)
     with c2: st.markdown(f'<div class="custom-metric-card"><p class="metric-label">Score</p><p class="metric-value">{l["score"]} pts</p></div>', unsafe_allow_html=True)
     
     c3, c4 = st.columns(2)
     with c3: st.markdown(f'<div class="custom-metric-card"><p class="metric-label">Decisor</p><p class="metric-value">{l["decisor"]}</p></div>', unsafe_allow_html=True)
-    with c4: st.markdown(f'<div class="potencial-wrapper"><p class="metric-label" style="color:#8E8E93;">Potencial Est.</p><p class="potencial-val">{l["o"]}</p></div>', unsafe_allow_html=True)
+    with c4: st.markdown(f'<div class="potencial-wrapper"><p class="metric-label" style="color:#8E8E93;">Potencial Est.</p><p class="potencial-val" style="font-size: 1.1rem;">{l["o"]}</p></div>', unsafe_allow_html=True)
     
     st.write("")
     
-    # Dossiê Expandido
     with st.expander("📂 Visualizar Dossiê Completo"):
         ec1, ec2 = st.columns(2)
         ec1.markdown(f"**🏢 Receita:** {l.get('receita', 'N/I')}\n\n**👥 Funcionários:** {l.get('funcionarios', 'N/I')}\n\n**🎯 Desafios:** {l.get('desafios', 'N/I')}")
@@ -411,13 +1402,12 @@ elif st.session_state.view_mode == 'detail':
 
     st.divider()
     
-    # Timeline de Interações
     st.markdown("### Registro")
+    st.markdown("<p class='subtext' style='font-size: 0.9rem; margin-bottom: 10px;'>Adicionar Novo Registro (Texto ou Áudio)</p>", unsafe_allow_html=True)
     
     with st.form("intel_form", clear_on_submit=True):
         txt = st.text_area("Nota", placeholder="Descreva a interação ou novos insights...", label_visibility="collapsed")
         
-        # Audio input support
         audio_val = None
         if hasattr(st, 'audio_input'):
             audio_val = st.audio_input("Gravar Voice Note (Opcional)")
@@ -427,11 +1417,11 @@ elif st.session_state.view_mode == 'detail':
         if st.form_submit_button("Registrar Insight", type="primary", use_container_width=True):
             if txt.strip() or audio_val is not None:
                 audio_url = None
+                lid_safe = extract_linkedin_id(l['linkedin']) or str(l['id'])
                 if audio_val is not None:
-                    lid_safe = extract_linkedin_id(l['linkedin']) or str(l['id'])
                     audio_url = upload_audio_to_supabase(audio_val.read(), lid_safe)
                 
-                save_note_to_supabase(extract_linkedin_id(l['linkedin']) or str(l['id']), txt.strip(), audio_url)
+                save_note_to_supabase(lid_safe, txt.strip(), audio_url)
                 st.rerun()
     
     st.write("")
@@ -452,6 +1442,5 @@ elif st.session_state.view_mode == 'detail':
             </div>
             """, unsafe_allow_html=True)
             
-            # Use native Streamlit audio component to prevent base64 size limits & take advantage of Supabase public URLs
             if n.get('audio_url'):
                 st.audio(n['audio_url'])
