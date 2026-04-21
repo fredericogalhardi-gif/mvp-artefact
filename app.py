@@ -264,7 +264,7 @@ LEADS_BASE = [
     {
         "ID": 18,
         "Nome": "Elizabeth Sousa Rodrigues",
-        "Empresa": "Emal Empresa de Mineração Aripuanã LTDA",
+        "Empresa": "Grupo Mendes",
         "Cargo": "Diretor Executivo de Gente e Cultura",
         "Quais desafios te trouxeram até aqui?": "Retenção de Talentos e Rotatividade (Turnover), Saúde Mental e Bem-Estar, Gestão da Cultura Híbrida, Desenvolvimento de Lideranças",
         "Tem interesse em conhecer parceiros": "Sim",
@@ -278,9 +278,6 @@ LEADS_BASE = [
         "Score": 60,
         "LinkedIn": "https://www.linkedin.com/in/elizabeth-sousa-rodrigues-26086518/",
         "Descrição Empresa": "Extração e processamento de minérios.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "SIM (Novo)",
         "Tier Final": "Tier 1"
     },
     {
@@ -300,9 +297,6 @@ LEADS_BASE = [
         "Score": 60,
         "LinkedIn": "linkedin.com/in/carolinabussadorirh/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base%3Babq8i8z4RZix2BwTaxiEHg%3D%3D",
         "Descrição Empresa": "Rede de supermercados premium.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "SIM (Novo)",
         "Tier Final": "Tier 1"
     },
     {
@@ -322,9 +316,6 @@ LEADS_BASE = [
         "Score": 58,
         "LinkedIn": "https://www.linkedin.com/in/camilamassaro-rh",
         "Descrição Empresa": "Processamento e distribuição de aço.",
-        "Comentários Caio": "Temos contato, fizemos várias propostas negadas mas nunca foi vendido. quem tem contato lá é o victor pontello",
-        "Foto": "",
-        "Novo Lead": "",
         "Tier Final": "Tier 1"
     },
     {
@@ -344,31 +335,63 @@ LEADS_BASE = [
         "Score": 56,
         "LinkedIn": "https://www.linkedin.com/in/brenda-donato-endo-78275041",
         "Descrição Empresa": "Administradora de consórcios de bens.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "",
         "Tier Final": "Tier 1"
     },
     {
-        "ID": 6,
-        "Nome": "Bruno Szarf",
-        "Empresa": "Stefanini",
-        "Cargo": "VP Global",
-        "Quais desafios te trouxeram até aqui?": "Desenvolvimento de Lideranças, Adoção e Integração de IA/Automação, People Analytics e Decisão Baseada em Dados",
-        "Tem interesse em conhecer parceiros": "Não",
-        "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Aquisição e Retenção de Talentos, Cultura Organizacional",
+        "ID": 42,
+        "Nome": "Willian Souza",
+        "Empresa": "EMS",
+        "Cargo": "Diretor de Governança e Treinamento",
+        "Quais desafios te trouxeram até aqui?": "Retenção de Talentos e Rotatividade (Turnover), Saúde Mental e Bem-Estar, Desenvolvimento de Lideranças, People Analytics e Decisão Baseada em Dados, Alinhamento Estratégico com a Alta Direção, Gestão de Mudança Organizacional",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Aquisição e Retenção de Talentos, Gestão da Mudança",
         "Qual é o prazo estimado para a sua": "4 - 6 meses",
-        "Qual solução você gostaria de enten": "-",
-        "Sou responsável pela decisão e budg": "Eu sou o principal decisor (a) sobre a escolha",
-        "Qual é a estimativa do orçamento an": "De 10 milhões até 50 milhões",
+        "Qual solução você gostaria de enten": "Treinamento e tomada de decisão apoiada por dados",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "De 2 milhões até 10 milhões",
         "Número de funcionários:": "Acima de 10000",
         "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
-        "Score": 56,
-        "LinkedIn": "https://www.linkedin.com/in/brunoszarf",
-        "Descrição Empresa": "Consultoria e soluções em TI.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "",
+        "Score": 55,
+        "LinkedIn": "https://www.linkedin.com/in/willian-souza-63874147",
+        "Descrição Empresa": "Indústria farmacêutica e medicamentos genéricos.",
+        "Tier Final": "Tier 1"
+    },
+    {
+        "ID": 15,
+        "Nome": "Danila Pires Carsoso",
+        "Empresa": "Motiva",
+        "Cargo": "Diretor",
+        "Quais desafios te trouxeram até aqui?": "Retenção de Talentos e Rotatividade (Turnover), Desenvolvimento de Lideranças, Adoção e Integração de IA/Automação, Gestão de Mudança Organizacional",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Automação de Processos no RH, Aquisição e Retenção de Talentos, Cultura Organizacional",
+        "Qual é o prazo estimado para a sua": "4 - 6 meses",
+        "Qual solução você gostaria de enten": "Aquisição e retenção de talentos",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "Abaixo de 2 milhões",
+        "Número de funcionários:": "Acima de 10000",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 55,
+        "LinkedIn": "",
+        "Descrição Empresa": "Soluções de atendimento e telemarketing.",
+        "Tier Final": "Tier 1"
+    },
+    {
+        "ID": 21,
+        "Nome": "Frederico Consetino Neto",
+        "Empresa": "Afya",
+        "Cargo": "Diretor de Recursos Humanos",
+        "Quais desafios te trouxeram até aqui?": "Retenção de Talentos e Rotatividade (Turnover), Saúde Mental e Bem-Estar, Gestão da Cultura Híbrida, Desenvolvimento de Lideranças, Diversidade, Equidade e Inclusão (DE&I), Adoção e Integração de IA/Automação, Cibersegurança e Privacidade de Dados, People Analytics e Decisão Baseada em Dados, Atualização Constante de Habilidades (Skills Gap), Alinhamento Estratégico com a Alta Direção, Gestão de Mudança Organizacional, Construção de uma Proposta de Valor ao Empregado (EVP) Forte, Sustentabilidade e ESG no RH",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Benefícios Flexíveis, Saúde Corporativa e Bem Estar",
+        "Qual é o prazo estimado para a sua": "7 - 12 meses",
+        "Qual solução você gostaria de enten": "Adoção e Integração de IA/Automação",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "Abaixo de 2 milhões",
+        "Número de funcionários:": "De 5000 a 10000 funcionários",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 55,
+        "LinkedIn": "https://www.linkedin.com/in/freico-cosentino-b67b1a20",
+        "Descrição Empresa": "Educação médica e tecnologias digitais.",
         "Tier Final": "Tier 1"
     },
     {
@@ -388,9 +411,6 @@ LEADS_BASE = [
         "Score": 54,
         "LinkedIn": "https://www.linkedin.com/in/patricia-rosado-b15ba01a",
         "Descrição Empresa": "Metalúrgica e fundição de componentes.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "",
         "Tier Final": "Tier 1"
     },
     {
@@ -408,11 +428,8 @@ LEADS_BASE = [
         "Número de funcionários:": "Acima de 10000",
         "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
         "Score": 54,
-        "LinkedIn": "",
-        "Descrição Empresa": "Indústria farmacêutica e química global.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "SIM (Novo)",
+        "LinkedIn": "https://www.linkedin.com/in/franciele-ropelato-84086b23/",
+        "Descrição Empresa": "Empresa global de saúde e farmacêutica",
         "Tier Final": "Tier 1"
     },
     {
@@ -432,9 +449,6 @@ LEADS_BASE = [
         "Score": 54,
         "LinkedIn": "https://www.linkedin.com/in/rita-souza-neurochange/",
         "Descrição Empresa": "Processamento de grãos e óleos.",
-        "Comentários Caio": "É cliente atual. Quem lidera a conta é o Mauricio e o Lourenço. Principal buyer é o Felipe Miana",
-        "Foto": "",
-        "Novo Lead": "",
         "Tier Final": "Tier 1"
     },
     {
@@ -454,9 +468,6 @@ LEADS_BASE = [
         "Score": 54,
         "LinkedIn": "https://www.linkedin.com/in/sorayabahde",
         "Descrição Empresa": "Serviços bancários e financeiros completos.",
-        "Comentários Caio": "A finor conhece o pessoal de lá, acho que é o Tiago. é um cliente atual",
-        "Foto": "",
-        "Novo Lead": "",
         "Tier Final": "Tier 1"
     },
     {
@@ -476,31 +487,6 @@ LEADS_BASE = [
         "Score": 52,
         "LinkedIn": "https://www.linkedin.com/in/patriciabobbato",
         "Descrição Empresa": "Cosméticos e produtos de higiene.",
-        "Comentários Caio": "Acho que tamo fazendo proposta lá. Quem tá liderando é o Mauricio aparentemente, mas acho que o Selli tem contexto. não é cliente, apenas lead",
-        "Foto": "",
-        "Novo Lead": "",
-        "Tier Final": "Tier 1"
-    },
-    {
-        "ID": 8,
-        "Nome": "Camilla Padua",
-        "Empresa": "KPMG Consultoria Ltda",
-        "Cargo": "Sócia",
-        "Quais desafios te trouxeram até aqui?": "Alinhamento Estratégico com a Alta Direção",
-        "Tem interesse em conhecer parceiros": "Sim",
-        "Quais são as prioridades de investi": "Novos Modelos de Trabalho",
-        "Qual é o prazo estimado para a sua": "0 - 3 meses",
-        "Qual solução você gostaria de enten": "Palestrante",
-        "Sou responsável pela decisão e budg": "Eu sou o principal decisor (a) sobre a escolha",
-        "Qual é a estimativa do orçamento an": "Palestrante",
-        "Número de funcionários:": "De 5000 a 10000 funcionários",
-        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
-        "Score": 50,
-        "LinkedIn": "",
-        "Descrição Empresa": "Consultoria e auditoria corporativa.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "SIM (Novo)",
         "Tier Final": "Tier 1"
     },
     {
@@ -520,10 +506,7 @@ LEADS_BASE = [
         "Score": 49,
         "LinkedIn": "https://br.linkedin.com/in/daniela-monteiro-a3125970",
         "Descrição Empresa": "Publicação de livros didáticos e literários.",
-        "Comentários Caio": "Tamo tentando vender um projeto de agentes lá. Quem tem contato é o Selli",
-        "Foto": "",
-        "Novo Lead": "",
-        "Tier Final": "Tier 2"
+        "Tier Final": "Tier 1"
     },
     {
         "ID": 16,
@@ -542,10 +525,7 @@ LEADS_BASE = [
         "Score": 48,
         "LinkedIn": "https://br.linkedin.com/in/din%C3%A1-ribeiro-de-carvalho-a1a184348",
         "Descrição Empresa": "Software de gestão para condomínios.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "",
-        "Tier Final": "Tier 2"
+        "Tier Final": "Tier 1"
     },
     {
         "ID": 31,
@@ -564,76 +544,7 @@ LEADS_BASE = [
         "Score": 48,
         "LinkedIn": "https://www.linkedin.com/in/netomello",
         "Descrição Empresa": "Fabricação de alimentos para pets.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "",
-        "Tier Final": "Tier 2"
-    },
-    {
-        "ID": 42,
-        "Nome": "Willian Souza",
-        "Empresa": "EMS",
-        "Cargo": "Diretor de Governança e Treinamento",
-        "Quais desafios te trouxeram até aqui?": "Retenção de Talentos e Rotatividade (Turnover), Saúde Mental e Bem-Estar, Desenvolvimento de Lideranças, People Analytics e Decisão Baseada em Dados, Alinhamento Estratégico com a Alta Direção, Gestão de Mudança Organizacional",
-        "Tem interesse em conhecer parceiros": "Sim",
-        "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Aquisição e Retenção de Talentos, Gestão da Mudança",
-        "Qual é o prazo estimado para a sua": "4 - 6 meses",
-        "Qual solução você gostaria de enten": "Treinamento e tomada de decisão apoiada por dados",
-        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
-        "Qual é a estimativa do orçamento an": "De 2 milhões até 10 milhões",
-        "Número de funcionários:": "Acima de 10000",
-        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
-        "Score": 48,
-        "LinkedIn": "https://www.linkedin.com/in/willian-souza-63874147",
-        "Descrição Empresa": "Indústria farmacêutica e medicamentos genéricos.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "",
-        "Tier Final": "Tier 2"
-    },
-    {
-        "ID": 15,
-        "Nome": "Danila Pires Carsoso",
-        "Empresa": "Motiva",
-        "Cargo": "Diretor",
-        "Quais desafios te trouxeram até aqui?": "Retenção de Talentos e Rotatividade (Turnover), Desenvolvimento de Lideranças, Adoção e Integração de IA/Automação, Gestão de Mudança Organizacional",
-        "Tem interesse em conhecer parceiros": "Sim",
-        "Quais são as prioridades de investi": "Automação de Processos no RH, Aquisição e Retenção de Talentos, Cultura Organizacional",
-        "Qual é o prazo estimado para a sua": "4 - 6 meses",
-        "Qual solução você gostaria de enten": "Aquisição e retenção de talentos",
-        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
-        "Qual é a estimativa do orçamento an": "Abaixo de 2 milhões",
-        "Número de funcionários:": "Acima de 10000",
-        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
-        "Score": 46,
-        "LinkedIn": "",
-        "Descrição Empresa": "Soluções de atendimento e telemarketing.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "",
-        "Tier Final": "Tier 2"
-    },
-    {
-        "ID": 21,
-        "Nome": "Frederico Consetino Neto",
-        "Empresa": "Afya",
-        "Cargo": "Diretor de Recursos Humanos",
-        "Quais desafios te trouxeram até aqui?": "Retenção de Talentos e Rotatividade (Turnover), Saúde Mental e Bem-Estar, Gestão da Cultura Híbrida, Desenvolvimento de Lideranças, Diversidade, Equidade e Inclusão (DE&I), Adoção e Integração de IA/Automação, Cibersegurança e Privacidade de Dados, People Analytics e Decisão Baseada em Dados, Atualização Constante de Habilidades (Skills Gap), Alinhamento Estratégico com a Alta Direção, Gestão de Mudança Organizacional, Construção de uma Proposta de Valor ao Empregado (EVP) Forte, Sustentabilidade e ESG no RH",
-        "Tem interesse em conhecer parceiros": "Sim",
-        "Quais são as prioridades de investi": "Benefícios Flexíveis, Saúde Corporativa e Bem Estar",
-        "Qual é o prazo estimado para a sua": "7 - 12 meses",
-        "Qual solução você gostaria de enten": "Adoção e Integração de IA/Automação",
-        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
-        "Qual é a estimativa do orçamento an": "Abaixo de 2 milhões",
-        "Número de funcionários:": "De 5000 a 10000 funcionários",
-        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
-        "Score": 46,
-        "LinkedIn": "https://www.linkedin.com/in/frederico-cosentino-b67b1a20",
-        "Descrição Empresa": "Educação médica e tecnologias digitais.",
-        "Comentários Caio": "Contato antigo, que morreu faz tempo. acho que não temos mais contato hoje",
-        "Foto": "",
-        "Novo Lead": "",
-        "Tier Final": "Tier 2"
+        "Tier Final": "Tier 1"
     },
     {
         "ID": 22,
@@ -652,9 +563,6 @@ LEADS_BASE = [
         "Score": 46,
         "LinkedIn": "https://www.linkedin.com/in/gerson-cosme-santos",
         "Descrição Empresa": "Peças para máquinas pesadas (mineração).",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "",
         "Tier Final": "Tier 2"
     },
     {
@@ -674,9 +582,6 @@ LEADS_BASE = [
         "Score": 46,
         "LinkedIn": "https://www.linkedin.com/in/brasilana",
         "Descrição Empresa": "Distribuição de autopeças e serviços.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "",
         "Tier Final": "Tier 2"
     },
     {
@@ -696,9 +601,6 @@ LEADS_BASE = [
         "Score": 45,
         "LinkedIn": "",
         "Descrição Empresa": "Indústria têxtil (cama, mesa e banho).",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "SIM (Novo)",
         "Tier Final": "Tier 2"
     },
     {
@@ -718,9 +620,6 @@ LEADS_BASE = [
         "Score": 43,
         "LinkedIn": "https://www.linkedin.com/in/thais-vendramini/",
         "Descrição Empresa": "Gestão de patrimônio e investimentos.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "",
         "Tier Final": "Tier 2"
     },
     {
@@ -740,9 +639,6 @@ LEADS_BASE = [
         "Score": 43,
         "LinkedIn": "https://br.linkedin.com/in/angelo-fanti-58a4a821",
         "Descrição Empresa": "Fabricação e distribuição de bebidas.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "",
         "Tier Final": "Tier 2"
     },
     {
@@ -762,9 +658,6 @@ LEADS_BASE = [
         "Score": 43,
         "LinkedIn": "https://www.linkedin.com/in/julianadorigorh",
         "Descrição Empresa": "Consultoria e estruturação de agronegócio.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "",
         "Tier Final": "Tier 2"
     },
     {
@@ -784,31 +677,6 @@ LEADS_BASE = [
         "Score": 40,
         "LinkedIn": "https://www.linkedin.com/in/tamiscosta",
         "Descrição Empresa": "Consultoria em nuvem (Google Cloud).",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "",
-        "Tier Final": "Tier 2"
-    },
-    {
-        "ID": 28,
-        "Nome": "Mariana Macedo Gaida",
-        "Empresa": "Uncover",
-        "Cargo": "Head of People",
-        "Quais desafios te trouxeram até aqui?": "Desenvolvimento de Lideranças, Adoção e Integração de IA/Automação, Alinhamento Estratégico com a Alta Direção",
-        "Tem interesse em conhecer parceiros": "Sim",
-        "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Automação de Processos no RH, Aquisição e Retenção de Talentos, Software de Gestão para RH",
-        "Qual é o prazo estimado para a sua": "4 - 6 meses",
-        "Qual solução você gostaria de enten": "Automacao de RH",
-        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
-        "Qual é a estimativa do orçamento an": "De 2 milhões até 10 milhões",
-        "Número de funcionários:": "Abaixo de 500 funcionários",
-        "Receita anual da empresa (em Reais)": "Abaixo de 250milhoes",
-        "Score": 39,
-        "LinkedIn": "",
-        "Descrição Empresa": "Tecnologia e otimização de dados.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "SIM (Novo)",
         "Tier Final": "Tier 2"
     },
     {
@@ -828,9 +696,6 @@ LEADS_BASE = [
         "Score": 37,
         "LinkedIn": "https://www.linkedin.com/in/aldo-santos-a4985353/",
         "Descrição Empresa": "Escritório de advocacia e cobrança.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "",
         "Tier Final": "Tier 2"
     },
     {
@@ -850,9 +715,6 @@ LEADS_BASE = [
         "Score": 37,
         "LinkedIn": "https://www.linkedin.com/in/giovani-carra-65858a33",
         "Descrição Empresa": "Embalagens de papelão e logística.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "",
         "Tier Final": "Tier 2"
     },
     {
@@ -872,9 +734,6 @@ LEADS_BASE = [
         "Score": 37,
         "LinkedIn": "https://www.linkedin.com/in/caroline-faki-68338285",
         "Descrição Empresa": "Produção de laticínios e derivados.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "",
         "Tier Final": "Tier 2"
     },
     {
@@ -894,9 +753,6 @@ LEADS_BASE = [
         "Score": 37,
         "LinkedIn": "",
         "Descrição Empresa": "Automação industrial e pneumática.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "SIM (Novo)",
         "Tier Final": "Tier 2"
     },
     {
@@ -908,7 +764,7 @@ LEADS_BASE = [
         "Tem interesse em conhecer parceiros": "Sim",
         "Quais são as prioridades de investi": "Novos Modelos de Trabalho, Automação de Processos no RH, Aquisição e Retenção de Talentos, Recrutamento e Seleção, Gestão da Mudança, Cultura Organizacional, Saúde Corporativa e Bem Estar",
         "Qual é o prazo estimado para a sua": "7 - 12 meses",
-        "Qual solução você gostaria de enten": "Entender melhor soluções que integrem Inteligência Artificial aplicada a People Analytics, com foco em descentralização da informação para gestores e tomada de decisão mais ágil e orientada a dados.",
+        "Qual solução você gostaria de enten": "Entender melhor soluções que integrem Inteligência Artificial aplicada a People Analytics, com foco em descentralização da informação para gestores e tomada de decisão mais ágil e orientada a dados. Soluções que suportem a digitalização e automação do ciclo de vida do colaborador, especialmente com uso de processos ágeis e integração entre sistemas, garantindo eficiência operacional e melhor experiência do colaborador. Melhorar a experiência de gestores e BPs com relação ao pacote de remuneração total dos colaboradores.",
         "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
         "Qual é a estimativa do orçamento an": "De 50 milhões até 100 milhões",
         "Número de funcionários:": "De 1000 a 5000 funcionários",
@@ -916,9 +772,6 @@ LEADS_BASE = [
         "Score": 32,
         "LinkedIn": "",
         "Descrição Empresa": "Outsourcing de equipamentos de TI e impressão.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "SIM (Novo)",
         "Tier Final": "Tier 3"
     },
     {
@@ -938,9 +791,6 @@ LEADS_BASE = [
         "Score": 30,
         "LinkedIn": "https://www.linkedin.com/in/jader-%C3%A9der-bleil-41115225",
         "Descrição Empresa": "Vagões ferroviários e serviços industriais.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "",
         "Tier Final": "Tier 3"
     },
     {
@@ -948,21 +798,18 @@ LEADS_BASE = [
         "Nome": "Daniela Nishimoto",
         "Empresa": "Grupo L'Oréal",
         "Cargo": "Diretora/ Executiva de Relações Humanas",
-        "Quais desafios te trouxeram até aqui?": "",
+        "Quais desafios te trouxeram até aqui?": "-",
         "Tem interesse em conhecer parceiros": "Sim",
-        "Quais são as prioridades de investi": "",
+        "Quais são as prioridades de investi": "-",
         "Qual é o prazo estimado para a sua": "7 - 12 meses",
-        "Qual solução você gostaria de enten": "",
+        "Qual solução você gostaria de enten": "-",
         "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
-        "Qual é a estimativa do orçamento an": "",
+        "Qual é a estimativa do orçamento an": "-",
         "Número de funcionários:": "Acima de 10000",
         "Receita anual da empresa (em Reais)": "Outro",
         "Score": 29,
         "LinkedIn": "https://www.linkedin.com/in/daniela-nishimoto-00b63b1",
         "Descrição Empresa": "Fabricação global de produtos cosméticos.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "",
         "Tier Final": "Tier 3"
     },
     {
@@ -982,9 +829,6 @@ LEADS_BASE = [
         "Score": 28,
         "LinkedIn": "",
         "Descrição Empresa": "Cervejaria e produção de bebidas.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "SIM (Novo)",
         "Tier Final": "Tier 3"
     },
     {
@@ -1004,9 +848,6 @@ LEADS_BASE = [
         "Score": 28,
         "LinkedIn": "https://www.linkedin.com/in/thamires-pedro-15287611b/",
         "Descrição Empresa": "Produção mundial de bauxita e alumínio.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "",
         "Tier Final": "Tier 3"
     },
     {
@@ -1026,9 +867,6 @@ LEADS_BASE = [
         "Score": 28,
         "LinkedIn": "https://www.linkedin.com/in/daniel-peruchi-6a09a0b9",
         "Descrição Empresa": "Produção mundial de bauxita e alumínio.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "",
         "Tier Final": "Tier 3"
     },
     {
@@ -1048,9 +886,6 @@ LEADS_BASE = [
         "Score": 28,
         "LinkedIn": "https://www.linkedin.com/in/sabrina-rosa-lemes-mba-4ba065107",
         "Descrição Empresa": "Vagões ferroviários e serviços industriais.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "",
         "Tier Final": "Tier 3"
     },
     {
@@ -1070,9 +905,6 @@ LEADS_BASE = [
         "Score": 28,
         "LinkedIn": "https://www.linkedin.com/in/ricardo-malvestite-74b1936",
         "Descrição Empresa": "Vagões ferroviários e serviços industriais.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "",
         "Tier Final": "Tier 3"
     },
     {
@@ -1092,10 +924,26 @@ LEADS_BASE = [
         "Score": 28,
         "LinkedIn": "https://www.linkedin.com/in/lenita-gilioli-freitas",
         "Descrição Empresa": "Cosméticos e limpeza doméstica (Minuano).",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "",
         "Tier Final": "Tier 3"
+    },
+    {
+        "ID": 28,
+        "Nome": "Mariana Macedo Gaida",
+        "Empresa": "Uncover",
+        "Cargo": "Head of People",
+        "Quais desafios te trouxeram até aqui?": "Desenvolvimento de Lideranças, Adoção e Integração de IA/Automação, Alinhamento Estratégico com a Alta Direção",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Automação de Processos no RH, Aquisição e Retenção de Talentos, Software de Gestão para RH",
+        "Qual é o prazo estimado para a sua": "4 - 6 meses",
+        "Qual solução você gostaria de enten": "Automacao de RH",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
+        "Qual é a estimativa do orçamento an": "De 2 milhões até 10 milhões",
+        "Número de funcionários:": "Abaixo de 500 funcionários",
+        "Receita anual da empresa (em Reais)": "Abaixo de 250milhoes",
+        "Score": 18,
+        "LinkedIn": "",
+        "Descrição Empresa": "Tecnologia e otimização de dados.",
+        "Tier Final": "Tier 4"
     },
     {
         "ID": 29,
@@ -1114,9 +962,6 @@ LEADS_BASE = [
         "Score": 26,
         "LinkedIn": "https://www.linkedin.com/in/michele-ferreira-16401083",
         "Descrição Empresa": "Rede varejista de alimentos.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "",
         "Tier Final": "Tier 3"
     },
     {
@@ -1136,9 +981,6 @@ LEADS_BASE = [
         "Score": 23,
         "LinkedIn": "",
         "Descrição Empresa": "Extração e processamento de minérios.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "SIM (Novo)",
         "Tier Final": "Tier 3"
     },
     {
@@ -1158,9 +1000,6 @@ LEADS_BASE = [
         "Score": 22,
         "LinkedIn": "https://www.linkedin.com/in/andrelearanha",
         "Descrição Empresa": "Software de gestão para condomínios.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "",
         "Tier Final": "Tier 3"
     },
     {
@@ -1180,9 +1019,6 @@ LEADS_BASE = [
         "Score": 20,
         "LinkedIn": "https://www.linkedin.com/in/nelsonsimeoni",
         "Descrição Empresa": "Software de gestão para condomínios.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "",
         "Tier Final": "Tier 3"
     },
     {
@@ -1194,7 +1030,7 @@ LEADS_BASE = [
         "Tem interesse em conhecer parceiros": "Sim",
         "Quais são as prioridades de investi": "Automação de Processos no RH, Aquisição e Retenção de Talentos",
         "Qual é o prazo estimado para a sua": "0 - 3 meses",
-        "Qual solução você gostaria de enten": "",
+        "Qual solução você gostaria de enten": "-",
         "Sou responsável pela decisão e budg": "Eu sou o principal decisor (a) sobre a escolha",
         "Qual é a estimativa do orçamento an": "De 2 milhões até 10 milhões",
         "Número de funcionários:": "Acima de 10000",
@@ -1202,9 +1038,6 @@ LEADS_BASE = [
         "Score": 19,
         "LinkedIn": "https://www.linkedin.com/in/daniela-matos-faria",
         "Descrição Empresa": "Operadora do Burger King e Popeyes.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "",
         "Tier Final": "Tier 4"
     },
     {
@@ -1224,9 +1057,6 @@ LEADS_BASE = [
         "Score": 19,
         "LinkedIn": "",
         "Descrição Empresa": "Concessionária de rodovias (Grupo CCR).",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "SIM (Novo)",
         "Tier Final": "Tier 4"
     },
     {
@@ -1246,9 +1076,44 @@ LEADS_BASE = [
         "Score": 17,
         "LinkedIn": "",
         "Descrição Empresa": "Extração e processamento de minérios.",
-        "Comentários Caio": "",
-        "Foto": "",
-        "Novo Lead": "SIM (Novo)",
+        "Tier Final": "Tier 4"
+    },
+    {
+        "ID": 6,
+        "Nome": "Bruno Szarf",
+        "Empresa": "Stefanini",
+        "Cargo": "VP Global",
+        "Quais desafios te trouxeram até aqui?": "Desenvolvimento de Lideranças, Adoção e Integração de IA/Automação, People Analytics e Decisão Baseada em Dados",
+        "Tem interesse em conhecer parceiros": "Não",
+        "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Aquisição e Retenção de Talentos, Cultura Organizacional",
+        "Qual é o prazo estimado para a sua": "4 - 6 meses",
+        "Qual solução você gostaria de enten": "-",
+        "Sou responsável pela decisão e budg": "Eu sou o principal decisor (a) sobre a escolha",
+        "Qual é a estimativa do orçamento an": "De 10 milhões até 50 milhões",
+        "Número de funcionários:": "Acima de 10000",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 0,
+        "LinkedIn": "https://www.linkedin.com/in/brunoszarf",
+        "Descrição Empresa": "Consultoria e soluções em TI.",
+        "Tier Final": "Tier 4"
+    },
+    {
+        "ID": 8,
+        "Nome": "Camilla Padua",
+        "Empresa": "KPMG Consultoria Ltda",
+        "Cargo": "Sócia",
+        "Quais desafios te trouxeram até aqui?": "Alinhamento Estratégico com a Alta Direção",
+        "Tem interesse em conhecer parceiros": "Sim",
+        "Quais são as prioridades de investi": "Novos Modelos de Trabalho",
+        "Qual é o prazo estimado para a sua": "0 - 3 meses",
+        "Qual solução você gostaria de enten": "Palestrante",
+        "Sou responsável pela decisão e budg": "Eu sou o principal decisor (a) sobre a escolha",
+        "Qual é a estimativa do orçamento an": "Palestrante",
+        "Número de funcionários:": "De 5000 a 10000 funcionários",
+        "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
+        "Score": 0,
+        "LinkedIn": "httpswww.linkedin.comincamillapadua",
+        "Descrição Empresa": "Consultoria e auditoria corporativa.",
         "Tier Final": "Tier 4"
     }
 ]
