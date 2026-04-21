@@ -141,7 +141,6 @@ def apply_executive_styles():
             font-weight: 800;
         }}
 
-        /* UX de Input (100% Contraste Modo Claro) */
         .stTextArea textarea, .stTextInput input, div[data-baseweb="textarea"] textarea, div[data-baseweb="input"] input {{
             background-color: {C['INPUT_BKG']} !important; 
             color: {C['INPUT_TEXT']} !important;
@@ -156,7 +155,6 @@ def apply_executive_styles():
         div[data-baseweb="textarea"], div[data-baseweb="input"] {{ background-color: transparent !important; border: none !important; }}
         ::placeholder {{ color: {C['SUB']} !important; opacity: 0.6 !important; }}
 
-        /* Visibilidade e Contorno dos Botões Secondary */
         button[kind="secondary"], .stLinkButton > a {{
             background-color: {C['BTN_SEC']} !important; 
             color: {C['TEXT']} !important;
@@ -167,14 +165,12 @@ def apply_executive_styles():
             display: inline-flex; align-items: center; justify-content: center; font-weight: 500 !important;
         }}
         
-        /* Efeito Hover Nítido */
         button[kind="secondary"]:hover, .stLinkButton > a:hover {{ 
             border-color: #3232ff !important; 
             background-color: rgba(50, 50, 255, 0.05) !important; 
             box-shadow: 0 0 8px rgba(50, 50, 255, 0.2) !important;
         }}
 
-        /* Efeito de Botão Ativo (Dashboard / Pipeline selecionado) */
         button[disabled] {{
             border: 1px solid #3232ff !important;
             background-color: rgba(50, 50, 255, 0.1) !important;
@@ -191,7 +187,6 @@ def apply_executive_styles():
         }}
         button[kind="primary"]:hover {{ transform: translateY(-2px) !important; box-shadow: 0 6px 20px rgba(50, 50, 255, 0.4) !important; }}
 
-        /* Fotos Circulares */
         .profile-pic, .initials-placeholder {{
             border-radius: 50%; object-fit: cover; border: 2px solid #fff;
             flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
@@ -212,7 +207,6 @@ def apply_executive_styles():
         .lead-row:hover {{ transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.05); }}
         .tier-1-bar {{ position: absolute; top: 0; left: 0; height: 4px; width: 100%; background: linear-gradient(90deg, #3232ff 0%, #ff1493 100%); }}
 
-        /* Grid 2x2 Elástico */
         div[data-testid="stMetric"] {{
             background: {C['METRIC_BKG']}; border: 1px solid {C['BORDER']};
             border-radius: 12px; padding: 1.2rem !important; height: 100%;
@@ -235,7 +229,6 @@ def apply_executive_styles():
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }}
 
-        /* Timeline Premium */
         .timeline-item {{
             border-left: 2px solid {C['BORDER']};
             margin-left: 15px; padding-left: 20px; padding-bottom: 20px;
@@ -247,6 +240,8 @@ def apply_executive_styles():
         }}
         .timeline-date {{ font-size: 0.8rem; color: {C['SUB']}; font-weight: 600; margin-bottom: 4px; }}
         .timeline-note {{ font-size: 0.95rem; color: {C['TEXT']}; margin: 0; line-height: 1.5; white-space: pre-wrap; }}
+        
+        audio {{ width: 100%; height: 35px; margin-top: 10px; border-radius: 8px; outline: none; }}
 
         [data-testid="stExpander"] {{ background-color: {C['CARD']} !important; border: 1px solid {C['BORDER']} !important; border-radius: 12px !important; }}
         [data-testid="stExpander"] summary {{ background-color: transparent !important; }}
@@ -542,7 +537,7 @@ LEADS_BASE = [
         "Qual é o prazo estimado para a sua": "7 - 12 meses",
         "Qual solução você gostaria de enten": "Liderança e Cultura",
         "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
-        "Qual é a estimativa do orçamento an": "De 2 milhões até 10 milhões",
+        "Qual é a estimativa do orçamento an": "De 2 milhões até 100 milhões",
         "Número de funcionários:": "De 1000 a 5000 funcionários",
         "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
         "Score": 48,
@@ -1121,3 +1116,195 @@ LEADS_BASE = [
         "Tier Final": "Tier 4"
     }
 ]
+
+vol_total = 0
+
+# Mapping dinâmico ignorando lógicas fixas de Tier no código. Extraindo do JSON:
+for l in LEADS_BASE:
+    l['id'] = l.get('ID')
+    l['nome'] = l.get('Nome', 'N/I')
+    l['empresa'] = l.get('Empresa', 'N/I')
+    l['cargo'] = l.get('Cargo', 'N/I')
+    
+    # Processar nível de decisão
+    raw_decisor = str(l.get('Sou responsável pela decisão e budg', '')).lower()
+    if 'principal decisor' in raw_decisor or 'sim' in raw_decisor:
+        l['decisor'] = 'Sim'
+    elif 'influenciador' in raw_decisor or 'participo' in raw_decisor:
+        l['decisor'] = 'Parcial'
+    else:
+        l['decisor'] = 'Não'
+        
+    l['score'] = l.get('Score', 0)
+    l['linkedin'] = l.get('LinkedIn', '#') if l.get('LinkedIn') else '#'
+    
+    # Mapeamento do Dossiê
+    l['bio'] = l.get('Descrição Empresa', 'N/I')
+    l['interesse'] = l.get('Quais são as prioridades de investi', 'N/I')
+    l['desafios'] = l.get('Quais desafios te trouxeram até aqui?', 'N/I')
+    l['orcamento_real'] = l.get('Qual é a estimativa do orçamento an', 'N/I')
+    l['receita'] = l.get('Receita anual da empresa (em Reais)', 'N/I')
+    l['funcionarios'] = l.get('Número de funcionários:', 'N/I')
+    l['prazo'] = l.get('Qual é o prazo estimado para a sua', 'N/I')
+    l['solucao'] = l.get('Qual solução você gostaria de enten', 'N/I')
+    l['comentarios_caio'] = l.get('Comentários Caio', '')
+    
+    # Obter Tier e Orçamento(Potencial) diretamente do JSON
+    l['t'] = str(l.get('Tier Final', 'Tier 4')).strip()
+    l['o'] = str(l.get('Qual é a estimativa do orçamento an', 'N/I')).strip()
+    
+    # Cores da Etiqueta
+    if '1' in l['t']: l['c'] = 'pill-blue'
+    elif '2' in l['t']: l['c'] = 'pill-magenta'
+    else: l['c'] = 'pill-neutral'
+    
+    # Lógica de cálculo do Volume Pipeline para o Dashboard Executivo
+    o_lower = str(l['o']).lower()
+    if 'acima de 100' in o_lower: vol_total += 100_000_000
+    elif '50 milhões até 100' in o_lower: vol_total += 75_000_000
+    elif '10 milhões até 50' in o_lower: vol_total += 30_000_000
+    elif '2 milhões até 10' in o_lower: vol_total += 6_000_000
+    elif 'abaixo de 2' in o_lower or 'abaixo de 1' in o_lower: vol_total += 1_000_000
+
+df_leads = pd.DataFrame(LEADS_BASE)
+
+# --- 8. SIDEBAR ---
+with st.sidebar:
+    st.markdown('<h2 class="atf-gradient" style="margin-bottom: 2rem;">Artefact</h2>', unsafe_allow_html=True)
+    if st.button("📊 Executive Dash", use_container_width=True, disabled=(st.session_state.view_mode=='dashboard')): st.session_state.view_mode='dashboard'; st.rerun()
+    if st.button("👥 Pipeline", use_container_width=True, disabled=(st.session_state.view_mode=='list')): st.session_state.view_mode='list'; st.rerun()
+    st.divider()
+    if st.button("🌓 Toggle Theme", use_container_width=True): st.session_state.theme = 'light' if st.session_state.theme == 'dark' else 'dark'; st.rerun()
+
+# --- 9. VIEWS ---
+if st.session_state.view_mode == 'dashboard':
+    st.markdown('<h1>Executive Overview</h1>', unsafe_allow_html=True)
+    
+    c1, c2, c3 = st.columns(3)
+    c1.markdown(f'<div class="custom-metric-card"><p class="metric-label">Contas Mapeadas</p><p class="metric-value">{len(df_leads)}</p></div>', unsafe_allow_html=True)
+    c2.markdown(f'<div class="custom-metric-card"><p class="metric-label">Decisores Confirmados</p><p class="metric-value">{len(df_leads[df_leads["decisor"] == "Sim"])}</p></div>', unsafe_allow_html=True)
+    c3.markdown(f'<div class="potencial-wrapper"><span class="metric-label" style="color:#8E8E93;">Volume Pipeline Est.</span><p class="potencial-val">> R$ {vol_total / 1000000:.1f}M</p></div>', unsafe_allow_html=True)
+    
+    st.divider()
+    font_col = "#ffffff" if st.session_state.theme == 'dark' else "#1A1A1C"
+    
+    g1, g2 = st.columns(2)
+    with g1:
+        st.markdown("### Pipeline Health")
+        df_sorted = df_leads.sort_values(by='score', ascending=False).head(10)
+        fig_bar = px.bar(df_sorted, x='score', y='nome', orientation='h', color='t', color_discrete_sequence=['#3232ff', '#ff1493', '#888890'])
+        fig_bar.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font_color=font_col, margin=dict(l=0,r=0,t=10,b=0), height=300, yaxis={'categoryorder':'total ascending'}, showlegend=False)
+        st.plotly_chart(fig_bar, use_container_width=True)
+        
+    with g2:
+        st.markdown("### Distribuição Estratégica")
+        fig_donut = px.pie(df_leads, names='t', hole=0.7, color_discrete_sequence=['#3232ff', '#ff1493', '#888890'])
+        fig_donut.update_layout(plot_bgcolor='rgba(0,0,0,0)', paper_bgcolor='rgba(0,0,0,0)', font_color=font_col, margin=dict(l=0,r=0,t=10,b=0), height=300, showlegend=True, legend=dict(orientation="h", y=-0.2))
+        st.plotly_chart(fig_donut, use_container_width=True)
+
+elif st.session_state.view_mode == 'list':
+    st.markdown('<h1>Strategic Pipeline</h1>', unsafe_allow_html=True)
+    sel = st.selectbox("Filtrar", ["Todos", "Tier 1", "Tier 2", "Tier 3", "Tier 4"], label_visibility="collapsed")
+    f_leads = LEADS_BASE if sel == "Todos" else [l for l in LEADS_BASE if sel in l['t']]
+    st.write("")
+    
+    for l in f_leads:
+        bar = '<div class="tier-1-bar"></div>' if "Tier 1" in l['t'] else ""
+        photo_html = get_photo_html(l['nome'], l.get('linkedin', '#'), "small")
+        
+        card = f"""<div class="lead-row">{bar}
+        <div style="display:flex; align-items:center; gap:15px; margin-bottom:12px;">
+            {photo_html}
+            <div style="flex:1;">
+                <strong style="font-size:1.15rem;">{l['nome']}</strong><br>
+                <span class="subtext">{l['cargo']}</span>
+            </div>
+            <div style="text-align:right;"><span class="{l['c']}">{l['t']}</span></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; padding-top:10px; border-top:1px solid rgba(128,128,128,0.2);">
+            <span style="font-weight:600;">{l['empresa']}</span>
+            <span class="{l['c']}" style="font-size: 0.85rem;">{l['o']}</span>
+        </div></div>"""
+        
+        st.markdown(card, unsafe_allow_html=True)
+        if st.button(f"Analisar Perfil", key=f"b_{l['id']}", use_container_width=True):
+            st.session_state.selected_lead_id = l['id']; st.session_state.view_mode = 'detail'; st.rerun()
+
+elif st.session_state.view_mode == 'detail':
+    l = next(item for item in LEADS_BASE if item['id'] == st.session_state.selected_lead_id)
+    if st.button("← Voltar ao Pipeline", use_container_width=True): st.session_state.view_mode = 'list'; st.rerun()
+    st.write("")
+    
+    photo_html = get_photo_html(l['nome'], l.get('linkedin', '#'), "large")
+    st.markdown(f"""
+        <div style="display:flex; align-items:center; gap:20px; margin-bottom:20px; flex-wrap:wrap;">
+            {photo_html}
+            <div>
+                <h1 style="margin-bottom:0; font-size:2.2rem;">{l['nome']}</h1>
+                <p class="subtext" style="font-size:1.1rem; margin-top:5px;">{l['cargo']} @ <strong>{l['empresa']}</strong></p>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
+    
+    c1, c2 = st.columns(2)
+    with c1: st.markdown(f'<div class="custom-metric-card"><p class="metric-label">Classificação</p><p class="metric-value">{l["t"]}</p></div>', unsafe_allow_html=True)
+    with c2: st.markdown(f'<div class="custom-metric-card"><p class="metric-label">Score</p><p class="metric-value">{l["score"]} pts</p></div>', unsafe_allow_html=True)
+    
+    c3, c4 = st.columns(2)
+    with c3: st.markdown(f'<div class="custom-metric-card"><p class="metric-label">Decisor</p><p class="metric-value">{l["decisor"]}</p></div>', unsafe_allow_html=True)
+    with c4: st.markdown(f'<div class="potencial-wrapper"><p class="metric-label" style="color:#8E8E93;">Potencial Est.</p><p class="potencial-val" style="font-size: 1.1rem;">{l["o"]}</p></div>', unsafe_allow_html=True)
+    
+    st.write("")
+    
+    with st.expander("📂 Visualizar Dossiê Completo"):
+        ec1, ec2 = st.columns(2)
+        ec1.markdown(f"**🏢 Receita:** {l.get('receita', 'N/I')}\n\n**👥 Funcionários:** {l.get('funcionarios', 'N/I')}\n\n**🎯 Desafios:** {l.get('desafios', 'N/I')}")
+        ec2.markdown(f"**⏳ Prazo Investimento:** {l.get('prazo', 'N/I')}\n\n**🛠 Solução Desejada:** {l.get('solucao', 'N/I')}\n\n**💡 Interesses:** {l.get('interesse', 'N/I')}")
+        if l.get('comentarios_caio'):
+            st.markdown(f"**💬 Comentários Internos:** {l['comentarios_caio']}")
+        if l.get('linkedin') and l['linkedin'] != "#": st.link_button("Abrir LinkedIn", l['linkedin'])
+
+    st.divider()
+    
+    st.markdown("### Registro")
+    st.markdown("<p class='subtext' style='font-size: 0.9rem; margin-bottom: 10px;'>Adicionar Novo Registro (Texto ou Áudio)</p>", unsafe_allow_html=True)
+    
+    with st.form("intel_form", clear_on_submit=True):
+        txt = st.text_area("Nota", placeholder="Descreva a interação ou novos insights...", label_visibility="collapsed")
+        
+        audio_val = None
+        if hasattr(st, 'audio_input'):
+            audio_val = st.audio_input("Gravar Voice Note (Opcional)")
+        elif hasattr(st, 'experimental_audio_input'):
+            audio_val = st.experimental_audio_input("Gravar Voice Note (Opcional)")
+
+        if st.form_submit_button("Registrar Insight", type="primary", use_container_width=True):
+            if txt.strip() or audio_val is not None:
+                audio_url = None
+                lid_safe = extract_linkedin_id(l['linkedin']) or str(l['id'])
+                if audio_val is not None:
+                    audio_url = upload_audio_to_supabase(audio_val.read(), lid_safe)
+                
+                save_note_to_supabase(lid_safe, txt.strip(), audio_url)
+                st.rerun()
+    
+    st.write("")
+    
+    notas_supabase = load_notes_from_supabase(extract_linkedin_id(l['linkedin']) or str(l['id']))
+    
+    if not notas_supabase:
+        st.info("Nenhuma interação registrada no banco de dados.")
+    else:
+        for n in notas_supabase:
+            dt_obj = datetime.fromisoformat(n['created_at'].replace('Z', '+00:00'))
+            dt_str = dt_obj.strftime("%d/%m/%Y %H:%M")
+            
+            st.markdown(f"""
+            <div class="timeline-item">
+                <p class="timeline-date">{dt_str}</p>
+                <p class="timeline-note">{n.get('texto', '')}</p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            if n.get('audio_url'):
+                st.audio(n['audio_url'])
