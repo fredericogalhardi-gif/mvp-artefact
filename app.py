@@ -126,6 +126,9 @@ def apply_executive_styles():
         "POT_BKG": "#030305" if is_dark else "#EAEBEE"
     }
     
+    # Define a cor da borda do botão baseado no tema (Azul se for escuro)
+    btn_border_color = "#3232ff" if is_dark else C['BORDER']
+    
     st.markdown(f"""
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -141,6 +144,7 @@ def apply_executive_styles():
             font-weight: 800;
         }}
 
+        /* UX de Input (100% Contraste Modo Claro) */
         .stTextArea textarea, .stTextInput input, div[data-baseweb="textarea"] textarea, div[data-baseweb="input"] input {{
             background-color: {C['INPUT_BKG']} !important; 
             color: {C['INPUT_TEXT']} !important;
@@ -155,22 +159,25 @@ def apply_executive_styles():
         div[data-baseweb="textarea"], div[data-baseweb="input"] {{ background-color: transparent !important; border: none !important; }}
         ::placeholder {{ color: {C['SUB']} !important; opacity: 0.6 !important; }}
 
+        /* Visibilidade e Contorno dos Botões Secondary */
         button[kind="secondary"], .stLinkButton > a {{
             background-color: {C['BTN_SEC']} !important; 
             color: {C['TEXT']} !important;
-            border: 1px solid {C['BORDER']} !important; 
+            border: 1px solid {btn_border_color} !important; 
             border-radius: 8px !important;
             transition: all 0.2s ease !important; 
             width: 100% !important; 
             display: inline-flex; align-items: center; justify-content: center; font-weight: 500 !important;
         }}
         
+        /* Efeito Hover Nítido */
         button[kind="secondary"]:hover, .stLinkButton > a:hover {{ 
             border-color: #3232ff !important; 
             background-color: rgba(50, 50, 255, 0.05) !important; 
             box-shadow: 0 0 8px rgba(50, 50, 255, 0.2) !important;
         }}
 
+        /* Efeito de Botão Ativo (Dashboard / Pipeline selecionado) */
         button[disabled] {{
             border: 1px solid #3232ff !important;
             background-color: rgba(50, 50, 255, 0.1) !important;
@@ -187,6 +194,7 @@ def apply_executive_styles():
         }}
         button[kind="primary"]:hover {{ transform: translateY(-2px) !important; box-shadow: 0 6px 20px rgba(50, 50, 255, 0.4) !important; }}
 
+        /* Fotos Circulares */
         .profile-pic, .initials-placeholder {{
             border-radius: 50%; object-fit: cover; border: 2px solid #fff;
             flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
@@ -207,6 +215,7 @@ def apply_executive_styles():
         .lead-row:hover {{ transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0,0,0,0.05); }}
         .tier-1-bar {{ position: absolute; top: 0; left: 0; height: 4px; width: 100%; background: linear-gradient(90deg, #3232ff 0%, #ff1493 100%); }}
 
+        /* Grid 2x2 Elástico */
         div[data-testid="stMetric"] {{
             background: {C['METRIC_BKG']}; border: 1px solid {C['BORDER']};
             border-radius: 12px; padding: 1.2rem !important; height: 100%;
@@ -229,6 +238,7 @@ def apply_executive_styles():
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }}
 
+        /* Timeline Premium */
         .timeline-item {{
             border-left: 2px solid {C['BORDER']};
             margin-left: 15px; padding-left: 20px; padding-bottom: 20px;
@@ -294,7 +304,7 @@ LEADS_BASE = [
         "Número de funcionários:": "De 1000 a 5000 funcionários",
         "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
         "Score": 60,
-        "LinkedIn": "linkedin.com/in/carolinabussadorirh/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base%3Babq8i8z4RZix2BwTaxiEHg%3D%3D",
+        "LinkedIn": "https://www.linkedin.com/in/carolinabussadorirh/",
         "Descrição Empresa": "Rede de supermercados premium.",
         "Tier Final": "Tier 1"
     },
@@ -536,8 +546,8 @@ LEADS_BASE = [
         "Quais são as prioridades de investi": "Treinamento e Desenvolvimento, Recrutamento e Seleção, Cultura Organizacional",
         "Qual é o prazo estimado para a sua": "7 - 12 meses",
         "Qual solução você gostaria de enten": "Liderança e Cultura",
-        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decisão",
-        "Qual é a estimativa do orçamento an": "De 2 milhões até 100 milhões",
+        "Sou responsável pela decisão e budg": "Eu influencio e participo da tomada de decision",
+        "Qual é a estimativa do orçamento an": "De 2 milhões até 10 milhões",
         "Número de funcionários:": "De 1000 a 5000 funcionários",
         "Receita anual da empresa (em Reais)": "Acima de 1bilhao",
         "Score": 48,
