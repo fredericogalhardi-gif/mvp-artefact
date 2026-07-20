@@ -29,6 +29,13 @@ def get_supabase_client() -> Client:
 
 supabase = get_supabase_client()
 
+def flash(message: str, kind: str = "error"):
+    st.session_state.setdefault("pending_flashes", []).append((kind, message))
+
+def render_flashes():
+    for kind, message in st.session_state.pop("pending_flashes", []):
+        getattr(st, kind)(message)
+
 def load_notes_from_supabase(lead_id: str):
     try:
         response = supabase.table("notas").select("*").eq("lead_id", str(lead_id)).order("created_at", desc=True).execute()
@@ -42,14 +49,14 @@ def save_note_to_supabase(lead_id: str, texto: str, audio_url: str = None):
         if audio_url: data["audio_url"] = audio_url
         supabase.table("notas").insert(data).execute()
     except Exception as e:
-        st.error(f"Erro ao salvar: {e}")
+        flash(f"Erro ao salvar: {e}")
 
 def delete_note_from_supabase(note_id: str):
     try:
         supabase.table("notas").delete().eq("id", note_id).execute()
         return True
     except Exception as e:
-        st.error(f"Erro ao deletar: {e}")
+        flash(f"Erro ao deletar: {e}")
         return False
 
 def upload_audio_to_supabase(audio_bytes, lead_id: str):
@@ -59,7 +66,8 @@ def upload_audio_to_supabase(audio_bytes, lead_id: str):
         filename = f"registro_{safe_lead_id}_{timestamp}.wav"
         supabase.storage.from_("gravacoes").upload(file=audio_bytes, path=filename, file_options={"content-type": "audio/wav"})
         return supabase.storage.from_("gravacoes").get_public_url(filename)
-    except Exception:
+    except Exception as e:
+        flash(f"Erro ao enviar áudio para o Supabase: {e}")
         return None
 
 # --- 3. GESTÃO DE ESTADO ---
@@ -125,6 +133,7 @@ def apply_executive_styles():
     """, unsafe_allow_html=True)
 
 apply_executive_styles()
+render_flashes()
 
 # --- 6. DATABASE ---
 LEADS_BASE = [
@@ -239,11 +248,18 @@ elif st.session_state.view_mode == 'detail':
 
     st.divider()
     st.markdown("### Registro")
+    if not hasattr(st, 'audio_input'):
+        st.warning("Gravação de voz indisponível: a versão do Streamlit instalada não suporta st.audio_input (requer >= 1.38).")
+
     with st.form("intel_form", clear_on_submit=True):
         txt = st.text_area("Nota", placeholder="Insights...", label_visibility="collapsed")
         audio = st.audio_input("Voz") if hasattr(st, 'audio_input') else None
         if st.form_submit_button("Registrar Insight", type="primary"):
-            url = upload_audio_to_supabase(audio.read(), l['LinkedIn']) if audio else None
+            url = None
+            if audio:
+                url = upload_audio_to_supabase(audio.read(), l['LinkedIn'])
+                if not url:
+                    flash("A nota foi salva sem o áudio, pois o upload falhou (veja o erro acima).", "warning")
             save_note_to_supabase(extract_linkedin_id(l['LinkedIn']) or str(l['ID']), txt, url)
             st.rerun()
     
