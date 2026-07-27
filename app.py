@@ -71,9 +71,11 @@ def upload_audio_to_supabase(audio_bytes, lead_id: str):
         return None
 
 # --- 3. GESTÃO DE ESTADO ---
-if 'view_mode' not in st.session_state: st.session_state.view_mode = 'dashboard'
+# Alterado para iniciar no Pipeline ('list') e adicionado o controle do áudio
+if 'view_mode' not in st.session_state: st.session_state.view_mode = 'list'
 if 'selected_lead_id' not in st.session_state: st.session_state.selected_lead_id = None
 if 'theme' not in st.session_state: st.session_state.theme = 'dark'
+if 'audio_key' not in st.session_state: st.session_state.audio_key = 0
 
 # --- 4. LÓGICA DE FOTOS ---
 SABI_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sabi')
@@ -136,6 +138,7 @@ apply_executive_styles()
 render_flashes()
 
 # --- 6. DATABASE ---
+# (Sua base se mantém idêntica)
 LEADS_BASE = [
     {"ID": 18, "Nome": "Elizabeth Sousa Rodrigues", "Empresa": "Grupo Mendes", "Cargo": "Diretor Executivo de Gente e Cultura", "Score": 60, "LinkedIn": "https://www.linkedin.com/in/elizabeth-sousa-rodrigues-26086518/", "Tier Final": "Tier 1", "Qual é a estimativa do orçamento an": "Acima de 100 milhões"},
     {"ID": 9, "Nome": "Carolina Bussadori", "Empresa": "Grupo St Marche", "Cargo": "Head de Gente & Cultura", "Score": 60, "LinkedIn": "linkedin.com/in/carolinabussadorirh/", "Tier Final": "Tier 1", "Qual é a estimativa do orçamento an": "Acima de 100 milhões"},
@@ -202,8 +205,8 @@ df_leads = pd.DataFrame(LEADS_BASE)
 # --- 8. SIDEBAR ---
 with st.sidebar:
     st.markdown('<h2 class="atf-gradient">Artefact</h2>', unsafe_allow_html=True)
-    if st.button("📊 Executive Dash", use_container_width=True, disabled=(st.session_state.view_mode=='dashboard')): st.session_state.view_mode='dashboard'; st.rerun()
     if st.button("👥 Pipeline", use_container_width=True, disabled=(st.session_state.view_mode=='list')): st.session_state.view_mode='list'; st.rerun()
+    if st.button("📊 Executive Dash", use_container_width=True, disabled=(st.session_state.view_mode=='dashboard')): st.session_state.view_mode='dashboard'; st.rerun()
     st.divider()
     if st.button("🌓 Toggle Theme", use_container_width=True): st.session_state.theme = 'light' if st.session_state.theme == 'dark' else 'dark'; st.rerun()
 
@@ -235,6 +238,8 @@ elif st.session_state.view_mode == 'detail':
     l = next(item for item in LEADS_BASE if item['ID'] == st.session_state.selected_lead_id)
     if st.button("← Voltar", use_container_width=True): st.session_state.view_mode = 'list'; st.rerun()
     st.markdown(f"""<div style="display:flex; align-items:center; gap:20px; margin: 20px 0;">{get_photo_html(l['Nome'], l.get('LinkedIn', '#'), "large")}<div><h1 style="margin:0;">{l['Nome']}</h1><p class="subtext">{l['Cargo']} @ {l['Empresa']}</p></div></div>""", unsafe_allow_html=True)
+    
+    # As colunas se adaptam nativamente no mobile do Streamlit
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Tier", l['t'])
     c2.metric("Score", f"{l['Score']} pts")
@@ -247,23 +252,40 @@ elif st.session_state.view_mode == 'detail':
         if l['LinkedIn']: st.link_button("Abrir LinkedIn", l['LinkedIn'])
 
     st.divider()
-    st.markdown("### Registro")
-    if not hasattr(st, 'audio_input'):
-        st.warning("Gravação de voz indisponível: a versão do Streamlit instalada não suporta st.audio_input (requer >= 1.38).")
-
-    with st.form("intel_form", clear_on_submit=True):
-        txt = st.text_area("Nota", placeholder="Insights...", label_visibility="collapsed")
-        audio = st.audio_input("Voz") if hasattr(st, 'audio_input') else None
-        if st.form_submit_button("Registrar Insight", type="primary"):
-            url = None
-            if audio:
-                url = upload_audio_to_supabase(audio.read(), l['LinkedIn'])
-                if not url:
-                    flash("A nota foi salva sem o áudio, pois o upload falhou (veja o erro acima).", "warning")
-            save_note_to_supabase(extract_linkedin_id(l['LinkedIn']) or str(l['ID']), txt, url)
-            st.rerun()
+    st.markdown("### Registro Rápido")
     
-    for n in load_notes_from_supabase(extract_linkedin_id(l['LinkedIn']) or str(l['ID'])):
+    lead_ref = extract_linkedin_id(l['LinkedIn']) or str(l['ID'])
+
+    # 1. Áudio solto fora do Form para envio automático
+    if hasattr(st, 'audio_input'):
+        audio = st.audio_input("Gravar nota de voz", key=f"audio_widget_{st.session_state.audio_key}")
+        
+        if audio:
+            with st.spinner("Salvando áudio..."):
+                url = upload_audio_to_supabase(audio.read(), l['LinkedIn'])
+                if url:
+                    save_note_to_supabase(lead_ref, "🎙️ Nota de voz registrada", url)
+                else:
+                    flash("Upload do áudio falhou. Apenas o registro foi criado.", "warning")
+                    save_note_to_supabase(lead_ref, "🎙️ Tentativa de gravação (Falha no áudio)", None)
+                
+                # Incrementa a chave para limpar o widget da tela e recarrega a página
+                st.session_state.audio_key += 1
+                st.rerun()
+    else:
+        st.warning("Gravação de voz indisponível: a versão do Streamlit instalada não suporta st.audio_input.")
+
+    # 2. Texto isolado dentro do form (para manter o botão e limpar ao enviar)
+    with st.form("text_note_form", clear_on_submit=True):
+        txt = st.text_area("Adicionar nota de texto", placeholder="Insights da reunião...", label_visibility="collapsed")
+        if st.form_submit_button("Salvar Texto", type="primary"):
+            if txt.strip():
+                save_note_to_supabase(lead_ref, txt, None)
+                st.rerun()
+    
+    # 3. Histórico
+    st.markdown("#### Histórico")
+    for n in load_notes_from_supabase(lead_ref):
         dt = datetime.fromisoformat(n['created_at'].replace('Z', '+00:00')).strftime("%d/%m %H:%M")
         st.markdown(f"""<div class="timeline-item"><p class="timeline-date">{dt}</p><p>{n['texto']}</p></div>""", unsafe_allow_html=True)
         if n.get('audio_url'): st.audio(n['audio_url'])
