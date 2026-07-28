@@ -3,6 +3,7 @@ import pandas as pd
 import os
 import base64
 import re
+import json
 from datetime import datetime
 from supabase import create_client, Client
 
@@ -67,6 +68,17 @@ def upload_audio_to_supabase(audio_bytes, lead_id: str):
     except Exception as e:
         flash(f"Erro ao enviar áudio: {e}")
         return None
+
+# --- INTEGRAÇÃO LLM (ESPAÇO DEDICADO) ---
+def processar_audio_com_llm(audio_bytes):
+    """
+    Aqui você vai colocar o código real da LLM.
+    Exemplo do fluxo:
+    1. openai.Audio.transcribe("whisper-1", audio_file)
+    2. openai.ChatCompletion.create(model="gpt-4o", prompt="Extraia os insights no formato JSON: [{'tipo': '...', 'texto': '...'}]")
+    """
+    # Retorne o JSON estruturado gerado pela IA. Por enquanto, retorna vazio para não quebrar a tela.
+    return [] 
 
 # --- 3. GESTÃO DE ESTADO ---
 if 'view_mode' not in st.session_state: st.session_state.view_mode = 'list'
@@ -134,39 +146,12 @@ def apply_executive_styles():
 apply_executive_styles()
 render_flashes()
 
-# --- 6. DATABASE MOCK (Com simulação do JSON da LLM) ---
-# Adicionei o campo "insights_ia" para simular o que sua automação vai inserir no banco depois
+# --- 6. DATABASE LIMPO ---
 LEADS_BASE = [
-    {
-        "ID": 18, 
-        "Nome": "Elizabeth Sousa Rodrigues", 
-        "Empresa": "Grupo Mendes", 
-        "Cargo": "Diretor Executivo de Gente e Cultura", 
-        "LinkedIn": "https://www.linkedin.com/in/elizabeth-sousa-rodrigues-26086518/",
-        "insights_ia": [
-            {"tipo": "Foco", "texto": "Está focada na reestruturação de plano de carreira para retenção de lideranças."},
-            {"tipo": "Tomada de Decisão", "texto": "Perfil pragmático, valoriza dados. Citou dificuldade com os relatórios atuais."}
-        ]
-    },
-    {
-        "ID": 9, 
-        "Nome": "Carolina Bussadori", 
-        "Empresa": "Grupo St Marche", 
-        "Cargo": "Head de Gente & Cultura", 
-        "LinkedIn": "linkedin.com/in/carolinabussadorirh/",
-        "insights_ia": []
-    },
-    {
-        "ID": 7, 
-        "Nome": "Camila Alves Massaro", 
-        "Empresa": "ArcelorMittal Gonvarri", 
-        "Cargo": "Director of People, Strategy & IT", 
-        "LinkedIn": "https://www.linkedin.com/in/camilamassaro-rh",
-        "insights_ia": [
-            {"tipo": "Tecnologia", "texto": "Buscando integrar os sistemas de RH com as ferramentas de TI globais."}
-        ]
-    }
-    # ... você pode continuar com os outros leads normalmente
+    {"ID": 18, "Nome": "Elizabeth Sousa Rodrigues", "Empresa": "Grupo Mendes", "Cargo": "Diretor Executivo de Gente e Cultura", "LinkedIn": "https://www.linkedin.com/in/elizabeth-sousa-rodrigues-26086518/"},
+    {"ID": 9, "Nome": "Carolina Bussadori", "Empresa": "Grupo St Marche", "Cargo": "Head de Gente & Cultura", "LinkedIn": "linkedin.com/in/carolinabussadorirh/"},
+    {"ID": 7, "Nome": "Camila Alves Massaro", "Empresa": "ArcelorMittal Gonvarri", "Cargo": "Director of People, Strategy & IT", "LinkedIn": "https://www.linkedin.com/in/camilamassaro-rh"}
+    # Adicione o resto dos leads aqui
 ]
 
 # --- 7. SIDEBAR ---
@@ -182,7 +167,7 @@ if st.session_state.view_mode == 'dashboard':
     st.markdown('<h1>Visão Geral</h1>', unsafe_allow_html=True)
     c1, c2 = st.columns(2)
     c1.metric("Total de Contatos", len(LEADS_BASE))
-    c2.metric("Insights Gerados (IA)", sum([1 for l in LEADS_BASE if l.get('insights_ia')]))
+    c2.metric("Interações Registradas", len(supabase.table("notas").select("id").execute().data))
     st.info("💡 Como o foco agora é relacionamento e insights qualitativos, o dashboard exibe o status da sua base de networking.")
 
 elif st.session_state.view_mode == 'list':
@@ -233,10 +218,13 @@ elif st.session_state.view_mode == 'detail':
     st.divider()
 
     # --- SESSÃO DE INSIGHTS DA IA ---
-    if l.get('insights_ia') and len(l['insights_ia']) > 0:
-        st.markdown("### 🧠 Insights Gerados (IA)")
-        for insight in l['insights_ia']:
-            # Renderiza um card bonitão para cada insight que voltar da sua LLM
+    # Aqui vamos assumir que os insights estão sendo puxados do Supabase junto com o perfil
+    # Por padrão agora vai aparecer sempre vazio, aguardando você imputar os dados
+    insights = l.get('insights_ia', []) 
+    
+    st.markdown("### 🧠 Insights Gerados (IA)")
+    if insights and len(insights) > 0:
+        for insight in insights:
             st.markdown(f"""
             <div class="ai-insight-card">
                 <div class="ai-insight-title">✨ {insight['tipo']}</div>
@@ -246,24 +234,30 @@ elif st.session_state.view_mode == 'detail':
             </div>
             """, unsafe_allow_html=True)
     else:
-        st.markdown("### 🧠 Insights Gerados (IA)")
-        st.caption("Nenhum insight gerado ainda. Grave um áudio para a IA analisar.")
+        st.caption("Aguardando processamento de áudio para gerar novos insights.")
 
     st.divider()
 
-    # --- REGISTRO RÁPIDO (Envio Automático) ---
+    # --- REGISTRO RÁPIDO COM GATILHO PARA LLM ---
     st.markdown("### 🎙️ Gravar Interação")
-    st.caption("Fale sobre a reunião. A IA extrairá os insights depois.")
+    st.caption("Fale sobre a reunião. O áudio será enviado para processamento.")
     
     if hasattr(st, 'audio_input'):
         audio = st.audio_input("Grave aqui", label_visibility="collapsed", key=f"audio_widget_{st.session_state.audio_key}")
         
         if audio:
-            with st.spinner("Enviando gravação para processamento..."):
-                url = upload_audio_to_supabase(audio.read(), l['LinkedIn'])
+            with st.spinner("Enviando gravação e processando inteligência..."):
+                audio_bytes = audio.read()
+                
+                # 1. Faz upload no banco
+                url = upload_audio_to_supabase(audio_bytes, l['LinkedIn'])
+                
+                # 2. ESPAÇO PARA CHAMAR A LLM 
+                # insights_gerados = processar_audio_com_llm(audio_bytes)
+                # save_insights_to_supabase(lead_ref, insights_gerados)
+                
                 if url:
-                    # Aqui é onde seu webhook ou backend pega o audio. Por enquanto salva a nota.
-                    save_note_to_supabase(lead_ref, "🎙️ Áudio enviado para transcrição e análise da IA.", url)
+                    save_note_to_supabase(lead_ref, "🎙️ Áudio enviado para a IA.", url)
                 else:
                     flash("Upload do áudio falhou.", "warning")
                 
