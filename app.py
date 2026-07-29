@@ -89,14 +89,28 @@ def upload_audio_to_supabase(audio_bytes, lead_id: str):
     except Exception as e: 
         return None
 
-# --- A MÁGICA DA IA (GEMINI) AQUI ---
+# --- A MÁGICA DA IA (GEMINI DINÂMICO) AQUI ---
 def processar_audio_com_ia(audio_bytes_bruto):
     if not has_gemini: 
         return "Erro: Gemini não configurado nos secrets.", []
     
     try:
-        model = genai.GenerativeModel('gemini-2.5-flash')
+        # 1. Busca dinamicamente o melhor modelo disponível na sua conta
+        modelo_escolhido = None
+        for m in genai.list_models():
+            if 'generateContent' in m.supported_generation_methods:
+                if 'gemini' in m.name.lower():
+                    modelo_escolhido = m.name
+                    # Dá preferência para as versões "flash" que são ultra rápidas
+                    if 'flash' in m.name.lower():
+                        break
+                        
+        if not modelo_escolhido:
+            return "Erro: Nenhum modelo de IA foi encontrado na sua conta do Google.", []
+            
+        model = genai.GenerativeModel(modelo_escolhido)
         
+        # 2. Prepara o prompt
         prompt = """
         Você é um analista comercial de elite.
         1. Ouça e transcreva o áudio fornecido.
@@ -111,11 +125,13 @@ def processar_audio_com_ia(audio_bytes_bruto):
         }
         """
         
+        # 3. Anexa o áudio gravado
         audio_part = {
             "mime_type": "audio/wav",
             "data": audio_bytes_bruto
         }
         
+        # 4. Chama a IA
         response = model.generate_content(
             [prompt, audio_part],
             generation_config={"response_mime_type": "application/json"}
@@ -196,13 +212,53 @@ def apply_executive_styles():
 apply_executive_styles()
 render_flashes()
 
-# --- 6. DATABASE (Base Limpa para Networking) ---
+# --- 6. DATABASE ---
 LEADS_BASE = [
     {"ID": 18, "Nome": "Elizabeth Sousa Rodrigues", "Empresa": "Grupo Mendes", "Cargo": "Diretor Executivo de Gente e Cultura", "LinkedIn": "https://www.linkedin.com/in/elizabeth-sousa-rodrigues-26086518/"},
     {"ID": 9, "Nome": "Carolina Bussadori", "Empresa": "Grupo St Marche", "Cargo": "Head de Gente & Cultura", "LinkedIn": "linkedin.com/in/carolinabussadorirh/"},
     {"ID": 7, "Nome": "Camila Alves Massaro", "Empresa": "ArcelorMittal Gonvarri", "Cargo": "Director of People, Strategy & IT", "LinkedIn": "https://www.linkedin.com/in/camilamassaro-rh"},
-    {"ID": 5, "Nome": "Brenda Donato Endo", "Empresa": "Embracon", "Cargo": "Diretora de RH", "LinkedIn": "https://www.linkedin.com/in/brenda-donato-endo-78275041"}
-    # ... Adicione o restante da sua base de leads aqui
+    {"ID": 5, "Nome": "Brenda Donato Endo", "Empresa": "Embracon", "Cargo": "Diretora de RH", "LinkedIn": "https://www.linkedin.com/in/brenda-donato-endo-78275041"},
+    {"ID": 42, "Nome": "Willian Souza", "Empresa": "EMS", "Cargo": "Diretor de Governança e Treinamento", "LinkedIn": "https://www.linkedin.com/in/willian-souza-63874147"},
+    {"ID": 15, "Nome": "Danila Pires Carsoso", "Empresa": "Motiva", "Cargo": "Diretor", "LinkedIn": ""},
+    {"ID": 21, "Nome": "Frederico Consetino Neto", "Empresa": "Afya", "Cargo": "Diretor de Recursos Humanos", "LinkedIn": "https://www.linkedin.com/in/freico-cosentino-b67b1a20"},
+    {"ID": 33, "Nome": "Patrícia Rosado", "Empresa": "Tupy", "Cargo": "VP de Pessoas, Cultura e SSMA", "LinkedIn": "https://www.linkedin.com/in/patricia-rosado-b15ba01a"},
+    {"ID": 20, "Nome": "Franciele Ropelato", "Empresa": "Merck", "Cargo": "Diretora De RH", "LinkedIn": ""},
+    {"ID": 35, "Nome": "RITA SOUZA", "Empresa": "Bunge Alimentos", "Cargo": "Diretora Gestão Mudança Organizacional", "LinkedIn": "https://www.linkedin.com/in/rita-souza-neurochange/"},
+    {"ID": 38, "Nome": "Soraya Bahde", "Empresa": "Bradesco", "Cargo": "Diretora", "LinkedIn": "https://www.linkedin.com/in/sorayabahde"},
+    {"ID": 32, "Nome": "Patricia Bobbato", "Empresa": "Natura", "Cargo": "Diretora de Cultura, Desenvolvimento, Bem estar e DE&I", "LinkedIn": "https://www.linkedin.com/in/patriciabobbato"},
+    {"ID": 13, "Nome": "Daniela Monteiro", "Empresa": "Editora do Brasil", "Cargo": "Diretora de RH & Marca", "LinkedIn": "https://br.linkedin.com/in/daniela-monteiro-a3125970"},
+    {"ID": 16, "Nome": "Diná Ribeiro de Carvalho", "Empresa": "Superlógica", "Cargo": "Diretora de Gente e Gestão", "LinkedIn": "https://br.linkedin.com/in/din%C3%A1-ribeiro-de-carvalho-a1a184348"},
+    {"ID": 31, "Nome": "Neto Mello", "Empresa": "Adimax", "Cargo": "Diretor de RH / CHRO", "LinkedIn": "https://www.linkedin.com/in/netomello"},
+    {"ID": 22, "Nome": "Gerson Cosme santos", "Empresa": "GHT", "Cargo": "Diretor gente & performance", "LinkedIn": "https://www.linkedin.com/in/gerson-cosme-santos"},
+    {"ID": 2, "Nome": "Ana Luiza Guimarães Brasil", "Empresa": "Fortbras", "Cargo": "Diretor de Gente e Gestão", "LinkedIn": "https://www.linkedin.com/in/brasilana"},
+    {"ID": 36, "Nome": "Rosangela Schneider", "Empresa": "Karsten SA", "Cargo": "CHRO", "LinkedIn": ""},
+    {"ID": 40, "Nome": "Thais Cristina de Abreu Vendramini Ferreira", "Empresa": "G5 Partners", "Cargo": "Vice President - People and Culture Manager", "LinkedIn": "https://www.linkedin.com/in/thais-vendramini/"},
+    {"ID": 4, "Nome": "Angelo Fanti", "Empresa": "Sorocaba Refrescos S/A", "Cargo": "Diretor Recursos Humanos", "LinkedIn": "https://br.linkedin.com/in/angelo-fanti-58a4a821"},
+    {"ID": 25, "Nome": "Juliana Dorigo", "Empresa": "Grupo Ecoagro", "Cargo": "Diretora de RH", "LinkedIn": "https://www.linkedin.com/in/julianadorigorh"},
+    {"ID": 39, "Nome": "Tâmara Costa", "Empresa": "SantoDigital", "Cargo": "Diretora de RH", "LinkedIn": "https://www.linkedin.com/in/tamiscosta"},
+    {"ID": 1, "Nome": "Aldo Silva dos Santos", "Empresa": "HCOSTA", "Cargo": "CHRO Gente e Gestão", "LinkedIn": "https://www.linkedin.com/in/aldo-santos-a4985353/"},
+    {"ID": 23, "Nome": "GIOVANI CARRA", "Empresa": "ADF ONDULADOS E LOGISTICA", "Cargo": "DIRETOR DE RH", "LinkedIn": "https://www.linkedin.com/in/giovani-carra-65858a33"},
+    {"ID": 10, "Nome": "Caroline Faki de Miranda", "Empresa": "Vigor Alimentos", "Cargo": "Head de Business Partner", "LinkedIn": "https://www.linkedin.com/in/caroline-faki-68338285"},
+    {"ID": 17, "Nome": "Diogo Dourado Soares", "Empresa": "Festo Brasil", "Cargo": "Head of HR CoE SAM", "LinkedIn": ""},
+    {"ID": 27, "Nome": "Leonardo Rodrigues Gaspar", "Empresa": "SIMPRESS", "Cargo": "Gerente Executivo RH", "LinkedIn": ""},
+    {"ID": 24, "Nome": "Jader Eder Bleil", "Empresa": "Greenbrier Maxion", "Cargo": "Gerente RT", "LinkedIn": "https://www.linkedin.com/in/jader-%C3%A9der-bleil-41115225"},
+    {"ID": 14, "Nome": "Daniela Nishimoto", "Empresa": "Grupo L'Oréal", "Cargo": "CHRO", "LinkedIn": "https://www.linkedin.com/in/daniela-nishimoto-00b63b1"},
+    {"ID": 43, "Nome": "Daniele Intrebartoli Costa", "Empresa": "Heineken", "Cargo": "Gerente Sr People", "LinkedIn": ""},
+    {"ID": 41, "Nome": "Thamires Justino", "Empresa": "Alcoa Alumínio", "Cargo": "Gerente de RH", "LinkedIn": "https://www.linkedin.com/in/thamires-pedro-15287611b/"},
+    {"ID": 11, "Nome": "Daniel Peruchi", "Empresa": "Alcoa", "Cargo": "Gerente Sênior RH", "LinkedIn": "https://www.linkedin.com/in/daniel-peruchi-6a09a0b9"},
+    {"ID": 37, "Nome": "Sabrina Lemes", "Empresa": "GBMX", "Cargo": "Gerente EHS", "LinkedIn": "https://www.linkedin.com/in/sabrina-rosa-lemes-mba-4ba065107"},
+    {"ID": 34, "Nome": "Ricardo Malvestite", "Empresa": "GBMX", "Cargo": "Gerente Sr RH", "LinkedIn": "https://www.linkedin.com/in/ricardo-malvestite-74b1936"},
+    {"ID": 26, "Nome": "Lenita David Gilioli", "Empresa": "Flora Produtos", "Cargo": "Gerente executiva RH", "LinkedIn": "https://www.linkedin.com/in/lenita-gilioli-freitas"},
+    {"ID": 28, "Nome": "Mariana Macedo Gaida", "Empresa": "Uncover", "Cargo": "Head of People", "LinkedIn": ""},
+    {"ID": 29, "Nome": "Michele Ferreira", "Empresa": "Confiança Supermercados", "Cargo": "Coordenadora de DHO", "LinkedIn": "https://www.linkedin.com/in/michele-ferreira-16401083"},
+    {"ID": 44, "Nome": "Marianna Biagi Pache", "Empresa": "Emal", "Cargo": "Gerente de Gestão de Pessoas", "LinkedIn": ""},
+    {"ID": 3, "Nome": "ANDRE LUIZ EXPEDITO ARANHA", "Empresa": "SUPERLOGICA", "Cargo": "GERENTE DE REMUNERAÇÃO", "LinkedIn": "https://www.linkedin.com/in/andrelearanha"},
+    {"ID": 30, "Nome": "Nelson Simeoni Junior", "Empresa": "Superlógica", "Cargo": "Gerente de DHO", "LinkedIn": "https://www.linkedin.com/in/nelsonsimeoni"},
+    {"ID": 12, "Nome": "Daniela Matos Faria", "Empresa": "Zamp", "Cargo": "Dir de Talentos e Cultura", "LinkedIn": "https://www.linkedin.com/in/daniela-matos-faria"},
+    {"ID": 19, "Nome": "FERNANDO SPINELLI", "Empresa": "CNL Rodovias", "Cargo": "Gerente de RH e SSO", "LinkedIn": ""},
+    {"ID": 45, "Nome": "Graziella Albuquerque", "Empresa": "Emal", "Cargo": "Supervisora de RH", "LinkedIn": ""},
+    {"ID": 6, "Nome": "Bruno Szarf", "Empresa": "Stefanini", "Cargo": "VP Global", "LinkedIn": "https://www.linkedin.com/in/brunoszarf"},
+    {"ID": 8, "Nome": "Camilla Padua", "Empresa": "KPMG", "Cargo": "Sócia", "LinkedIn": "httpswww.linkedin.comincamillapadua"}
 ]
 
 # --- 7. SIDEBAR ---
@@ -285,7 +341,7 @@ elif st.session_state.view_mode == 'detail':
 
     # --- REGISTRO RÁPIDO COM GATILHO PARA LLM ---
     st.markdown("### 🎙️ Gravar Interação")
-    st.caption("Fale sobre a reunião. O Gemini (Google IA) ouvirá o áudio e extrairá os insights.")
+    st.caption("Fale sobre a reunião. O Gemini ouvirá o áudio e extrairá os insights.")
     
     if hasattr(st, 'audio_input'):
         audio = st.audio_input("Grave aqui", label_visibility="collapsed", key=f"audio_widget_{st.session_state.audio_key}")
