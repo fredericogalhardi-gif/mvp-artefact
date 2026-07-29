@@ -89,62 +89,63 @@ def upload_audio_to_supabase(audio_bytes, lead_id: str):
     except Exception as e: 
         return None
 
-# --- A MÁGICA DA IA (GEMINI DINÂMICO) AQUI ---
+# --- A MÁGICA DA IA (GEMINI BLINDADO) AQUI ---
 def processar_audio_com_ia(audio_bytes_bruto):
     if not has_gemini: 
         return "Erro: Gemini não configurado nos secrets.", []
     
-    try:
-        # 1. Busca dinamicamente o melhor modelo disponível na sua conta
-        modelo_escolhido = None
-        for m in genai.list_models():
-            if 'generateContent' in m.supported_generation_methods:
-                if 'gemini' in m.name.lower():
-                    modelo_escolhido = m.name
-                    # Dá preferência para as versões "flash" que são ultra rápidas
-                    if 'flash' in m.name.lower():
-                        break
-                        
-        if not modelo_escolhido:
-            return "Erro: Nenhum modelo de IA foi encontrado na sua conta do Google.", []
+    # Lista de modelos do melhor para o "mais garantido"
+    modelos_para_testar = [
+        'gemini-1.5-flash-latest',
+        'gemini-1.5-flash',
+        'gemini-2.0-flash',
+        'gemini-1.5-pro-latest',
+        'gemini-1.0-pro'
+    ]
+    
+    prompt = """
+    Você é um analista comercial de elite.
+    1. Ouça e transcreva o áudio fornecido.
+    2. Extraia os insights qualitativos mais valiosos da reunião.
+    
+    Retorne APENAS um JSON estrito no seguinte formato:
+    {
+        "transcricao": "texto completo da transcrição aqui",
+        "insights": [
+            {"tipo": "Nome do Tópico (Ex: Foco, Dor, Oportunidade)", "texto": "Resumo executivo do insight"}
+        ]
+    }
+    """
+    
+    audio_part = {
+        "mime_type": "audio/wav",
+        "data": audio_bytes_bruto
+    }
+    
+    ultimo_erro = ""
+    
+    # O código vai tentar um por um até o Google aceitar
+    for nome_modelo in modelos_para_testar:
+        try:
+            model = genai.GenerativeModel(nome_modelo)
+            response = model.generate_content(
+                [prompt, audio_part],
+                generation_config={"response_mime_type": "application/json"}
+            )
             
-        model = genai.GenerativeModel(modelo_escolhido)
-        
-        # 2. Prepara o prompt
-        prompt = """
-        Você é um analista comercial de elite.
-        1. Ouça e transcreva o áudio fornecido.
-        2. Extraia os insights qualitativos mais valiosos da reunião.
-        
-        Retorne APENAS um JSON estrito no seguinte formato:
-        {
-            "transcricao": "texto completo da transcrição aqui",
-            "insights": [
-                {"tipo": "Nome do Tópico (Ex: Foco, Dor, Oportunidade, Próximos Passos)", "texto": "Resumo executivo do insight"}
-            ]
-        }
-        """
-        
-        # 3. Anexa o áudio gravado
-        audio_part = {
-            "mime_type": "audio/wav",
-            "data": audio_bytes_bruto
-        }
-        
-        # 4. Chama a IA
-        response = model.generate_content(
-            [prompt, audio_part],
-            generation_config={"response_mime_type": "application/json"}
-        )
-        
-        dados_json = json.loads(response.text)
-        transcricao = dados_json.get("transcricao", "Transcrição não retornada.")
-        insights = dados_json.get("insights", [])
-        
-        return transcricao, insights
-        
-    except Exception as e:
-        return f"Falha na análise da IA: {str(e)}", []
+            dados_json = json.loads(response.text)
+            transcricao = dados_json.get("transcricao", "Transcrição não retornada.")
+            insights = dados_json.get("insights", [])
+            
+            # Se deu certo, retorna os dados e para o loop
+            return transcricao, insights
+            
+        except Exception as e:
+            ultimo_erro = str(e)
+            continue # Ignora o erro e tenta o próximo modelo da lista
+            
+    # Se TODOS falharem, ele avisa
+    return f"Falha na IA. O Google bloqueou todos os modelos tentados. Último erro: {ultimo_erro}", []
 
 # --- 3. GESTÃO DE ESTADO ---
 if 'view_mode' not in st.session_state: st.session_state.view_mode = 'list'
