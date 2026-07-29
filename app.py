@@ -89,20 +89,20 @@ def upload_audio_to_supabase(audio_bytes, lead_id: str):
     except Exception as e: 
         return None
 
-# --- A MÁGICA DA IA (GEMINI BLINDADO) AQUI ---
+# --- A MÁGICA DA IA (GEMINI EXPLORADOR) AQUI ---
 def processar_audio_com_ia(audio_bytes_bruto):
     if not has_gemini: 
         return "Erro: Gemini não configurado nos secrets.", []
     
-    # Lista de modelos do melhor para o "mais garantido"
-    modelos_para_testar = [
-        'gemini-1.5-flash-latest',
-        'gemini-1.5-flash',
-        'gemini-2.0-flash',
-        'gemini-1.5-pro-latest',
-        'gemini-1.0-pro'
-    ]
-    
+    # 1. Pega a lista real de modelos permitidos para a SUA conta hoje
+    try:
+        modelos_disponiveis = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+    except Exception as e:
+        return f"Erro ao acessar a lista de modelos do Google: {str(e)}", []
+        
+    if not modelos_disponiveis:
+        return "Erro Crítico: A sua chave API não tem nenhum modelo de IA liberado pelo Google.", []
+
     prompt = """
     Você é um analista comercial de elite.
     1. Ouça e transcreva o áudio fornecido.
@@ -123,9 +123,16 @@ def processar_audio_com_ia(audio_bytes_bruto):
     }
     
     ultimo_erro = ""
+    modelos_tentados = []
     
-    # O código vai tentar um por um até o Google aceitar
-    for nome_modelo in modelos_para_testar:
+    # 2. Testa TODOS os modelos disponíveis, um por um
+    for nome_modelo in modelos_disponiveis:
+        # Se for modelo focado só em texto/embeddings, a gente ignora pra economizar tempo
+        if 'embedding' in nome_modelo.lower() or 'aqa' in nome_modelo.lower():
+            continue
+            
+        modelos_tentados.append(nome_modelo)
+        
         try:
             model = genai.GenerativeModel(nome_modelo)
             response = model.generate_content(
@@ -134,18 +141,19 @@ def processar_audio_com_ia(audio_bytes_bruto):
             )
             
             dados_json = json.loads(response.text)
-            transcricao = dados_json.get("transcricao", "Transcrição não retornada.")
+            transcricao = dados_json.get("transcricao", "Transcrição gerada, mas sem texto.")
             insights = dados_json.get("insights", [])
             
-            # Se deu certo, retorna os dados e para o loop
+            # Deu certo! Retorna e encerra.
             return transcricao, insights
             
         except Exception as e:
             ultimo_erro = str(e)
-            continue # Ignora o erro e tenta o próximo modelo da lista
+            continue # Falhou? Segue pro próximo modelo da lista
             
-    # Se TODOS falharem, ele avisa
-    return f"Falha na IA. O Google bloqueou todos os modelos tentados. Último erro: {ultimo_erro}", []
+    # 3. Se TODOS falharem, mostramos as provas do crime
+    msg_erro = f"O Google recusou o áudio em todos os modelos. <br>Modelos que você tem: {', '.join(modelos_tentados)}.<br>Último Erro: {ultimo_erro}"
+    return msg_erro, []
 
 # --- 3. GESTÃO DE ESTADO ---
 if 'view_mode' not in st.session_state: st.session_state.view_mode = 'list'
@@ -213,7 +221,7 @@ def apply_executive_styles():
 apply_executive_styles()
 render_flashes()
 
-# --- 6. DATABASE ---
+# --- 6. DATABASE (Base Limpa para Networking) ---
 LEADS_BASE = [
     {"ID": 18, "Nome": "Elizabeth Sousa Rodrigues", "Empresa": "Grupo Mendes", "Cargo": "Diretor Executivo de Gente e Cultura", "LinkedIn": "https://www.linkedin.com/in/elizabeth-sousa-rodrigues-26086518/"},
     {"ID": 9, "Nome": "Carolina Bussadori", "Empresa": "Grupo St Marche", "Cargo": "Head de Gente & Cultura", "LinkedIn": "linkedin.com/in/carolinabussadorirh/"},
@@ -348,24 +356,24 @@ elif st.session_state.view_mode == 'detail':
         audio = st.audio_input("Grave aqui", label_visibility="collapsed", key=f"audio_widget_{st.session_state.audio_key}")
         
         if audio:
-            with st.spinner("🧠 Gemini está analisando o áudio e extraindo insights..."):
+            with st.spinner("🧠 Explorando modelos do Gemini, analisando o áudio e extraindo insights..."):
                 audio_bytes = audio.read()
                 
                 # 1. Upload do áudio pro Supabase
                 url = upload_audio_to_supabase(audio_bytes, l['LinkedIn'])
                 
-                # 2. Chama a IA pra transcrever e tirar insights de uma vez só!
+                # 2. Chama a IA (que agora procura automaticamente o modelo que funciona!)
                 texto_transcrito, novos_insights = processar_audio_com_ia(audio_bytes)
                 
                 # 3. Salva a transcrição como nota
                 if url:
-                    nota_formatada = f"🎙️ **Transcrição (Gemini IA):**\n\n_{texto_transcrito}_"
+                    nota_formatada = f"🎙️ **Transcrição / Processamento:**\n\n_{texto_transcrito}_"
                     save_note_to_supabase(lead_ref, nota_formatada, url)
                 else:
                     flash("Upload do áudio falhou, mas a transcrição foi gerada.", "warning")
                     save_note_to_supabase(lead_ref, f"🎙️ **Transcrição (Sem áudio):**\n\n_{texto_transcrito}_")
                 
-                # 4. Salva os insights estruturados na tabela de insights
+                # 4. Salva os insights estruturados na tabela de insights (se conseguiu algum)
                 if novos_insights:
                     for insight in novos_insights:
                         save_insight_to_supabase(lead_ref, insight.get("tipo", "Geral"), insight.get("texto", ""))
