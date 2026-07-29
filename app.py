@@ -4,9 +4,11 @@ import os
 import base64
 import re
 import json
+import io
 from datetime import datetime
 from supabase import create_client, Client
 import google.generativeai as genai
+from pydub import AudioSegment
 
 # --- 1. CONFIGURAÇÃO C-LEVEL ---
 st.set_page_config(
@@ -44,7 +46,24 @@ def render_flashes():
     for kind, message in st.session_state.pop("pending_flashes", []):
         getattr(st, kind)(message)
 
-# --- BANCO DE DADOS: NOTAS E INSIGHTS ---
+# --- 3. FUNÇÃO DE COMPRESSÃO DE ÁUDIO ---
+def comprimir_audio_para_mp3(audio_bytes_wav):
+    try:
+        # Lê o áudio .wav original da memória
+        audio_original = AudioSegment.from_file(io.BytesIO(audio_bytes_wav), format="wav")
+        
+        # Cria um espaço na memória para o novo arquivo MP3
+        mp3_io = io.BytesIO()
+        
+        # Exporta como mp3 com bitrate baixo (ótimo para voz, economiza 90% de espaço)
+        audio_original.export(mp3_io, format="mp3", bitrate="32k")
+        
+        return mp3_io.getvalue()
+    except Exception as e:
+        flash(f"Aviso: Não foi possível comprimir o áudio ({str(e)}). Salvando no formato original.", "warning")
+        return audio_bytes_wav # Retorna o original como plano B
+
+# --- 4. BANCO DE DADOS: NOTAS E INSIGHTS ---
 def load_notes_from_supabase(lead_id: str):
     try:
         return supabase.table("notas").select("*").eq("lead_id", str(lead_id)).order("created_at", desc=True).execute().data
@@ -83,18 +102,19 @@ def upload_audio_to_supabase(audio_bytes, lead_id: str):
     try:
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
         safe_lead_id = re.sub(r'[^a-zA-Z0-9]', '', str(lead_id))
-        filename = f"registro_{safe_lead_id}_{timestamp}.wav"
-        supabase.storage.from_("gravacoes").upload(file=audio_bytes, path=filename, file_options={"content-type": "audio/wav"})
+        # Ajustado para salvar como .mp3
+        filename = f"registro_{safe_lead_id}_{timestamp}.mp3"
+        supabase.storage.from_("gravacoes").upload(file=audio_bytes, path=filename, file_options={"content-type": "audio/mp3"})
         return supabase.storage.from_("gravacoes").get_public_url(filename)
     except Exception as e: 
         return None
 
-# --- A MÁGICA DA IA (GEMINI EXPLORADOR) AQUI ---
+# --- 5. A MÁGICA DA IA (GEMINI EXPLORADOR) AQUI ---
 def processar_audio_com_ia(audio_bytes_bruto):
     if not has_gemini: 
         return "Erro: Gemini não configurado nos secrets.", []
     
-    # 1. Pega a lista real de modelos permitidos para a SUA conta hoje
+    # Pega a lista real de modelos permitidos
     try:
         modelos_disponiveis = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
     except Exception as e:
@@ -112,22 +132,20 @@ def processar_audio_com_ia(audio_bytes_bruto):
     {
         "transcricao": "texto completo da transcrição aqui",
         "insights": [
-            {"tipo": "Nome do Tópico (Ex: Foco, Dor, Oportunidade)", "texto": "Resumo executivo do insight"}
+            {"tipo": "Nome do Tópico (Ex: Foco, Dor, Oportunidade, Próximos Passos)", "texto": "Resumo executivo do insight"}
         ]
     }
     """
     
     audio_part = {
-        "mime_type": "audio/wav",
+        "mime_type": "audio/mp3", # Atualizado para mp3
         "data": audio_bytes_bruto
     }
     
     ultimo_erro = ""
     modelos_tentados = []
     
-    # 2. Testa TODOS os modelos disponíveis, um por um
     for nome_modelo in modelos_disponiveis:
-        # Se for modelo focado só em texto/embeddings, a gente ignora pra economizar tempo
         if 'embedding' in nome_modelo.lower() or 'aqa' in nome_modelo.lower():
             continue
             
@@ -144,24 +162,22 @@ def processar_audio_com_ia(audio_bytes_bruto):
             transcricao = dados_json.get("transcricao", "Transcrição gerada, mas sem texto.")
             insights = dados_json.get("insights", [])
             
-            # Deu certo! Retorna e encerra.
             return transcricao, insights
             
         except Exception as e:
             ultimo_erro = str(e)
-            continue # Falhou? Segue pro próximo modelo da lista
+            continue
             
-    # 3. Se TODOS falharem, mostramos as provas do crime
     msg_erro = f"O Google recusou o áudio em todos os modelos. <br>Modelos que você tem: {', '.join(modelos_tentados)}.<br>Último Erro: {ultimo_erro}"
     return msg_erro, []
 
-# --- 3. GESTÃO DE ESTADO ---
+# --- 6. GESTÃO DE ESTADO ---
 if 'view_mode' not in st.session_state: st.session_state.view_mode = 'list'
 if 'selected_lead_id' not in st.session_state: st.session_state.selected_lead_id = None
 if 'theme' not in st.session_state: st.session_state.theme = 'dark'
 if 'audio_key' not in st.session_state: st.session_state.audio_key = 0
 
-# --- 4. LÓGICA DE FOTOS ---
+# --- 7. LÓGICA DE FOTOS ---
 SABI_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sabi')
 
 def extract_linkedin_id(url):
@@ -182,7 +198,7 @@ def get_photo_html(name, url, size_class="large"):
     initials = "".join([w[0] for w in str(name).split()[:2]]).upper()
     return f'<div class="initials-placeholder {size_class}">{initials}</div>'
 
-# --- 5. DESIGN SYSTEM ---
+# --- 8. DESIGN SYSTEM ---
 def apply_executive_styles():
     is_dark = st.session_state.theme == 'dark'
     C = {
@@ -221,7 +237,7 @@ def apply_executive_styles():
 apply_executive_styles()
 render_flashes()
 
-# --- 6. DATABASE (Base Limpa para Networking) ---
+# --- 9. DATABASE (Base de Contatos) ---
 LEADS_BASE = [
     {"ID": 18, "Nome": "Elizabeth Sousa Rodrigues", "Empresa": "Grupo Mendes", "Cargo": "Diretor Executivo de Gente e Cultura", "LinkedIn": "https://www.linkedin.com/in/elizabeth-sousa-rodrigues-26086518/"},
     {"ID": 9, "Nome": "Carolina Bussadori", "Empresa": "Grupo St Marche", "Cargo": "Head de Gente & Cultura", "LinkedIn": "linkedin.com/in/carolinabussadorirh/"},
@@ -270,7 +286,7 @@ LEADS_BASE = [
     {"ID": 8, "Nome": "Camilla Padua", "Empresa": "KPMG", "Cargo": "Sócia", "LinkedIn": "httpswww.linkedin.comincamillapadua"}
 ]
 
-# --- 7. SIDEBAR ---
+# --- 10. SIDEBAR ---
 with st.sidebar:
     st.markdown('<h2 class="atf-gradient">Artefact</h2>', unsafe_allow_html=True)
     if st.button("👥 Contatos", use_container_width=True, disabled=(st.session_state.view_mode=='list')): 
@@ -281,7 +297,7 @@ with st.sidebar:
         st.session_state.theme = 'light' if st.session_state.theme == 'dark' else 'dark'
         st.rerun()
 
-# --- 8. VIEWS ---
+# --- 11. VIEWS ---
 if st.session_state.view_mode == 'list':
     st.markdown('<h1>Contatos</h1>', unsafe_allow_html=True)
     search = st.text_input("🔍 Pesquisar por nome ou empresa...", placeholder="Digite aqui...")
@@ -350,22 +366,26 @@ elif st.session_state.view_mode == 'detail':
 
     # --- REGISTRO RÁPIDO COM GATILHO PARA LLM ---
     st.markdown("### 🎙️ Gravar Interação")
-    st.caption("Fale sobre a reunião. O Gemini ouvirá o áudio e extrairá os insights.")
+    st.caption("Fale sobre a reunião. O áudio será comprimido para economizar espaço e analisado pela IA.")
     
     if hasattr(st, 'audio_input'):
         audio = st.audio_input("Grave aqui", label_visibility="collapsed", key=f"audio_widget_{st.session_state.audio_key}")
         
         if audio:
-            with st.spinner("🧠 Explorando modelos do Gemini, analisando o áudio e extraindo insights..."):
-                audio_bytes = audio.read()
+            with st.spinner("🧠 Comprimindo áudio e extraindo insights..."):
+                # 1. Lê os bytes originais (pesados)
+                audio_bytes_wav = audio.read()
                 
-                # 1. Upload do áudio pro Supabase
-                url = upload_audio_to_supabase(audio_bytes, l['LinkedIn'])
+                # 2. Comprime para MP3 (leve)
+                audio_bytes_mp3 = comprimir_audio_para_mp3(audio_bytes_wav)
                 
-                # 2. Chama a IA (que agora procura automaticamente o modelo que funciona!)
-                texto_transcrito, novos_insights = processar_audio_com_ia(audio_bytes)
+                # 3. Upload do áudio MP3 pro Supabase
+                url = upload_audio_to_supabase(audio_bytes_mp3, l['LinkedIn'])
                 
-                # 3. Salva a transcrição como nota
+                # 4. Chama a IA usando o arquivo MP3 mais leve
+                texto_transcrito, novos_insights = processar_audio_com_ia(audio_bytes_mp3)
+                
+                # 5. Salva a transcrição como nota
                 if url:
                     nota_formatada = f"🎙️ **Transcrição / Processamento:**\n\n_{texto_transcrito}_"
                     save_note_to_supabase(lead_ref, nota_formatada, url)
@@ -373,12 +393,11 @@ elif st.session_state.view_mode == 'detail':
                     flash("Upload do áudio falhou, mas a transcrição foi gerada.", "warning")
                     save_note_to_supabase(lead_ref, f"🎙️ **Transcrição (Sem áudio):**\n\n_{texto_transcrito}_")
                 
-                # 4. Salva os insights estruturados na tabela de insights (se conseguiu algum)
+                # 6. Salva os insights estruturados
                 if novos_insights:
                     for insight in novos_insights:
                         save_insight_to_supabase(lead_ref, insight.get("tipo", "Geral"), insight.get("texto", ""))
                 
-                # Incrementa chave pra limpar o áudio da tela e atualiza
                 st.session_state.audio_key += 1
                 st.rerun()
     else:
@@ -408,6 +427,7 @@ elif st.session_state.view_mode == 'detail':
             </div>
             """, unsafe_allow_html=True)
             if n.get('audio_url'): 
+                # O player agora tocará o MP3
                 st.audio(n['audio_url'])
             if st.button("Deletar", key=f"del_{n['id']}", type="secondary"):
                 if delete_note_from_supabase(n['id']): st.rerun()
