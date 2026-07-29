@@ -95,7 +95,7 @@ def processar_audio_com_ia(audio_bytes_bruto):
         return "Erro: Gemini não configurado nos secrets.", []
     
     try:
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.5-flash')
         
         prompt = """
         Você é um analista comercial de elite.
