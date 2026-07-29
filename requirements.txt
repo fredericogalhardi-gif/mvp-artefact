@@ -5,3 +5,4 @@ openpyxl
 plotly
 supabase
 openai
+google-generativeai
