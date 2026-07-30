@@ -5,6 +5,7 @@ import base64
 import re
 import json
 import io
+import time
 from datetime import datetime
 from supabase import create_client, Client
 import google.generativeai as genai
@@ -57,7 +58,108 @@ def comprimir_audio_para_mp3(audio_bytes_wav):
         flash(f"Aviso: Não foi possível comprimir o áudio ({str(e)}). Salvando no formato original.", "warning")
         return audio_bytes_wav
 
-# --- 4. BANCO DE DADOS: NOTAS E INSIGHTS ---
+# --- 4. BANCO DE DADOS: LEADS, NOTAS E INSIGHTS ---
+
+# Base inicial apenas para migração automática
+INITIAL_LEADS = [
+    {"ID": 18, "Nome": "Elizabeth Sousa Rodrigues", "Empresa": "Grupo Mendes", "Cargo": "Diretor Executivo de Gente e Cultura", "LinkedIn": "https://www.linkedin.com/in/elizabeth-sousa-rodrigues-26086518/", "Prioritario": False},
+    {"ID": 9, "Nome": "Carolina Bussadori", "Empresa": "Grupo St Marche", "Cargo": "Head de Gente & Cultura", "LinkedIn": "linkedin.com/in/carolinabussadorirh/", "Prioritario": False},
+    {"ID": 7, "Nome": "Camila Alves Massaro", "Empresa": "ArcelorMittal Gonvarri", "Cargo": "Director of People, Strategy & IT", "LinkedIn": "https://www.linkedin.com/in/camilamassaro-rh", "Prioritario": False},
+    {"ID": 5, "Nome": "Brenda Donato Endo", "Empresa": "Embracon", "Cargo": "Diretora de RH", "LinkedIn": "https://www.linkedin.com/in/brenda-donato-endo-78275041", "Prioritario": False},
+    {"ID": 42, "Nome": "Willian Souza", "Empresa": "EMS", "Cargo": "Diretor de Governança e Treinamento", "LinkedIn": "https://www.linkedin.com/in/willian-souza-63874147", "Prioritario": False},
+    {"ID": 15, "Nome": "Danila Pires Carsoso", "Empresa": "Motiva", "Cargo": "Diretor", "LinkedIn": "", "Prioritario": False},
+    {"ID": 21, "Nome": "Frederico Consetino Neto", "Empresa": "Afya", "Cargo": "Diretor de Recursos Humanos", "LinkedIn": "https://www.linkedin.com/in/freico-cosentino-b67b1a20", "Prioritario": False},
+    {"ID": 33, "Nome": "Patrícia Rosado", "Empresa": "Tupy", "Cargo": "VP de Pessoas, Cultura e SSMA", "LinkedIn": "https://www.linkedin.com/in/patricia-rosado-b15ba01a", "Prioritario": False},
+    {"ID": 20, "Nome": "Franciele Ropelato", "Empresa": "Merck", "Cargo": "Diretora De RH", "LinkedIn": "", "Prioritario": False},
+    {"ID": 35, "Nome": "RITA SOUZA", "Empresa": "Bunge Alimentos", "Cargo": "Diretora Gestão Mudança Organizacional", "LinkedIn": "https://www.linkedin.com/in/rita-souza-neurochange/", "Prioritario": False},
+    {"ID": 38, "Nome": "Soraya Bahde", "Empresa": "Bradesco", "Cargo": "Diretora", "LinkedIn": "https://www.linkedin.com/in/sorayabahde", "Prioritario": False},
+    {"ID": 32, "Nome": "Patricia Bobbato", "Empresa": "Natura", "Cargo": "Diretora de Cultura, Desenvolvimento, Bem estar e DE&I", "LinkedIn": "https://www.linkedin.com/in/patriciabobbato", "Prioritario": False},
+    {"ID": 13, "Nome": "Daniela Monteiro", "Empresa": "Editora do Brasil", "Cargo": "Diretora de RH & Marca", "LinkedIn": "https://br.linkedin.com/in/daniela-monteiro-a3125970", "Prioritario": False},
+    {"ID": 16, "Nome": "Diná Ribeiro de Carvalho", "Empresa": "Superlógica", "Cargo": "Diretora de Gente e Gestão", "LinkedIn": "https://br.linkedin.com/in/din%C3%A1-ribeiro-de-carvalho-a1a184348", "Prioritario": False},
+    {"ID": 31, "Nome": "Neto Mello", "Empresa": "Adimax", "Cargo": "Diretor de RH / CHRO", "LinkedIn": "https://www.linkedin.com/in/netomello", "Prioritario": False},
+    {"ID": 22, "Nome": "Gerson Cosme santos", "Empresa": "GHT", "Cargo": "Diretor gente & performance", "LinkedIn": "https://www.linkedin.com/in/gerson-cosme-santos", "Prioritario": False},
+    {"ID": 2, "Nome": "Ana Luiza Guimarães Brasil", "Empresa": "Fortbras", "Cargo": "Diretor de Gente e Gestão", "LinkedIn": "https://www.linkedin.com/in/brasilana", "Prioritario": False},
+    {"ID": 36, "Nome": "Rosangela Schneider", "Empresa": "Karsten SA", "Cargo": "CHRO", "LinkedIn": "", "Prioritario": False},
+    {"ID": 40, "Nome": "Thais Cristina de Abreu Vendramini Ferreira", "Empresa": "G5 Partners", "Cargo": "Vice President - People and Culture Manager", "LinkedIn": "https://www.linkedin.com/in/thais-vendramini/", "Prioritario": False},
+    {"ID": 4, "Nome": "Angelo Fanti", "Empresa": "Sorocaba Refrescos S/A", "Cargo": "Diretor Recursos Humanos", "LinkedIn": "https://br.linkedin.com/in/angelo-fanti-58a4a821", "Prioritario": False},
+    {"ID": 25, "Nome": "Juliana Dorigo", "Empresa": "Grupo Ecoagro", "Cargo": "Diretora de RH", "LinkedIn": "https://www.linkedin.com/in/julianadorigorh", "Prioritario": False},
+    {"ID": 39, "Nome": "Tâmara Costa", "Empresa": "SantoDigital", "Cargo": "Diretora de RH", "LinkedIn": "https://www.linkedin.com/in/tamiscosta", "Prioritario": False},
+    {"ID": 1, "Nome": "Aldo Silva dos Santos", "Empresa": "HCOSTA", "Cargo": "CHRO Gente e Gestão", "LinkedIn": "https://www.linkedin.com/in/aldo-santos-a4985353/", "Prioritario": False},
+    {"ID": 23, "Nome": "GIOVANI CARRA", "Empresa": "ADF ONDULADOS E LOGISTICA", "Cargo": "DIRETOR DE RH", "LinkedIn": "https://www.linkedin.com/in/giovani-carra-65858a33", "Prioritario": False},
+    {"ID": 10, "Nome": "Caroline Faki de Miranda", "Empresa": "Vigor Alimentos", "Cargo": "Head de Business Partner", "LinkedIn": "https://www.linkedin.com/in/caroline-faki-68338285", "Prioritario": False},
+    {"ID": 17, "Nome": "Diogo Dourado Soares", "Empresa": "Festo Brasil", "Cargo": "Head of HR CoE SAM", "LinkedIn": "", "Prioritario": False},
+    {"ID": 27, "Nome": "Leonardo Rodrigues Gaspar", "Empresa": "SIMPRESS", "Cargo": "Gerente Executivo RH", "LinkedIn": "", "Prioritario": False},
+    {"ID": 24, "Nome": "Jader Eder Bleil", "Empresa": "Greenbrier Maxion", "Cargo": "Gerente RT", "LinkedIn": "https://www.linkedin.com/in/jader-%C3%A9der-bleil-41115225", "Prioritario": False},
+    {"ID": 14, "Nome": "Daniela Nishimoto", "Empresa": "Grupo L'Oréal", "Cargo": "CHRO", "LinkedIn": "https://www.linkedin.com/in/daniela-nishimoto-00b63b1", "Prioritario": False},
+    {"ID": 43, "Nome": "Daniele Intrebartoli Costa", "Empresa": "Heineken", "Cargo": "Gerente Sr People", "LinkedIn": "", "Prioritario": False},
+    {"ID": 41, "Nome": "Thamires Justino", "Empresa": "Alcoa Alumínio", "Cargo": "Gerente de RH", "LinkedIn": "https://www.linkedin.com/in/thamires-pedro-15287611b/", "Prioritario": False},
+    {"ID": 11, "Nome": "Daniel Peruchi", "Empresa": "Alcoa", "Cargo": "Gerente Sênior RH", "LinkedIn": "https://www.linkedin.com/in/daniel-peruchi-6a09a0b9", "Prioritario": False},
+    {"ID": 37, "Nome": "Sabrina Lemes", "Empresa": "GBMX", "Cargo": "Gerente EHS", "LinkedIn": "https://www.linkedin.com/in/sabrina-rosa-lemes-mba-4ba065107", "Prioritario": False},
+    {"ID": 34, "Nome": "Ricardo Malvestite", "Empresa": "GBMX", "Cargo": "Gerente Sr RH", "LinkedIn": "https://www.linkedin.com/in/ricardo-malvestite-74b1936", "Prioritario": False},
+    {"ID": 26, "Nome": "Lenita David Gilioli", "Empresa": "Flora Produtos", "Cargo": "Gerente executiva RH", "LinkedIn": "https://www.linkedin.com/in/lenita-gilioli-freitas", "Prioritario": False},
+    {"ID": 28, "Nome": "Mariana Macedo Gaida", "Empresa": "Uncover", "Cargo": "Head of People", "LinkedIn": "", "Prioritario": False},
+    {"ID": 29, "Nome": "Michele Ferreira", "Empresa": "Confiança Supermercados", "Cargo": "Coordenadora de DHO", "LinkedIn": "https://www.linkedin.com/in/michele-ferreira-16401083", "Prioritario": False},
+    {"ID": 44, "Nome": "Marianna Biagi Pache", "Empresa": "Emal", "Cargo": "Gerente de Gestão de Pessoas", "LinkedIn": "", "Prioritario": False},
+    {"ID": 3, "Nome": "ANDRE LUIZ EXPEDITO ARANHA", "Empresa": "SUPERLOGICA", "Cargo": "GERENTE DE REMUNERAÇÃO", "LinkedIn": "https://www.linkedin.com/in/andrelearanha", "Prioritario": False},
+    {"ID": 30, "Nome": "Nelson Simeoni Junior", "Empresa": "Superlógica", "Cargo": "Gerente de DHO", "LinkedIn": "https://www.linkedin.com/in/nelsonsimeoni", "Prioritario": False},
+    {"ID": 12, "Nome": "Daniela Matos Faria", "Empresa": "Zamp", "Cargo": "Dir de Talentos e Cultura", "LinkedIn": "https://www.linkedin.com/in/daniela-matos-faria", "Prioritario": False},
+    {"ID": 19, "Nome": "FERNANDO SPINELLI", "Empresa": "CNL Rodovias", "Cargo": "Gerente de RH e SSO", "LinkedIn": "", "Prioritario": False},
+    {"ID": 45, "Nome": "Graziella Albuquerque", "Empresa": "Emal", "Cargo": "Supervisora de RH", "LinkedIn": "", "Prioritario": False},
+    {"ID": 6, "Nome": "Bruno Szarf", "Empresa": "Stefanini", "Cargo": "VP Global", "LinkedIn": "https://www.linkedin.com/in/brunoszarf", "Prioritario": False},
+    {"ID": 8, "Nome": "Camilla Padua", "Empresa": "KPMG", "Cargo": "Sócia", "LinkedIn": "httpswww.linkedin.comincamillapadua", "Prioritario": False}
+]
+
+def load_leads_from_supabase():
+    try:
+        res = supabase.table("leads").select("*").execute()
+        if not res.data:
+            # Se a tabela estiver vazia, carrega a base inicial automaticamente!
+            for l in INITIAL_LEADS:
+                supabase.table("leads").insert({
+                    "id": l["ID"],
+                    "nome": l["Nome"],
+                    "empresa": l["Empresa"],
+                    "cargo": l["Cargo"],
+                    "linkedin": l["LinkedIn"],
+                    "prioritario": l.get("Prioritario", False)
+                }).execute()
+            res = supabase.table("leads").select("*").execute()
+            
+        return [
+            {
+                "ID": d["id"],
+                "Nome": d["nome"],
+                "Empresa": d["empresa"],
+                "Cargo": d["cargo"],
+                "LinkedIn": d["linkedin"],
+                "Prioritario": d.get("prioritario", False)
+            } for d in res.data
+        ]
+    except Exception as e:
+        flash(f"Erro ao carregar contatos do banco. A tabela 'leads' existe? {e}")
+        return INITIAL_LEADS
+
+def save_new_lead_to_supabase(lead_data):
+    try:
+        supabase.table("leads").insert({
+            "id": lead_data["ID"],
+            "nome": lead_data["Nome"],
+            "empresa": lead_data["Empresa"],
+            "cargo": lead_data["Cargo"],
+            "linkedin": lead_data["LinkedIn"],
+            "prioritario": lead_data["Prioritario"]
+        }).execute()
+        return True
+    except Exception as e:
+        flash(f"Erro ao salvar contato no banco: {e}")
+        return False
+
+def update_lead_priority_in_supabase(lead_id, prioritario):
+    try:
+        supabase.table("leads").update({"prioritario": prioritario}).eq("id", lead_id).execute()
+    except Exception as e:
+        flash(f"Erro ao atualizar prioridade no banco: {e}")
+
 def load_notes_from_supabase(lead_id: str):
     try:
         return supabase.table("notas").select("*").eq("lead_id", str(lead_id)).order("created_at", desc=True).execute().data
@@ -163,60 +265,11 @@ def processar_audio_com_ia(audio_bytes_bruto):
     msg_erro = f"O Google recusou o áudio em todos os modelos. <br>Modelos que você tem: {', '.join(modelos_tentados)}.<br>Último Erro: {ultimo_erro}"
     return msg_erro, []
 
-# --- 6. DATABASE DE CONTATOS (BASE + ESTADO) ---
-INITIAL_LEADS = [
-    {"ID": 18, "Nome": "Elizabeth Sousa Rodrigues", "Empresa": "Grupo Mendes", "Cargo": "Diretor Executivo de Gente e Cultura", "LinkedIn": "https://www.linkedin.com/in/elizabeth-sousa-rodrigues-26086518/", "Prioritario": False},
-    {"ID": 9, "Nome": "Carolina Bussadori", "Empresa": "Grupo St Marche", "Cargo": "Head de Gente & Cultura", "LinkedIn": "linkedin.com/in/carolinabussadorirh/", "Prioritario": False},
-    {"ID": 7, "Nome": "Camila Alves Massaro", "Empresa": "ArcelorMittal Gonvarri", "Cargo": "Director of People, Strategy & IT", "LinkedIn": "https://www.linkedin.com/in/camilamassaro-rh", "Prioritario": False},
-    {"ID": 5, "Nome": "Brenda Donato Endo", "Empresa": "Embracon", "Cargo": "Diretora de RH", "LinkedIn": "https://www.linkedin.com/in/brenda-donato-endo-78275041", "Prioritario": False},
-    {"ID": 42, "Nome": "Willian Souza", "Empresa": "EMS", "Cargo": "Diretor de Governança e Treinamento", "LinkedIn": "https://www.linkedin.com/in/willian-souza-63874147", "Prioritario": False},
-    {"ID": 15, "Nome": "Danila Pires Carsoso", "Empresa": "Motiva", "Cargo": "Diretor", "LinkedIn": "", "Prioritario": False},
-    {"ID": 21, "Nome": "Frederico Consetino Neto", "Empresa": "Afya", "Cargo": "Diretor de Recursos Humanos", "LinkedIn": "https://www.linkedin.com/in/freico-cosentino-b67b1a20", "Prioritario": False},
-    {"ID": 33, "Nome": "Patrícia Rosado", "Empresa": "Tupy", "Cargo": "VP de Pessoas, Cultura e SSMA", "LinkedIn": "https://www.linkedin.com/in/patricia-rosado-b15ba01a", "Prioritario": False},
-    {"ID": 20, "Nome": "Franciele Ropelato", "Empresa": "Merck", "Cargo": "Diretora De RH", "LinkedIn": "", "Prioritario": False},
-    {"ID": 35, "Nome": "RITA SOUZA", "Empresa": "Bunge Alimentos", "Cargo": "Diretora Gestão Mudança Organizacional", "LinkedIn": "https://www.linkedin.com/in/rita-souza-neurochange/", "Prioritario": False},
-    {"ID": 38, "Nome": "Soraya Bahde", "Empresa": "Bradesco", "Cargo": "Diretora", "LinkedIn": "https://www.linkedin.com/in/sorayabahde", "Prioritario": False},
-    {"ID": 32, "Nome": "Patricia Bobbato", "Empresa": "Natura", "Cargo": "Diretora de Cultura, Desenvolvimento, Bem estar e DE&I", "LinkedIn": "https://www.linkedin.com/in/patriciabobbato", "Prioritario": False},
-    {"ID": 13, "Nome": "Daniela Monteiro", "Empresa": "Editora do Brasil", "Cargo": "Diretora de RH & Marca", "LinkedIn": "https://br.linkedin.com/in/daniela-monteiro-a3125970", "Prioritario": False},
-    {"ID": 16, "Nome": "Diná Ribeiro de Carvalho", "Empresa": "Superlógica", "Cargo": "Diretora de Gente e Gestão", "LinkedIn": "https://br.linkedin.com/in/din%C3%A1-ribeiro-de-carvalho-a1a184348", "Prioritario": False},
-    {"ID": 31, "Nome": "Neto Mello", "Empresa": "Adimax", "Cargo": "Diretor de RH / CHRO", "LinkedIn": "https://www.linkedin.com/in/netomello", "Prioritario": False},
-    {"ID": 22, "Nome": "Gerson Cosme santos", "Empresa": "GHT", "Cargo": "Diretor gente & performance", "LinkedIn": "https://www.linkedin.com/in/gerson-cosme-santos", "Prioritario": False},
-    {"ID": 2, "Nome": "Ana Luiza Guimarães Brasil", "Empresa": "Fortbras", "Cargo": "Diretor de Gente e Gestão", "LinkedIn": "https://www.linkedin.com/in/brasilana", "Prioritario": False},
-    {"ID": 36, "Nome": "Rosangela Schneider", "Empresa": "Karsten SA", "Cargo": "CHRO", "LinkedIn": "", "Prioritario": False},
-    {"ID": 40, "Nome": "Thais Cristina de Abreu Vendramini Ferreira", "Empresa": "G5 Partners", "Cargo": "Vice President - People and Culture Manager", "LinkedIn": "https://www.linkedin.com/in/thais-vendramini/", "Prioritario": False},
-    {"ID": 4, "Nome": "Angelo Fanti", "Empresa": "Sorocaba Refrescos S/A", "Cargo": "Diretor Recursos Humanos", "LinkedIn": "https://br.linkedin.com/in/angelo-fanti-58a4a821", "Prioritario": False},
-    {"ID": 25, "Nome": "Juliana Dorigo", "Empresa": "Grupo Ecoagro", "Cargo": "Diretora de RH", "LinkedIn": "https://www.linkedin.com/in/julianadorigorh", "Prioritario": False},
-    {"ID": 39, "Nome": "Tâmara Costa", "Empresa": "SantoDigital", "Cargo": "Diretora de RH", "LinkedIn": "https://www.linkedin.com/in/tamiscosta", "Prioritario": False},
-    {"ID": 1, "Nome": "Aldo Silva dos Santos", "Empresa": "HCOSTA", "Cargo": "CHRO Gente e Gestão", "LinkedIn": "https://www.linkedin.com/in/aldo-santos-a4985353/", "Prioritario": False},
-    {"ID": 23, "Nome": "GIOVANI CARRA", "Empresa": "ADF ONDULADOS E LOGISTICA", "Cargo": "DIRETOR DE RH", "LinkedIn": "https://www.linkedin.com/in/giovani-carra-65858a33", "Prioritario": False},
-    {"ID": 10, "Nome": "Caroline Faki de Miranda", "Empresa": "Vigor Alimentos", "Cargo": "Head de Business Partner", "LinkedIn": "https://www.linkedin.com/in/caroline-faki-68338285", "Prioritario": False},
-    {"ID": 17, "Nome": "Diogo Dourado Soares", "Empresa": "Festo Brasil", "Cargo": "Head of HR CoE SAM", "LinkedIn": "", "Prioritario": False},
-    {"ID": 27, "Nome": "Leonardo Rodrigues Gaspar", "Empresa": "SIMPRESS", "Cargo": "Gerente Executivo RH", "LinkedIn": "", "Prioritario": False},
-    {"ID": 24, "Nome": "Jader Eder Bleil", "Empresa": "Greenbrier Maxion", "Cargo": "Gerente RT", "LinkedIn": "https://www.linkedin.com/in/jader-%C3%A9der-bleil-41115225", "Prioritario": False},
-    {"ID": 14, "Nome": "Daniela Nishimoto", "Empresa": "Grupo L'Oréal", "Cargo": "CHRO", "LinkedIn": "https://www.linkedin.com/in/daniela-nishimoto-00b63b1", "Prioritario": False},
-    {"ID": 43, "Nome": "Daniele Intrebartoli Costa", "Empresa": "Heineken", "Cargo": "Gerente Sr People", "LinkedIn": "", "Prioritario": False},
-    {"ID": 41, "Nome": "Thamires Justino", "Empresa": "Alcoa Alumínio", "Cargo": "Gerente de RH", "LinkedIn": "https://www.linkedin.com/in/thamires-pedro-15287611b/", "Prioritario": False},
-    {"ID": 11, "Nome": "Daniel Peruchi", "Empresa": "Alcoa", "Cargo": "Gerente Sênior RH", "LinkedIn": "https://www.linkedin.com/in/daniel-peruchi-6a09a0b9", "Prioritario": False},
-    {"ID": 37, "Nome": "Sabrina Lemes", "Empresa": "GBMX", "Cargo": "Gerente EHS", "LinkedIn": "https://www.linkedin.com/in/sabrina-rosa-lemes-mba-4ba065107", "Prioritario": False},
-    {"ID": 34, "Nome": "Ricardo Malvestite", "Empresa": "GBMX", "Cargo": "Gerente Sr RH", "LinkedIn": "https://www.linkedin.com/in/ricardo-malvestite-74b1936", "Prioritario": False},
-    {"ID": 26, "Nome": "Lenita David Gilioli", "Empresa": "Flora Produtos", "Cargo": "Gerente executiva RH", "LinkedIn": "https://www.linkedin.com/in/lenita-gilioli-freitas", "Prioritario": False},
-    {"ID": 28, "Nome": "Mariana Macedo Gaida", "Empresa": "Uncover", "Cargo": "Head of People", "LinkedIn": "", "Prioritario": False},
-    {"ID": 29, "Nome": "Michele Ferreira", "Empresa": "Confiança Supermercados", "Cargo": "Coordenadora de DHO", "LinkedIn": "https://www.linkedin.com/in/michele-ferreira-16401083", "Prioritario": False},
-    {"ID": 44, "Nome": "Marianna Biagi Pache", "Empresa": "Emal", "Cargo": "Gerente de Gestão de Pessoas", "LinkedIn": "", "Prioritario": False},
-    {"ID": 3, "Nome": "ANDRE LUIZ EXPEDITO ARANHA", "Empresa": "SUPERLOGICA", "Cargo": "GERENTE DE REMUNERAÇÃO", "LinkedIn": "https://www.linkedin.com/in/andrelearanha", "Prioritario": False},
-    {"ID": 30, "Nome": "Nelson Simeoni Junior", "Empresa": "Superlógica", "Cargo": "Gerente de DHO", "LinkedIn": "https://www.linkedin.com/in/nelsonsimeoni", "Prioritario": False},
-    {"ID": 12, "Nome": "Daniela Matos Faria", "Empresa": "Zamp", "Cargo": "Dir de Talentos e Cultura", "LinkedIn": "https://www.linkedin.com/in/daniela-matos-faria", "Prioritario": False},
-    {"ID": 19, "Nome": "FERNANDO SPINELLI", "Empresa": "CNL Rodovias", "Cargo": "Gerente de RH e SSO", "LinkedIn": "", "Prioritario": False},
-    {"ID": 45, "Nome": "Graziella Albuquerque", "Empresa": "Emal", "Cargo": "Supervisora de RH", "LinkedIn": "", "Prioritario": False},
-    {"ID": 6, "Nome": "Bruno Szarf", "Empresa": "Stefanini", "Cargo": "VP Global", "LinkedIn": "https://www.linkedin.com/in/brunoszarf", "Prioritario": False},
-    {"ID": 8, "Nome": "Camilla Padua", "Empresa": "KPMG", "Cargo": "Sócia", "LinkedIn": "httpswww.linkedin.comincamillapadua", "Prioritario": False}
-]
-
-# Inicializa sessão para gerenciar novos contatos
+# --- 6. GESTÃO DE ESTADO E INICIALIZAÇÃO DB ---
 if 'leads_list' not in st.session_state:
-    st.session_state.leads_list = INITIAL_LEADS
+    with st.spinner("Sincronizando contatos com o banco de dados..."):
+        st.session_state.leads_list = load_leads_from_supabase()
 
-# --- 7. GESTÃO DE ESTADO E DESIGN SYSTEM ---
 if 'view_mode' not in st.session_state: st.session_state.view_mode = 'list'
 if 'selected_lead_id' not in st.session_state: st.session_state.selected_lead_id = None
 if 'theme' not in st.session_state: st.session_state.theme = 'dark'
@@ -281,7 +334,7 @@ def apply_executive_styles():
 apply_executive_styles()
 render_flashes()
 
-# --- 8. SIDEBAR ---
+# --- 7. SIDEBAR ---
 with st.sidebar:
     st.markdown('<h2 class="atf-gradient">Artefact</h2>', unsafe_allow_html=True)
     if st.button("👥 Contatos", use_container_width=True, disabled=(st.session_state.view_mode=='list')): 
@@ -292,7 +345,7 @@ with st.sidebar:
         st.session_state.theme = 'light' if st.session_state.theme == 'dark' else 'dark'
         st.rerun()
 
-# --- 9. VIEWS ---
+# --- 8. VIEWS ---
 if st.session_state.view_mode == 'list':
     st.markdown('<h1>Contatos</h1>', unsafe_allow_html=True)
     
@@ -311,7 +364,8 @@ if st.session_state.view_mode == 'list':
             
             if st.form_submit_button("Cadastrar Contato", type="primary"):
                 if novo_nome.strip():
-                    new_id = max([l['ID'] for l in st.session_state.leads_list], default=0) + 1
+                    # Gera um ID único grande para não colidir com os 45 originais
+                    new_id = int(time.time())
                     novo_lead = {
                         "ID": new_id,
                         "Nome": novo_nome.strip(),
@@ -320,9 +374,11 @@ if st.session_state.view_mode == 'list':
                         "LinkedIn": novo_linkedin.strip(),
                         "Prioritario": prioritario_check
                     }
-                    st.session_state.leads_list.append(novo_lead)
-                    st.success(f"Contato {novo_nome} cadastrado com sucesso!")
-                    st.rerun()
+                    
+                    if save_new_lead_to_supabase(novo_lead):
+                        st.session_state.leads_list.append(novo_lead)
+                        st.success(f"Contato {novo_nome} cadastrado com sucesso!")
+                        st.rerun()
                 else:
                     st.error("Por favor, preencha pelo menos o nome do contato.")
 
@@ -390,7 +446,9 @@ elif st.session_state.view_mode == 'detail':
         # BOTÃO PARA ALTERNAR A PRIORIDADE DO LEAD
         btn_star_label = "❌ Remover Prioridade" if l.get("Prioritario") else "⭐ Marcar como Prioritário"
         if st.button(btn_star_label, use_container_width=True):
-            l["Prioritario"] = not l.get("Prioritario", False)
+            novo_status = not l.get("Prioritario", False)
+            update_lead_priority_in_supabase(l["ID"], novo_status)
+            l["Prioritario"] = novo_status
             st.rerun()
             
     with col_b:
