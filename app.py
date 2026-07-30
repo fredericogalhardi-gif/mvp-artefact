@@ -22,8 +22,9 @@ st.set_page_config(
 # --- 2. SISTEMA DE LOGIN (AUTENTICAÇÃO) ---
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
+if 'current_user' not in st.session_state:
+    st.session_state.current_user = None
 
-# Função de estilo só para a tela de login ficar elegante
 def render_login_screen():
     st.markdown("""
         <style>
@@ -49,20 +50,22 @@ def render_login_screen():
     
     st.markdown('<div class="login-container">', unsafe_allow_html=True)
     st.markdown('<h1 class="atf-gradient">Artefact</h1>', unsafe_allow_html=True)
-    st.markdown("<p style='color: #8E8E93; margin-bottom: 2rem;'>Insira sua senha de acesso</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #8E8E93; margin-bottom: 1rem;'>Selecione seu perfil e acesse</p>", unsafe_allow_html=True)
     
-    senha_digitada = st.text_input("Senha", type="password", label_visibility="collapsed", placeholder="Digite a senha...")
+    usuarios_permitidos = ["André", "Rafael", "Manu", "Paolo", "Ponti", "Fred"]
+    usuario_selecionado = st.selectbox("Usuário", usuarios_permitidos, label_visibility="collapsed")
+    senha_digitada = st.text_input("Senha", type="password", label_visibility="collapsed", placeholder="Digite a senha da equipe...")
     
     if st.button("Entrar", type="primary", use_container_width=True):
-        senha_correta = st.secrets.get("APP_PASSWORD", "admin123") # "admin123" é um fallback provisório
+        senha_correta = st.secrets.get("APP_PASSWORD", "admin123")
         if senha_digitada == senha_correta:
             st.session_state.logged_in = True
+            st.session_state.current_user = usuario_selecionado
             st.rerun()
         else:
             st.error("Senha incorreta. Tente novamente.")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# SE NÃO ESTIVER LOGADO, MOSTRA O LOGIN E PARA O CÓDIGO AQUI
 if not st.session_state.logged_in:
     render_login_screen()
     st.stop()
@@ -203,8 +206,9 @@ def load_insights_from_supabase(lead_id: str):
 def delete_all_insights_from_supabase(lead_id: str):
     try:
         supabase.table("insights").delete().eq("lead_id", str(lead_id)).execute()
+        return True
     except Exception:
-        pass
+        return False
 
 def save_insight_to_supabase(lead_id: str, tipo: str, texto: str):
     try:
@@ -224,7 +228,7 @@ def upload_audio_to_supabase(audio_bytes, lead_id: str):
         return None
 
 # --- 5. A MÁGICA DA IA (GEMINI EXPLORADOR) ---
-def processar_audio_com_ia(audio_bytes_bruto, insights_anteriores_texto):
+def processar_audio_com_ia(audio_bytes_bruto, insights_anteriores_texto, usuario):
     if not has_gemini: 
         return "Erro: Gemini não configurado.", []
     try:
@@ -236,10 +240,10 @@ def processar_audio_com_ia(audio_bytes_bruto, insights_anteriores_texto):
         return "Erro: Sem modelos de IA.", []
 
     prompt = f"""
-    Você é um analista comercial de elite.
-    1. Ouça e transcreva o NOVO áudio.
+    Você é um analista comercial de elite auxiliando o consultor {usuario}.
+    1. Ouça e transcreva o NOVO áudio gravado por {usuario}.
     2. Analise a transcrição junto com os INSIGHTS ANTERIORES listados abaixo.
-    3. ATUALIZE e CONSOLIDE os insights. Junte informações do mesmo tópico. NUNCA descarte informações importantes dos insights antigos, apenas agregue ou atualize.
+    3. ATUALIZE e CONSOLIDE os insights. Junte informações do mesmo tópico. Se houver informações de consultores diferentes, integre-as de forma coerente. NUNCA descarte informações importantes dos insights antigos, apenas agregue ou atualize.
     
     --- INSIGHTS ANTERIORES DO CLIENTE ---
     {insights_anteriores_texto}
@@ -343,6 +347,8 @@ render_flashes()
 with st.sidebar:
     st.markdown('<h2 class="atf-gradient">Artefact</h2>', unsafe_allow_html=True)
     
+    st.markdown(f"<div style='text-align: center; margin-bottom: 20px;'><span style='font-size: 1.2rem;'>👋 Olá, <b>{st.session_state.current_user}</b>!</span></div>", unsafe_allow_html=True)
+    
     if st.button("👥 Contatos", use_container_width=True, disabled=(st.session_state.view_mode=='list')): 
         st.session_state.view_mode='list'
         st.rerun()
@@ -355,9 +361,9 @@ with st.sidebar:
         
     st.divider()
     
-    # BOTÃO DE LOGOUT ADICIONADO
     if st.button("🚪 Sair (Logout)", type="secondary", use_container_width=True):
         st.session_state.logged_in = False
+        st.session_state.current_user = None
         st.rerun()
 
 # --- 8. VIEWS ---
@@ -478,13 +484,19 @@ elif st.session_state.view_mode == 'detail':
                 </div>
             </div>
             """, unsafe_allow_html=True)
+            
+        # BOTÃO PARA RESETAR OS INSIGHTS
+        if st.button("🔄 Resetar Insights da IA", type="secondary"):
+            if delete_all_insights_from_supabase(lead_ref):
+                st.success("Insights apagados! O próximo áudio gerará um resumo do zero.")
+                st.rerun()
     else:
         st.caption("Aguardando gravação de áudio para gerar novos insights.")
 
     st.divider()
 
     st.markdown("### 🎙️ Gravar Interação")
-    st.caption("Fale sobre a reunião. O áudio será analisado pela IA para atualizar os insights.")
+    st.caption(f"Você está gravando como **{st.session_state.current_user}**.")
     
     if hasattr(st, 'audio_input'):
         audio = st.audio_input("Grave aqui", label_visibility="collapsed", key=f"audio_widget_{st.session_state.audio_key}")
@@ -496,12 +508,12 @@ elif st.session_state.view_mode == 'detail':
                 url = upload_audio_to_supabase(audio_bytes_mp3, l['LinkedIn'])
                 
                 insights_anteriores_texto = "\n".join([f"- {i['tipo']}: {i['texto']}" for i in insights_db]) if insights_db else "Nenhum insight anterior."
-                texto_transcrito, novos_insights = processar_audio_com_ia(audio_bytes_mp3, insights_anteriores_texto)
+                texto_transcrito, novos_insights = processar_audio_com_ia(audio_bytes_mp3, insights_anteriores_texto, st.session_state.current_user)
                 
                 if url:
-                    save_note_to_supabase(lead_ref, f"🎙️ **Transcrição:**\n\n_{texto_transcrito}_", url)
+                    save_note_to_supabase(lead_ref, f"🎙️ **{st.session_state.current_user}** (Áudio):\n\n_{texto_transcrito}_", url)
                 else:
-                    save_note_to_supabase(lead_ref, f"🎙️ **Transcrição (Sem áudio):**\n\n_{texto_transcrito}_")
+                    save_note_to_supabase(lead_ref, f"🎙️ **{st.session_state.current_user}** (Sem áudio):\n\n_{texto_transcrito}_")
                 
                 if novos_insights:
                     delete_all_insights_from_supabase(lead_ref)
@@ -516,7 +528,8 @@ elif st.session_state.view_mode == 'detail':
             txt = st.text_area("Nota", label_visibility="collapsed")
             if st.form_submit_button("Salvar Texto", type="primary"):
                 if txt.strip():
-                    save_note_to_supabase(lead_ref, txt, None)
+                    # Adiciona a identificação do usuário na nota manual
+                    save_note_to_supabase(lead_ref, f"👤 **{st.session_state.current_user}**:\n{txt.strip()}", None)
                     st.rerun()
     
     st.markdown("<br>#### Histórico", unsafe_allow_html=True)
