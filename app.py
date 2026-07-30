@@ -261,7 +261,7 @@ def apply_executive_styles():
         .stApp {{ background-color: {C['BKG']}; font-family: 'Inter', sans-serif; color: {C['TEXT']}; }}
         [data-testid="stSidebar"] {{ background-color: {C['SIDEBAR']} !important; border-right: 1px solid {C['BORDER']}; }}
         .atf-gradient {{ background: linear-gradient(90deg, #3232ff 0%, #ff1493 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800; }}
-        .stTextArea textarea, .stTextInput input {{ background-color: {C['INPUT_BKG']} !important; color: {C['INPUT_TEXT']} !important; border: 1px solid {C['BORDER']} !important; border-radius: 8px !important; }}
+        .stTextArea textarea, .stTextInput input, .stSelectbox select {{ background-color: {C['INPUT_BKG']} !important; color: {C['INPUT_TEXT']} !important; border: 1px solid {C['BORDER']} !important; border-radius: 8px !important; }}
         button[kind="secondary"] {{ background-color: transparent !important; color: {C['TEXT']} !important; border: 1px solid {btn_border} !important; border-radius: 8px !important; width: 100% !important; }}
         button[kind="primary"] {{ background: linear-gradient(90deg, #3232ff 0%, #ff1493 100%) !important; color: #FFFFFF !important; border: none !important; border-radius: 8px !important; width: 100% !important; font-weight: 600 !important; }}
         .profile-pic, .initials-placeholder {{ border-radius: 50%; object-fit: cover; border: 2px solid #fff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }}
@@ -326,13 +326,25 @@ if st.session_state.view_mode == 'list':
                 else:
                     st.error("Por favor, preencha pelo menos o nome do contato.")
 
-    search = st.text_input("🔍 Pesquisar por nome ou empresa...", placeholder="Digite aqui...")
+    # --- CAMPOS DE BUSCA E ORDENAÇÃO ---
+    col_search, col_sort = st.columns([3, 1])
+    with col_search:
+        search = st.text_input("🔍 Pesquisar...", placeholder="Pesquisar por nome ou empresa...")
+    with col_sort:
+        sort_by = st.selectbox("Ordenar por:", ["Prioridade", "Nome", "Empresa", "Cargo"])
     
     # Filtra por texto
     f_leads = [l for l in st.session_state.leads_list if search.lower() in l['Nome'].lower() or search.lower() in l['Empresa'].lower()]
     
-    # --- ORDENAÇÃO: Prioritários primeiro ---
-    f_leads.sort(key=lambda x: not x.get("Prioritario", False))
+    # --- LÓGICA DE ORDENAÇÃO DINÂMICA ---
+    if sort_by == "Prioridade":
+        f_leads.sort(key=lambda x: (not x.get("Prioritario", False), x.get("Nome", "")))
+    elif sort_by == "Nome":
+        f_leads.sort(key=lambda x: x.get("Nome", ""))
+    elif sort_by == "Empresa":
+        f_leads.sort(key=lambda x: (x.get("Empresa", ""), x.get("Nome", "")))
+    elif sort_by == "Cargo":
+        f_leads.sort(key=lambda x: (x.get("Cargo", ""), x.get("Nome", "")))
     
     for l in f_leads:
         star_html = '<span class="star-tag">⭐ Prioritário</span>' if l.get("Prioritario") else ""
