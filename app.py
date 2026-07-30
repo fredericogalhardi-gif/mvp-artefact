@@ -13,13 +13,66 @@ from pydub import AudioSegment
 
 # --- 1. CONFIGURAÇÃO C-LEVEL ---
 st.set_page_config(
-    page_title="Artefact | Contacts",
+    page_title="Artefact | CRM",
     page_icon="💠",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# --- 2. CONEXÕES (SUPABASE E GEMINI) ---
+# --- 2. SISTEMA DE LOGIN (AUTENTICAÇÃO) ---
+if 'logged_in' not in st.session_state:
+    st.session_state.logged_in = False
+
+# Função de estilo só para a tela de login ficar elegante
+def render_login_screen():
+    st.markdown("""
+        <style>
+        .login-container {
+            max-width: 400px;
+            margin: 10vh auto;
+            padding: 3rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+        .atf-gradient { 
+            background: linear-gradient(90deg, #3232ff 0%, #ff1493 100%); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+            font-weight: 800; 
+            font-size: 2.5rem;
+            margin-bottom: 2rem;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+    
+    st.markdown('<div class="login-container">', unsafe_allow_html=True)
+    st.markdown('<h1 class="atf-gradient">Artefact</h1>', unsafe_allow_html=True)
+    st.markdown("<p style='color: #8E8E93; margin-bottom: 2rem;'>Insira sua senha de acesso</p>", unsafe_allow_html=True)
+    
+    senha_digitada = st.text_input("Senha", type="password", label_visibility="collapsed", placeholder="Digite a senha...")
+    
+    if st.button("Entrar", type="primary", use_container_width=True):
+        senha_correta = st.secrets.get("APP_PASSWORD", "admin123") # "admin123" é um fallback provisório
+        if senha_digitada == senha_correta:
+            st.session_state.logged_in = True
+            st.rerun()
+        else:
+            st.error("Senha incorreta. Tente novamente.")
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# SE NÃO ESTIVER LOGADO, MOSTRA O LOGIN E PARA O CÓDIGO AQUI
+if not st.session_state.logged_in:
+    render_login_screen()
+    st.stop()
+
+
+# =====================================================================
+# A PARTIR DAQUI, O CÓDIGO SÓ RODA SE O USUÁRIO ESTIVER LOGADO
+# =====================================================================
+
+# --- 3. CONEXÕES (SUPABASE E GEMINI) ---
 @st.cache_resource
 def get_supabase_client() -> Client:
     try:
@@ -32,13 +85,12 @@ def get_supabase_client() -> Client:
 
 supabase = get_supabase_client()
 
-# Inicializa Gemini
 try:
     genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
     has_gemini = True
 except KeyError:
     has_gemini = False
-    st.warning("⚠️ GEMINI_API_KEY não encontrada nos secrets. A IA não vai funcionar.")
+    st.warning("⚠️ GEMINI_API_KEY não encontrada nos secrets.")
 
 def flash(message: str, kind: str = "error"):
     st.session_state.setdefault("pending_flashes", []).append((kind, message))
@@ -47,7 +99,6 @@ def render_flashes():
     for kind, message in st.session_state.pop("pending_flashes", []):
         getattr(st, kind)(message)
 
-# --- 3. FUNÇÃO DE COMPRESSÃO DE ÁUDIO ---
 def comprimir_audio_para_mp3(audio_bytes_wav):
     try:
         audio_original = AudioSegment.from_file(io.BytesIO(audio_bytes_wav), format="wav")
@@ -55,7 +106,7 @@ def comprimir_audio_para_mp3(audio_bytes_wav):
         audio_original.export(mp3_io, format="mp3", bitrate="32k")
         return mp3_io.getvalue()
     except Exception as e:
-        flash(f"Aviso: Não foi possível comprimir o áudio ({str(e)}). Salvando no formato original.", "warning")
+        flash(f"Aviso: Não foi possível comprimir o áudio ({str(e)}).", "warning")
         return audio_bytes_wav
 
 # --- 4. BANCO DE DADOS: LEADS, NOTAS E INSIGHTS ---
@@ -65,46 +116,7 @@ INITIAL_LEADS = [
     {"ID": 7, "Nome": "Camila Alves Massaro", "Empresa": "ArcelorMittal Gonvarri", "Cargo": "Director of People, Strategy & IT", "LinkedIn": "https://www.linkedin.com/in/camilamassaro-rh", "Prioritario": False},
     {"ID": 5, "Nome": "Brenda Donato Endo", "Empresa": "Embracon", "Cargo": "Diretora de RH", "LinkedIn": "https://www.linkedin.com/in/brenda-donato-endo-78275041", "Prioritario": False},
     {"ID": 42, "Nome": "Willian Souza", "Empresa": "EMS", "Cargo": "Diretor de Governança e Treinamento", "LinkedIn": "https://www.linkedin.com/in/willian-souza-63874147", "Prioritario": False},
-    {"ID": 15, "Nome": "Danila Pires Carsoso", "Empresa": "Motiva", "Cargo": "Diretor", "LinkedIn": "", "Prioritario": False},
-    {"ID": 21, "Nome": "Frederico Consetino Neto", "Empresa": "Afya", "Cargo": "Diretor de Recursos Humanos", "LinkedIn": "https://www.linkedin.com/in/freico-cosentino-b67b1a20", "Prioritario": False},
-    {"ID": 33, "Nome": "Patrícia Rosado", "Empresa": "Tupy", "Cargo": "VP de Pessoas, Cultura e SSMA", "LinkedIn": "https://www.linkedin.com/in/patricia-rosado-b15ba01a", "Prioritario": False},
-    {"ID": 20, "Nome": "Franciele Ropelato", "Empresa": "Merck", "Cargo": "Diretora De RH", "LinkedIn": "", "Prioritario": False},
-    {"ID": 35, "Nome": "RITA SOUZA", "Empresa": "Bunge Alimentos", "Cargo": "Diretora Gestão Mudança Organizacional", "LinkedIn": "https://www.linkedin.com/in/rita-souza-neurochange/", "Prioritario": False},
-    {"ID": 38, "Nome": "Soraya Bahde", "Empresa": "Bradesco", "Cargo": "Diretora", "LinkedIn": "https://www.linkedin.com/in/sorayabahde", "Prioritario": False},
-    {"ID": 32, "Nome": "Patricia Bobbato", "Empresa": "Natura", "Cargo": "Diretora de Cultura, Desenvolvimento, Bem estar e DE&I", "LinkedIn": "https://www.linkedin.com/in/patriciabobbato", "Prioritario": False},
-    {"ID": 13, "Nome": "Daniela Monteiro", "Empresa": "Editora do Brasil", "Cargo": "Diretora de RH & Marca", "LinkedIn": "https://br.linkedin.com/in/daniela-monteiro-a3125970", "Prioritario": False},
-    {"ID": 16, "Nome": "Diná Ribeiro de Carvalho", "Empresa": "Superlógica", "Cargo": "Diretora de Gente e Gestão", "LinkedIn": "https://br.linkedin.com/in/din%C3%A1-ribeiro-de-carvalho-a1a184348", "Prioritario": False},
-    {"ID": 31, "Nome": "Neto Mello", "Empresa": "Adimax", "Cargo": "Diretor de RH / CHRO", "LinkedIn": "https://www.linkedin.com/in/netomello", "Prioritario": False},
-    {"ID": 22, "Nome": "Gerson Cosme santos", "Empresa": "GHT", "Cargo": "Diretor gente & performance", "LinkedIn": "https://www.linkedin.com/in/gerson-cosme-santos", "Prioritario": False},
-    {"ID": 2, "Nome": "Ana Luiza Guimarães Brasil", "Empresa": "Fortbras", "Cargo": "Diretor de Gente e Gestão", "LinkedIn": "https://www.linkedin.com/in/brasilana", "Prioritario": False},
-    {"ID": 36, "Nome": "Rosangela Schneider", "Empresa": "Karsten SA", "Cargo": "CHRO", "LinkedIn": "", "Prioritario": False},
-    {"ID": 40, "Nome": "Thais Cristina de Abreu Vendramini Ferreira", "Empresa": "G5 Partners", "Cargo": "Vice President - People and Culture Manager", "LinkedIn": "https://www.linkedin.com/in/thais-vendramini/", "Prioritario": False},
-    {"ID": 4, "Nome": "Angelo Fanti", "Empresa": "Sorocaba Refrescos S/A", "Cargo": "Diretor Recursos Humanos", "LinkedIn": "https://br.linkedin.com/in/angelo-fanti-58a4a821", "Prioritario": False},
-    {"ID": 25, "Nome": "Juliana Dorigo", "Empresa": "Grupo Ecoagro", "Cargo": "Diretora de RH", "LinkedIn": "https://www.linkedin.com/in/julianadorigorh", "Prioritario": False},
-    {"ID": 39, "Nome": "Tâmara Costa", "Empresa": "SantoDigital", "Cargo": "Diretora de RH", "LinkedIn": "https://www.linkedin.com/in/tamiscosta", "Prioritario": False},
-    {"ID": 1, "Nome": "Aldo Silva dos Santos", "Empresa": "HCOSTA", "Cargo": "CHRO Gente e Gestão", "LinkedIn": "https://www.linkedin.com/in/aldo-santos-a4985353/", "Prioritario": False},
-    {"ID": 23, "Nome": "GIOVANI CARRA", "Empresa": "ADF ONDULADOS E LOGISTICA", "Cargo": "DIRETOR DE RH", "LinkedIn": "https://www.linkedin.com/in/giovani-carra-65858a33", "Prioritario": False},
-    {"ID": 10, "Nome": "Caroline Faki de Miranda", "Empresa": "Vigor Alimentos", "Cargo": "Head de Business Partner", "LinkedIn": "https://www.linkedin.com/in/caroline-faki-68338285", "Prioritario": False},
-    {"ID": 17, "Nome": "Diogo Dourado Soares", "Empresa": "Festo Brasil", "Cargo": "Head of HR CoE SAM", "LinkedIn": "", "Prioritario": False},
-    {"ID": 27, "Nome": "Leonardo Rodrigues Gaspar", "Empresa": "SIMPRESS", "Cargo": "Gerente Executivo RH", "LinkedIn": "", "Prioritario": False},
-    {"ID": 24, "Nome": "Jader Eder Bleil", "Empresa": "Greenbrier Maxion", "Cargo": "Gerente RT", "LinkedIn": "https://www.linkedin.com/in/jader-%C3%A9der-bleil-41115225", "Prioritario": False},
-    {"ID": 14, "Nome": "Daniela Nishimoto", "Empresa": "Grupo L'Oréal", "Cargo": "CHRO", "LinkedIn": "https://www.linkedin.com/in/daniela-nishimoto-00b63b1", "Prioritario": False},
-    {"ID": 43, "Nome": "Daniele Intrebartoli Costa", "Empresa": "Heineken", "Cargo": "Gerente Sr People", "LinkedIn": "", "Prioritario": False},
-    {"ID": 41, "Nome": "Thamires Justino", "Empresa": "Alcoa Alumínio", "Cargo": "Gerente de RH", "LinkedIn": "https://www.linkedin.com/in/thamires-pedro-15287611b/", "Prioritario": False},
-    {"ID": 11, "Nome": "Daniel Peruchi", "Empresa": "Alcoa", "Cargo": "Gerente Sênior RH", "LinkedIn": "https://www.linkedin.com/in/daniel-peruchi-6a09a0b9", "Prioritario": False},
-    {"ID": 37, "Nome": "Sabrina Lemes", "Empresa": "GBMX", "Cargo": "Gerente EHS", "LinkedIn": "https://www.linkedin.com/in/sabrina-rosa-lemes-mba-4ba065107", "Prioritario": False},
-    {"ID": 34, "Nome": "Ricardo Malvestite", "Empresa": "GBMX", "Cargo": "Gerente Sr RH", "LinkedIn": "https://www.linkedin.com/in/ricardo-malvestite-74b1936", "Prioritario": False},
-    {"ID": 26, "Nome": "Lenita David Gilioli", "Empresa": "Flora Produtos", "Cargo": "Gerente executiva RH", "LinkedIn": "https://www.linkedin.com/in/lenita-gilioli-freitas", "Prioritario": False},
-    {"ID": 28, "Nome": "Mariana Macedo Gaida", "Empresa": "Uncover", "Cargo": "Head of People", "LinkedIn": "", "Prioritario": False},
-    {"ID": 29, "Nome": "Michele Ferreira", "Empresa": "Confiança Supermercados", "Cargo": "Coordenadora de DHO", "LinkedIn": "https://www.linkedin.com/in/michele-ferreira-16401083", "Prioritario": False},
-    {"ID": 44, "Nome": "Marianna Biagi Pache", "Empresa": "Emal", "Cargo": "Gerente de Gestão de Pessoas", "LinkedIn": "", "Prioritario": False},
-    {"ID": 3, "Nome": "ANDRE LUIZ EXPEDITO ARANHA", "Empresa": "SUPERLOGICA", "Cargo": "GERENTE DE REMUNERAÇÃO", "LinkedIn": "https://www.linkedin.com/in/andrelearanha", "Prioritario": False},
-    {"ID": 30, "Nome": "Nelson Simeoni Junior", "Empresa": "Superlógica", "Cargo": "Gerente de DHO", "LinkedIn": "https://www.linkedin.com/in/nelsonsimeoni", "Prioritario": False},
-    {"ID": 12, "Nome": "Daniela Matos Faria", "Empresa": "Zamp", "Cargo": "Dir de Talentos e Cultura", "LinkedIn": "https://www.linkedin.com/in/daniela-matos-faria", "Prioritario": False},
-    {"ID": 19, "Nome": "FERNANDO SPINELLI", "Empresa": "CNL Rodovias", "Cargo": "Gerente de RH e SSO", "LinkedIn": "", "Prioritario": False},
-    {"ID": 45, "Nome": "Graziella Albuquerque", "Empresa": "Emal", "Cargo": "Supervisora de RH", "LinkedIn": "", "Prioritario": False},
-    {"ID": 6, "Nome": "Bruno Szarf", "Empresa": "Stefanini", "Cargo": "VP Global", "LinkedIn": "https://www.linkedin.com/in/brunoszarf", "Prioritario": False},
-    {"ID": 8, "Nome": "Camilla Padua", "Empresa": "KPMG", "Cargo": "Sócia", "LinkedIn": "httpswww.linkedin.comincamillapadua", "Prioritario": False}
+    {"ID": 15, "Nome": "Danila Pires Carsoso", "Empresa": "Motiva", "Cargo": "Diretor", "LinkedIn": "", "Prioritario": False}
 ]
 
 def load_leads_from_supabase():
@@ -133,7 +145,7 @@ def load_leads_from_supabase():
             } for d in res.data
         ]
     except Exception as e:
-        flash(f"Erro ao carregar contatos do banco. A tabela 'leads' existe? {e}")
+        flash(f"Erro ao carregar contatos do banco. {e}")
         return INITIAL_LEADS
 
 def save_new_lead_to_supabase(lead_data):
@@ -148,14 +160,14 @@ def save_new_lead_to_supabase(lead_data):
         }).execute()
         return True
     except Exception as e:
-        flash(f"Erro ao salvar contato no banco: {e}")
+        flash(f"Erro ao salvar contato: {e}")
         return False
 
 def update_lead_priority_in_supabase(lead_id, prioritario):
     try:
         supabase.table("leads").update({"prioritario": prioritario}).eq("id", lead_id).execute()
     except Exception as e:
-        flash(f"Erro ao atualizar prioridade no banco: {e}")
+        flash(f"Erro ao atualizar prioridade: {e}")
 
 def load_notes_from_supabase(lead_id: str):
     try:
@@ -173,17 +185,13 @@ def save_note_to_supabase(lead_id: str, texto: str, audio_url: str = None):
 
 def delete_note_from_supabase(note_id: str, audio_url: str = None):
     try:
-        # Exclui a anotação da tabela
         supabase.table("notas").delete().eq("id", note_id).execute()
-        
-        # Se tinha um áudio, exclui do Storage também para economizar espaço!
         if audio_url:
             filename = audio_url.split("/")[-1]
             supabase.storage.from_("gravacoes").remove([filename])
-            
         return True
     except Exception as e:
-        flash(f"Erro ao excluir nota ou áudio: {e}")
+        flash(f"Erro ao excluir: {e}")
         return False
 
 def load_insights_from_supabase(lead_id: str):
@@ -194,17 +202,16 @@ def load_insights_from_supabase(lead_id: str):
 
 def delete_all_insights_from_supabase(lead_id: str):
     try:
-        # Limpa os insights velhos antes de salvar os novos consolidados pela IA
         supabase.table("insights").delete().eq("lead_id", str(lead_id)).execute()
-    except Exception as e:
+    except Exception:
         pass
 
 def save_insight_to_supabase(lead_id: str, tipo: str, texto: str):
     try:
         data = {"lead_id": str(lead_id), "tipo": tipo, "texto": texto, "created_at": datetime.now().isoformat()}
         supabase.table("insights").insert(data).execute()
-    except Exception as e:
-        flash(f"Erro ao salvar insight: {e}")
+    except Exception:
+        pass
 
 def upload_audio_to_supabase(audio_bytes, lead_id: str):
     try:
@@ -213,81 +220,60 @@ def upload_audio_to_supabase(audio_bytes, lead_id: str):
         filename = f"registro_{safe_lead_id}_{timestamp}.mp3"
         supabase.storage.from_("gravacoes").upload(file=audio_bytes, path=filename, file_options={"content-type": "audio/mp3"})
         return supabase.storage.from_("gravacoes").get_public_url(filename)
-    except Exception as e: 
+    except Exception: 
         return None
 
 # --- 5. A MÁGICA DA IA (GEMINI EXPLORADOR) ---
 def processar_audio_com_ia(audio_bytes_bruto, insights_anteriores_texto):
     if not has_gemini: 
-        return "Erro: Gemini não configurado nos secrets.", []
-    
+        return "Erro: Gemini não configurado.", []
     try:
         modelos_disponiveis = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
     except Exception as e:
-        return f"Erro ao acessar a lista de modelos do Google: {str(e)}", []
+        return f"Erro Google: {str(e)}", []
         
     if not modelos_disponiveis:
-        return "Erro Crítico: A sua chave API não tem nenhum modelo de IA liberado pelo Google.", []
+        return "Erro: Sem modelos de IA.", []
 
-    # NOVO PROMPT: Agora ele junta e funde os insights!
     prompt = f"""
     Você é um analista comercial de elite.
-    Sua missão é manter o CRM sempre atualizado e não perder informações.
-    
-    1. Ouça e transcreva o NOVO áudio fornecido.
+    1. Ouça e transcreva o NOVO áudio.
     2. Analise a transcrição junto com os INSIGHTS ANTERIORES listados abaixo.
-    3. ATUALIZE e CONSOLIDE os insights. Junte informações do mesmo tópico (ex: combine o 'Orçamento' antigo com o 'Orçamento' novo). Se o novo áudio falar de algo inédito, crie um novo tópico. NUNCA descarte informações importantes dos insights antigos, apenas agregue ou atualize.
+    3. ATUALIZE e CONSOLIDE os insights. Junte informações do mesmo tópico. NUNCA descarte informações importantes dos insights antigos, apenas agregue ou atualize.
     
     --- INSIGHTS ANTERIORES DO CLIENTE ---
     {insights_anteriores_texto}
     --------------------------------------
     
-    Retorne APENAS um JSON estrito no seguinte formato:
+    Retorne APENAS um JSON estrito:
     {{
-        "transcricao": "texto completo da nova transcrição aqui",
+        "transcricao": "texto da nova transcrição",
         "insights": [
-            {{"tipo": "Nome do Tópico (Ex: Foco, Dor, Oportunidade, Próximos Passos)", "texto": "Resumo executivo consolidado deste insight"}}
+            {{"tipo": "Nome do Tópico", "texto": "Resumo executivo consolidado"}}
         ]
     }}
     """
     
-    audio_part = {
-        "mime_type": "audio/mp3",
-        "data": audio_bytes_bruto
-    }
-    
+    audio_part = {"mime_type": "audio/mp3", "data": audio_bytes_bruto}
     ultimo_erro = ""
-    modelos_tentados = []
     
     for nome_modelo in modelos_disponiveis:
         if 'embedding' in nome_modelo.lower() or 'aqa' in nome_modelo.lower():
             continue
-            
-        modelos_tentados.append(nome_modelo)
-        
         try:
             model = genai.GenerativeModel(nome_modelo)
-            response = model.generate_content(
-                [prompt, audio_part],
-                generation_config={"response_mime_type": "application/json"}
-            )
-            
+            response = model.generate_content([prompt, audio_part], generation_config={"response_mime_type": "application/json"})
             dados_json = json.loads(response.text)
-            transcricao = dados_json.get("transcricao", "Transcrição gerada, mas sem texto.")
-            insights = dados_json.get("insights", [])
-            
-            return transcricao, insights
-            
+            return dados_json.get("transcricao", "Gerada sem texto."), dados_json.get("insights", [])
         except Exception as e:
             ultimo_erro = str(e)
             continue
             
-    msg_erro = f"O Google recusou o áudio em todos os modelos. <br>Modelos que você tem: {', '.join(modelos_tentados)}.<br>Último Erro: {ultimo_erro}"
-    return msg_erro, []
+    return f"Erro em todos os modelos: {ultimo_erro}", []
 
 # --- 6. GESTÃO DE ESTADO E INICIALIZAÇÃO DB ---
 if 'leads_list' not in st.session_state:
-    with st.spinner("Sincronizando contatos com o banco de dados..."):
+    with st.spinner("Sincronizando contatos..."):
         st.session_state.leads_list = load_leads_from_supabase()
 
 if 'view_mode' not in st.session_state: st.session_state.view_mode = 'list'
@@ -311,7 +297,6 @@ def get_photo_html(name, url, size_class="large"):
                 with open(test_path, "rb") as f:
                     b64 = base64.b64encode(f.read()).decode()
                 return f'<img src="data:image/png;base64,{b64}" class="profile-pic {size_class}">'
-    
     initials = "".join([w[0] for w in str(name).split()[:2]]).upper()
     return f'<div class="initials-placeholder {size_class}">{initials}</div>'
 
@@ -357,19 +342,28 @@ render_flashes()
 # --- 7. SIDEBAR ---
 with st.sidebar:
     st.markdown('<h2 class="atf-gradient">Artefact</h2>', unsafe_allow_html=True)
+    
     if st.button("👥 Contatos", use_container_width=True, disabled=(st.session_state.view_mode=='list')): 
         st.session_state.view_mode='list'
         st.rerun()
+    
     st.divider()
-    if st.button("🌓 Toggle Theme", use_container_width=True): 
+    
+    if st.button("🌓 Tema (Claro/Escuro)", use_container_width=True): 
         st.session_state.theme = 'light' if st.session_state.theme == 'dark' else 'dark'
+        st.rerun()
+        
+    st.divider()
+    
+    # BOTÃO DE LOGOUT ADICIONADO
+    if st.button("🚪 Sair (Logout)", type="secondary", use_container_width=True):
+        st.session_state.logged_in = False
         st.rerun()
 
 # --- 8. VIEWS ---
 if st.session_state.view_mode == 'list':
     st.markdown('<h1>Contatos</h1>', unsafe_allow_html=True)
     
-    # --- FORMULÁRIO DE CADASTRO DE NOVO CONTATO ---
     with st.expander("➕ Adicionar Novo Contato"):
         with st.form("add_contact_form", clear_on_submit=True):
             col1, col2 = st.columns(2)
@@ -388,30 +382,26 @@ if st.session_state.view_mode == 'list':
                     novo_lead = {
                         "ID": new_id,
                         "Nome": novo_nome.strip(),
-                        "Empresa": nova_empresa.strip() or "Empresa não informada",
-                        "Cargo": novo_cargo.strip() or "Cargo não informado",
+                        "Empresa": nova_empresa.strip() or "Não informada",
+                        "Cargo": novo_cargo.strip() or "Não informado",
                         "LinkedIn": novo_linkedin.strip(),
                         "Prioritario": prioritario_check
                     }
-                    
                     if save_new_lead_to_supabase(novo_lead):
                         st.session_state.leads_list.append(novo_lead)
                         st.success(f"Contato {novo_nome} cadastrado com sucesso!")
                         st.rerun()
                 else:
-                    st.error("Por favor, preencha pelo menos o nome do contato.")
+                    st.error("Preencha pelo menos o nome.")
 
-    # --- CAMPOS DE BUSCA E ORDENAÇÃO ---
     col_search, col_sort = st.columns([3, 1])
     with col_search:
         search = st.text_input("🔍 Pesquisar...", placeholder="Pesquisar por nome ou empresa...")
     with col_sort:
         sort_by = st.selectbox("Ordenar por:", ["Prioridade", "Nome", "Empresa", "Cargo"])
     
-    # Filtra por texto
     f_leads = [l for l in st.session_state.leads_list if search.lower() in l['Nome'].lower() or search.lower() in l['Empresa'].lower()]
     
-    # --- LÓGICA DE ORDENAÇÃO DINÂMICA ---
     if sort_by == "Prioridade":
         f_leads.sort(key=lambda x: (not x.get("Prioritario", False), x.get("Nome", "")))
     elif sort_by == "Nome":
@@ -462,8 +452,7 @@ elif st.session_state.view_mode == 'detail':
     
     col_a, col_b = st.columns([1, 4])
     with col_a:
-        # BOTÃO PARA ALTERNAR A PRIORIDADE DO LEAD
-        btn_star_label = "❌ Remover Prioridade" if l.get("Prioritario") else "⭐ Marcar como Prioritário"
+        btn_star_label = "❌ Remover Prioridade" if l.get("Prioritario") else "⭐ Marcar Prioritário"
         if st.button(btn_star_label, use_container_width=True):
             novo_status = not l.get("Prioritario", False)
             update_lead_priority_in_supabase(l["ID"], novo_status)
@@ -476,7 +465,6 @@ elif st.session_state.view_mode == 'detail':
 
     st.divider()
 
-    # --- SESSÃO DE INSIGHTS DA IA ---
     insights_db = load_insights_from_supabase(lead_ref)
     
     st.markdown("### 🧠 Insights Gerados (IA)")
@@ -495,56 +483,43 @@ elif st.session_state.view_mode == 'detail':
 
     st.divider()
 
-    # --- REGISTRO RÁPIDO COM GATILHO PARA LLM ---
     st.markdown("### 🎙️ Gravar Interação")
-    st.caption("Fale sobre a reunião. O áudio será comprimido para economizar espaço e analisado pela IA.")
+    st.caption("Fale sobre a reunião. O áudio será analisado pela IA para atualizar os insights.")
     
     if hasattr(st, 'audio_input'):
         audio = st.audio_input("Grave aqui", label_visibility="collapsed", key=f"audio_widget_{st.session_state.audio_key}")
         
         if audio:
-            with st.spinner("🧠 Comprimindo áudio e consolidando insights..."):
+            with st.spinner("🧠 Processando IA..."):
                 audio_bytes_wav = audio.read()
                 audio_bytes_mp3 = comprimir_audio_para_mp3(audio_bytes_wav)
-                
                 url = upload_audio_to_supabase(audio_bytes_mp3, l['LinkedIn'])
                 
-                # Prepara os insights antigos em texto para a IA fundir
-                if insights_db:
-                    insights_anteriores_texto = "\n".join([f"- {i['tipo']}: {i['texto']}" for i in insights_db])
-                else:
-                    insights_anteriores_texto = "Nenhum insight anterior."
-                
+                insights_anteriores_texto = "\n".join([f"- {i['tipo']}: {i['texto']}" for i in insights_db]) if insights_db else "Nenhum insight anterior."
                 texto_transcrito, novos_insights = processar_audio_com_ia(audio_bytes_mp3, insights_anteriores_texto)
                 
                 if url:
-                    nota_formatada = f"🎙️ **Transcrição / Processamento:**\n\n_{texto_transcrito}_"
-                    save_note_to_supabase(lead_ref, nota_formatada, url)
+                    save_note_to_supabase(lead_ref, f"🎙️ **Transcrição:**\n\n_{texto_transcrito}_", url)
                 else:
-                    flash("Upload do áudio falhou, mas a transcrição foi gerada.", "warning")
                     save_note_to_supabase(lead_ref, f"🎙️ **Transcrição (Sem áudio):**\n\n_{texto_transcrito}_")
                 
                 if novos_insights:
-                    # Limpa os insights velhos para não duplicar, e salva a nova lista inteligente da IA
                     delete_all_insights_from_supabase(lead_ref)
                     for insight in novos_insights:
                         save_insight_to_supabase(lead_ref, insight.get("tipo", "Geral"), insight.get("texto", ""))
                 
                 st.session_state.audio_key += 1
                 st.rerun()
-    else:
-        st.warning("Gravação de voz indisponível no seu navegador/versão.")
 
-    with st.expander("📝 Adicionar nota de texto manual"):
+    with st.expander("📝 Adicionar nota manual"):
         with st.form("text_note_form", clear_on_submit=True):
-            txt = st.text_area("Nota", placeholder="Digite uma nota manual...", label_visibility="collapsed")
+            txt = st.text_area("Nota", label_visibility="collapsed")
             if st.form_submit_button("Salvar Texto", type="primary"):
                 if txt.strip():
                     save_note_to_supabase(lead_ref, txt, None)
                     st.rerun()
     
-    # --- HISTÓRICO BRUTO ---
-    st.markdown("<br>#### Histórico de Interações", unsafe_allow_html=True)
+    st.markdown("<br>#### Histórico", unsafe_allow_html=True)
     notas = load_notes_from_supabase(lead_ref)
     
     if not notas:
@@ -558,13 +533,10 @@ elif st.session_state.view_mode == 'detail':
                 <div>{n['texto']}</div>
             </div>
             """, unsafe_allow_html=True)
-            
             if n.get('audio_url'): 
                 st.audio(n['audio_url'])
             
-            # MENU DE EXCLUSÃO COM CONFIRMAÇÃO DE SEGURANÇA
-            with st.expander("🗑️ Excluir esta interação"):
-                st.warning("Tem certeza? Isso apagará a nota de texto e o arquivo de áudio do banco de dados definitivamente.")
+            with st.expander("🗑️ Excluir"):
                 if st.button("Sim, Excluir", key=f"btn_del_{n['id']}", type="primary"):
                     if delete_note_from_supabase(n['id'], n.get('audio_url')): 
                         st.rerun()
