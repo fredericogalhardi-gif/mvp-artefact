@@ -59,8 +59,6 @@ def comprimir_audio_para_mp3(audio_bytes_wav):
         return audio_bytes_wav
 
 # --- 4. BANCO DE DADOS: LEADS, NOTAS E INSIGHTS ---
-
-# Base inicial apenas para migração automática
 INITIAL_LEADS = [
     {"ID": 18, "Nome": "Elizabeth Sousa Rodrigues", "Empresa": "Grupo Mendes", "Cargo": "Diretor Executivo de Gente e Cultura", "LinkedIn": "https://www.linkedin.com/in/elizabeth-sousa-rodrigues-26086518/", "Prioritario": False},
     {"ID": 9, "Nome": "Carolina Bussadori", "Empresa": "Grupo St Marche", "Cargo": "Head de Gente & Cultura", "LinkedIn": "linkedin.com/in/carolinabussadorirh/", "Prioritario": False},
@@ -113,7 +111,6 @@ def load_leads_from_supabase():
     try:
         res = supabase.table("leads").select("*").execute()
         if not res.data:
-            # Se a tabela estiver vazia, carrega a base inicial automaticamente!
             for l in INITIAL_LEADS:
                 supabase.table("leads").insert({
                     "id": l["ID"],
@@ -174,11 +171,19 @@ def save_note_to_supabase(lead_id: str, texto: str, audio_url: str = None):
     except Exception as e:
         flash(f"Erro ao salvar nota: {e}")
 
-def delete_note_from_supabase(note_id: str):
+def delete_note_from_supabase(note_id: str, audio_url: str = None):
     try:
+        # Exclui a anotação da tabela
         supabase.table("notas").delete().eq("id", note_id).execute()
+        
+        # Se tinha um áudio, exclui do Storage também para economizar espaço!
+        if audio_url:
+            filename = audio_url.split("/")[-1]
+            supabase.storage.from_("gravacoes").remove([filename])
+            
         return True
     except Exception as e:
+        flash(f"Erro ao excluir nota ou áudio: {e}")
         return False
 
 def load_insights_from_supabase(lead_id: str):
@@ -186,6 +191,13 @@ def load_insights_from_supabase(lead_id: str):
         return supabase.table("insights").select("*").eq("lead_id", str(lead_id)).order("created_at", desc=True).execute().data
     except Exception as e: 
         return []
+
+def delete_all_insights_from_supabase(lead_id: str):
+    try:
+        # Limpa os insights velhos antes de salvar os novos consolidados pela IA
+        supabase.table("insights").delete().eq("lead_id", str(lead_id)).execute()
+    except Exception as e:
+        pass
 
 def save_insight_to_supabase(lead_id: str, tipo: str, texto: str):
     try:
@@ -205,7 +217,7 @@ def upload_audio_to_supabase(audio_bytes, lead_id: str):
         return None
 
 # --- 5. A MÁGICA DA IA (GEMINI EXPLORADOR) ---
-def processar_audio_com_ia(audio_bytes_bruto):
+def processar_audio_com_ia(audio_bytes_bruto, insights_anteriores_texto):
     if not has_gemini: 
         return "Erro: Gemini não configurado nos secrets.", []
     
@@ -217,18 +229,26 @@ def processar_audio_com_ia(audio_bytes_bruto):
     if not modelos_disponiveis:
         return "Erro Crítico: A sua chave API não tem nenhum modelo de IA liberado pelo Google.", []
 
-    prompt = """
+    # NOVO PROMPT: Agora ele junta e funde os insights!
+    prompt = f"""
     Você é um analista comercial de elite.
-    1. Ouça e transcreva o áudio fornecido.
-    2. Extraia os insights qualitativos mais valiosos da reunião.
+    Sua missão é manter o CRM sempre atualizado e não perder informações.
+    
+    1. Ouça e transcreva o NOVO áudio fornecido.
+    2. Analise a transcrição junto com os INSIGHTS ANTERIORES listados abaixo.
+    3. ATUALIZE e CONSOLIDE os insights. Junte informações do mesmo tópico (ex: combine o 'Orçamento' antigo com o 'Orçamento' novo). Se o novo áudio falar de algo inédito, crie um novo tópico. NUNCA descarte informações importantes dos insights antigos, apenas agregue ou atualize.
+    
+    --- INSIGHTS ANTERIORES DO CLIENTE ---
+    {insights_anteriores_texto}
+    --------------------------------------
     
     Retorne APENAS um JSON estrito no seguinte formato:
-    {
-        "transcricao": "texto completo da transcrição aqui",
+    {{
+        "transcricao": "texto completo da nova transcrição aqui",
         "insights": [
-            {"tipo": "Nome do Tópico (Ex: Foco, Dor, Oportunidade, Próximos Passos)", "texto": "Resumo executivo do insight"}
+            {{"tipo": "Nome do Tópico (Ex: Foco, Dor, Oportunidade, Próximos Passos)", "texto": "Resumo executivo consolidado deste insight"}}
         ]
-    }
+    }}
     """
     
     audio_part = {
@@ -364,7 +384,6 @@ if st.session_state.view_mode == 'list':
             
             if st.form_submit_button("Cadastrar Contato", type="primary"):
                 if novo_nome.strip():
-                    # Gera um ID único grande para não colidir com os 45 originais
                     new_id = int(time.time())
                     novo_lead = {
                         "ID": new_id,
@@ -484,12 +503,19 @@ elif st.session_state.view_mode == 'detail':
         audio = st.audio_input("Grave aqui", label_visibility="collapsed", key=f"audio_widget_{st.session_state.audio_key}")
         
         if audio:
-            with st.spinner("🧠 Comprimindo áudio e extraindo insights..."):
+            with st.spinner("🧠 Comprimindo áudio e consolidando insights..."):
                 audio_bytes_wav = audio.read()
                 audio_bytes_mp3 = comprimir_audio_para_mp3(audio_bytes_wav)
                 
                 url = upload_audio_to_supabase(audio_bytes_mp3, l['LinkedIn'])
-                texto_transcrito, novos_insights = processar_audio_com_ia(audio_bytes_mp3)
+                
+                # Prepara os insights antigos em texto para a IA fundir
+                if insights_db:
+                    insights_anteriores_texto = "\n".join([f"- {i['tipo']}: {i['texto']}" for i in insights_db])
+                else:
+                    insights_anteriores_texto = "Nenhum insight anterior."
+                
+                texto_transcrito, novos_insights = processar_audio_com_ia(audio_bytes_mp3, insights_anteriores_texto)
                 
                 if url:
                     nota_formatada = f"🎙️ **Transcrição / Processamento:**\n\n_{texto_transcrito}_"
@@ -499,6 +525,8 @@ elif st.session_state.view_mode == 'detail':
                     save_note_to_supabase(lead_ref, f"🎙️ **Transcrição (Sem áudio):**\n\n_{texto_transcrito}_")
                 
                 if novos_insights:
+                    # Limpa os insights velhos para não duplicar, e salva a nova lista inteligente da IA
+                    delete_all_insights_from_supabase(lead_ref)
                     for insight in novos_insights:
                         save_insight_to_supabase(lead_ref, insight.get("tipo", "Geral"), insight.get("texto", ""))
                 
@@ -530,7 +558,13 @@ elif st.session_state.view_mode == 'detail':
                 <div>{n['texto']}</div>
             </div>
             """, unsafe_allow_html=True)
+            
             if n.get('audio_url'): 
                 st.audio(n['audio_url'])
-            if st.button("Deletar", key=f"del_{n['id']}", type="secondary"):
-                if delete_note_from_supabase(n['id']): st.rerun()
+            
+            # MENU DE EXCLUSÃO COM CONFIRMAÇÃO DE SEGURANÇA
+            with st.expander("🗑️ Excluir esta interação"):
+                st.warning("Tem certeza? Isso apagará a nota de texto e o arquivo de áudio do banco de dados definitivamente.")
+                if st.button("Sim, Excluir", key=f"btn_del_{n['id']}", type="primary"):
+                    if delete_note_from_supabase(n['id'], n.get('audio_url')): 
+                        st.rerun()
