@@ -6,6 +6,8 @@ import re
 import json
 import io
 import time
+import unicodedata
+import zlib
 from datetime import datetime
 from supabase import create_client, Client
 import google.generativeai as genai
@@ -171,6 +173,96 @@ def update_lead_priority_in_supabase(lead_id, prioritario):
         supabase.table("leads").update({"prioritario": prioritario}).eq("id", lead_id).execute()
     except Exception as e:
         flash(f"Erro ao atualizar prioridade: {e}")
+
+def _norm_col(s):
+    s = unicodedata.normalize('NFKD', str(s)).encode('ascii', 'ignore').decode('ascii')
+    return re.sub(r'[^a-z0-9]', '', s.lower())
+
+# Cada campo aceita vários nomes possíveis de coluna (planilhas diferentes usam nomenclaturas diferentes)
+ALIASES = {
+    "id": ["id"],
+    "nome": ["nome", "nomecompleto"],
+    "empresa": ["empresa"],
+    "cargo": ["cargo"],
+    "linkedin": ["linkedin"],
+}
+
+def _map_columns(df):
+    normalizados = {_norm_col(c): c for c in df.columns}
+    mapa = {}
+    for campo, opcoes in ALIASES.items():
+        for opcao in opcoes:
+            if opcao in normalizados:
+                mapa[campo] = normalizados[opcao]
+                break
+    return mapa
+
+def _valor(row, mapa, campo, default=""):
+    col = mapa.get(campo)
+    if col is None:
+        return default
+    val = row.get(col)
+    val = "" if pd.isna(val) else str(val).strip()
+    return val or default
+
+def ler_planilha_leads(arquivo):
+    """Lê Excel/CSV mesmo quando a linha de cabeçalho não é a primeira (planilhas exportadas
+    costumam ter uma linha de título/agrupamento antes do cabeçalho real)."""
+    is_csv = arquivo.name.lower().endswith(".csv")
+    for header_row in range(4):
+        arquivo.seek(0)
+        try:
+            df = pd.read_csv(arquivo, header=header_row) if is_csv else pd.read_excel(arquivo, header=header_row)
+        except Exception:
+            continue
+        if "nome" in _map_columns(df):
+            return df
+    arquivo.seek(0)
+    return pd.read_csv(arquivo) if is_csv else pd.read_excel(arquivo)
+
+def import_leads_from_dataframe(df):
+    """Faz upsert em lote na tabela 'leads' a partir de um DataFrame (Excel/CSV importado).
+    Reconhece variações de nome de coluna (ex.: 'Nome Completo', 'Linkedin'). Quando a planilha
+    não traz uma coluna ID, gera um ID estável a partir do LinkedIn/nome, para que reimportar o
+    mesmo arquivo atualize os mesmos registros em vez de duplicar."""
+    mapa = _map_columns(df)
+    if "nome" not in mapa:
+        flash("Planilha inválida: nenhuma coluna de nome (ex.: 'Nome' ou 'Nome Completo') foi encontrada.")
+        return 0, 0
+
+    registros = []
+    for _, row in df.iterrows():
+        nome = _valor(row, mapa, "nome")
+        if not nome:
+            continue
+        linkedin = _valor(row, mapa, "linkedin")
+
+        id_bruto = _valor(row, mapa, "id")
+        try:
+            lead_id = int(float(id_bruto)) if id_bruto else None
+        except (ValueError, TypeError):
+            lead_id = None
+        if lead_id is None:
+            chave = linkedin.rstrip('/').lower() or nome.lower()
+            lead_id = 10_000_000 + (zlib.crc32(chave.encode('utf-8')) % 1_000_000_000)
+
+        registros.append({
+            "id": lead_id,
+            "nome": nome,
+            "empresa": _valor(row, mapa, "empresa", "Não informada"),
+            "cargo": _valor(row, mapa, "cargo", "Não informado"),
+            "linkedin": linkedin,
+        })
+
+    if not registros:
+        return 0, 0
+
+    try:
+        supabase.table("leads").upsert(registros, on_conflict="id").execute()
+        return len(registros), 0
+    except Exception as e:
+        flash(f"Erro ao importar leads: {e}")
+        return 0, len(registros)
 
 def load_notes_from_supabase(lead_id: str):
     try:
@@ -399,6 +491,28 @@ if st.session_state.view_mode == 'list':
                         st.rerun()
                 else:
                     st.error("Preencha pelo menos o nome.")
+
+    with st.expander("📥 Importar Leads em Massa (Excel/CSV)"):
+        st.caption("A planilha precisa de ao menos uma coluna de nome (Nome ou Nome Completo). Empresa, Cargo e LinkedIn são reconhecidos automaticamente. Se houver coluna ID, ela é usada para atualizar o registro; caso contrário, o LinkedIn (ou o nome) identifica o lead, então reimportar o mesmo arquivo atualiza em vez de duplicar.")
+        arquivo = st.file_uploader("Selecione o arquivo", type=["xlsx", "xls", "csv"], key="import_leads_uploader")
+        if arquivo is not None:
+            try:
+                df_import = ler_planilha_leads(arquivo)
+            except Exception as e:
+                df_import = None
+                st.error(f"Não foi possível ler o arquivo: {e}")
+
+            if df_import is not None:
+                st.dataframe(df_import.head(10), use_container_width=True)
+                if st.button("Confirmar Importação", type="primary"):
+                    with st.spinner("Importando leads..."):
+                        ok, falhas = import_leads_from_dataframe(df_import)
+                    if ok:
+                        st.session_state.leads_list = load_leads_from_supabase()
+                        st.success(f"{ok} leads importados/atualizados com sucesso!")
+                        st.rerun()
+                    elif falhas == 0:
+                        st.warning("Nenhum lead válido encontrado na planilha.")
 
     col_search, col_sort = st.columns([3, 1])
     with col_search:
