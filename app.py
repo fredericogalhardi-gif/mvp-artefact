@@ -52,7 +52,6 @@ def render_login_screen():
     st.markdown('<h1 class="atf-gradient">Artefact</h1>', unsafe_allow_html=True)
     st.markdown("<p style='color: #8E8E93; margin-bottom: 1rem;'>Selecione seu perfil e acesse</p>", unsafe_allow_html=True)
     
-    # Spinelli adicionado como Gestor (Não é um lead)
     usuarios_permitidos = ["Spinelli (Gestor/Admin)", "André", "Rafael", "Manu", "Paolo", "Ponti", "Fred"]
     usuario_selecionado = st.selectbox("Usuário", usuarios_permitidos, label_visibility="collapsed")
     senha_digitada = st.text_input("Senha", type="password", label_visibility="collapsed", placeholder="Digite a senha da equipe...")
@@ -190,14 +189,12 @@ def update_lead_status_in_supabase(lead_id, novo_status):
     except Exception as e:
         flash(f"Erro ao atualizar status: {e}")
 
-# Lógica de fallback robusta para gerar o ID/Chave do Lead no sistema
 def get_lead_ref(l):
     url = l.get('LinkedIn', '')
     if url and str(url).lower() != 'nan' and url != '#':
         extracted = url.rstrip('/').split('/')[-1]
         if extracted: return extracted
         
-    # Chave Automática se não houver LinkedIn (Nome + Empresa)
     nome = l.get('Nome', '')
     empresa = l.get('Empresa', '')
     fallback = re.sub(r'[^a-zA-Z0-9]', '', f"{nome}_{empresa}").lower()
@@ -368,6 +365,8 @@ def apply_executive_styles():
         .timeline-item::before {{ content: ''; position: absolute; left: -6px; top: 0; width: 10px; height: 10px; border-radius: 50%; background: #ff1493; }}
         .timeline-date {{ font-size: 0.8rem; color: {C['SUB']}; margin-bottom: 5px; }}
         .star-tag {{ background: linear-gradient(90deg, #FFD700 0%, #FFA500 100%); color: #000; font-size: 0.75rem; font-weight: 800; padding: 2px 8px; border-radius: 12px; text-transform: uppercase; margin-left: 8px; }}
+        .status-tag {{ font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; border: 1px solid {C['BORDER']}; margin-left: 8px; color: {C['SUB']}; }}
+        .info-box {{ background: {C['INPUT_BKG']}; border: 1px solid {C['BORDER']}; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }}
         </style>
     """, unsafe_allow_html=True)
 
@@ -455,40 +454,22 @@ if st.session_state.view_mode == 'list':
     
     for l in f_leads:
         star_html = '<span class="star-tag">⭐ Prioritário</span>' if l.get("Prioritario") else ""
+        status_html = f"<span class='status-tag'>{l.get('Status', 'whatsapp não enviado')}</span>"
+        
         card = f"""
         <div class="lead-row">
             <div style="display:flex; align-items:center; gap:15px;">
                 {get_photo_html(l['Nome'], l.get('LinkedIn', '#'), "small")}
                 <div style="flex:1;">
-                    <strong style="font-size: 1.1rem;">{l['Nome']}</strong> {star_html}<br>
+                    <strong style="font-size: 1.1rem;">{l['Nome']}</strong> {star_html} {status_html}<br>
                     <span class="subtext">{l['Cargo']} @ {l['Empresa']}</span>
                 </div>
             </div>
         </div>
         """
         st.markdown(card, unsafe_allow_html=True)
-        
-        # MENU OCULTO: Acordeão de Informações e Status
-        with st.expander("🔽 Ver Tema, Descrição e Atualizar Status"):
-            st.markdown(f"**Tema da Entrevista:** {l.get('Tema', 'Não definido')}")
-            st.markdown(f"**Descrição:**\n{l.get('Descricao', 'Sem descrição')}")
-            
-            opcoes_status = ["whatsapp não enviado", "mensagem 01 enviada", "lead respondeu", "lead não respondeu"]
-            current_status = l.get('Status', 'whatsapp não enviado')
-            if current_status not in opcoes_status:
-                current_status = "whatsapp não enviado"
                 
-            novo_status = st.selectbox(
-                "Mudar Status:", 
-                opcoes_status, 
-                index=opcoes_status.index(current_status), 
-                key=f"status_{l['ID']}"
-            )
-            if novo_status != current_status:
-                update_lead_status_in_supabase(l['ID'], novo_status)
-                l['Status'] = novo_status
-                
-        if st.button(f"Abrir Perfil de {l['Nome']}", key=f"v_{l['ID']}", use_container_width=True): 
+        if st.button(f"Abrir Perfil", key=f"v_{l['ID']}", use_container_width=True): 
             st.session_state.selected_lead_id = l['ID']
             st.session_state.view_mode = 'detail'
             st.rerun()
@@ -497,7 +478,7 @@ if st.session_state.view_mode == 'list':
 
 elif st.session_state.view_mode == 'detail':
     l = next(item for item in st.session_state.leads_list if item['ID'] == st.session_state.selected_lead_id)
-    lead_ref = get_lead_ref(l) # Chave ID garantida (LinkedIn ou Nome_Empresa)
+    lead_ref = get_lead_ref(l)
     
     if st.button("← Voltar"): 
         st.session_state.view_mode = 'list'
@@ -532,7 +513,31 @@ elif st.session_state.view_mode == 'detail':
             st.button("Sem LinkedIn cadastrado", disabled=True)
 
     st.divider()
+    
+    # --- INFORMAÇÕES DA ENTREVISTA E STATUS ---
+    st.markdown("### 📋 Informações do Lead")
+    st.markdown(f"**Tema da Entrevista:** {l.get('Tema', 'Não definido')}")
+    st.markdown(f"<div class='info-box'>{l.get('Descricao', 'Sem descrição')}</div>", unsafe_allow_html=True)
+    
+    opcoes_status = ["whatsapp não enviado", "mensagem 01 enviada", "lead respondeu", "lead não respondeu"]
+    current_status = l.get('Status', 'whatsapp não enviado')
+    if current_status not in opcoes_status:
+        current_status = "whatsapp não enviado"
+        
+    novo_status = st.selectbox(
+        "Atualizar Status do Lead:", 
+        opcoes_status, 
+        index=opcoes_status.index(current_status), 
+        key=f"status_detail_{l['ID']}"
+    )
+    if novo_status != current_status:
+        update_lead_status_in_supabase(l['ID'], novo_status)
+        l['Status'] = novo_status
+        st.success("Status atualizado!")
 
+    st.divider()
+
+    # --- SESSÃO DE INSIGHTS DA IA ---
     insights_db = load_insights_from_supabase(lead_ref)
     
     st.markdown("### 🧠 Insights Gerados (IA)")
@@ -609,7 +614,6 @@ elif st.session_state.view_mode == 'detail':
             if n.get('audio_url'): 
                 st.audio(n['audio_url'])
             
-            # CONFIRMAÇÃO DE SEGURANÇA PARA EXCLUSÃO (NOVA)
             with st.expander("🗑️ Excluir esta interação"):
                 st.warning("⚠️ Atenção: Esta ação é irreversível e apagará o log e o áudio permanentemente do banco de dados.")
                 confirmacao = st.checkbox("Sim, tenho certeza que desejo excluir", key=f"chk_del_{n['id']}")
