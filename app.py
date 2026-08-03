@@ -52,7 +52,7 @@ def render_login_screen():
     st.markdown('<h1 class="atf-gradient">Artefact</h1>', unsafe_allow_html=True)
     st.markdown("<p style='color: #8E8E93; margin-bottom: 1rem;'>Selecione seu perfil e acesse</p>", unsafe_allow_html=True)
     
-    usuarios_permitidos = ["Spinelli (Gestor/Admin)", "André", "Rafael", "Manu", "Paolo", "Ponti", "Fred"]
+    usuarios_permitidos = ["Spinelli", "André", "Rafael", "Manu", "Paolo", "Ponti", "Fred"]
     usuario_selecionado = st.selectbox("Usuário", usuarios_permitidos, label_visibility="collapsed")
     senha_digitada = st.text_input("Senha", type="password", label_visibility="collapsed", placeholder="Digite a senha da equipe...")
     
@@ -114,14 +114,50 @@ def comprimir_audio_para_mp3(audio_bytes_wav):
 
 # --- 4. BANCO DE DADOS: LEADS, NOTAS E INSIGHTS ---
 
-# Base extraída limpa e atualizada da planilha Controle de Leads GT.xlsx
+# Base extraída da planilha "Controle de Leads GT.xlsx"
 INITIAL_LEADS = [
-    {"ID": 1, "Nome": "Giuliane Paulista", "Empresa": "Banco do Brasil", "Cargo": "AI & Analytics Executive", "LinkedIn": "https://www.linkedin.com/in/giulianepaulista/", "Prioritario": False, "Tema": "Construindo confiança na Era da IA: Jornada do Banco do Brasil em governança, capacitação e maturidade", "Descricao": "- Estratégias para construir governança de dados e IA em escala: como estruturar um modelo de governança sólido em uma instituição do porte do Banco do Brasil\n\n- Os caminhos para alfabetizar em dados e IA milhares de colaboradores com diferentes níveis de maturidade, transformando resistência em engajamento.\n\n- Quais métricas e marcos práticos ajudam a avaliar se a organização está evoluindo de forma madura, segura e alinhada às exigências regulatórias do setor financeiro.\n\n- Como o Banco do Brasil equilibra o entusiasmo com novos modelos de IA e a necessidade de garantir respostas confiáveis, transparentes e sem alucinações.\n\n- Reflexões sobre como valores fundamentais de gestão — como resiliência, simplicidade e curiosidade — se mantêm atuais em meio a transformações tecnológicas tão aceleradas.", "Status": "whatsapp não enviado"},
-    {"ID": 2, "Nome": "Sara Sitta e Fernanda Vargas", "Empresa": "Ford", "Cargo": "AI & Data Science Lead (Sara)", "LinkedIn": "https://www.linkedin.com/in/sarasitta/", "Prioritario": False, "Tema": "Fast Cases — Dados, IA, pessoas e ROI em empresas brasileiras / Workshop \"Do piloto ao P&L\" / Mesas Colaborativas", "Descricao": "- Como identificar rapidamente oportunidades de Dados e IA na indústria que tenham ciclo curto de implementação e forte potencial de retorno financeiro.\n\n- Quais são os principais gargalos ao mover projetos da fase de testes para a operação diária e como garantir que o ROI seja refletido no balanço financeiro.\n\n- Como definir KPIs claros e atribuir valor financeiro a iniciativas de Inteligência Artificial (de modelos tradicionais a GenAI) \n\n- Como construir uma base de dados sólida e pipelines resilientes para garantir que as aplicações de GenAI operem com dados de alta qualidade e em escala.\n\n- Como ecossistemas abertos de discussão e compartilhamento de casos reais entre empresas brasileiras ajudam a acelerar a maturidade do mercado local de IA.", "Status": "whatsapp não enviado"},
-    {"ID": 3, "Nome": "Gabriel Vernalha Ribeiro", "Empresa": "Dasa", "Cargo": "Executivo de Dados, Analytics e IA", "LinkedIn": "https://www.linkedin.com/in/gvribeiro/", "Prioritario": False, "Tema": "Liderando o Futuro / Board Reverse Pitch: A IA muda tudo? / Mesas Colaborativas", "Descricao": "\"- Como liderar a agenda de implementação da IA em um ecossistema tão crítico e regulado quanto o de saúde.\n\n- Como conduzir a conversa com conselheiros e acionistas sem cair no exagero do hype, balanceando grandes promessas com retorno claro de investimento, gestão de riscos e segurança do paciente.\n\n- Estratégias práticas para manter a conformidade (LGPD/hipaa), a privacidade de dados médicos e a qualidade analítica sem travar a inovação\n\n- Como aplicar PMO, OKRs e Design Thinking para gerenciar a carteira de projetos de inteligência artificial, priorizando as iniciativas que trazem maior impacto nos resultados e na jornada do cliente/paciente.\n\n- Como engajar e capacitar equipes multidisciplinares e profissionais da saúde — que muitas vezes resistem à automação —, promovendo a adoção confiável de novas ferramentas.\"", "Status": "whatsapp não enviado"},
-    {"ID": 4, "Nome": "Gabriel Mochnacs", "Empresa": "Cielo", "Cargo": "Superintendente de Dados e IA", "LinkedIn": "https://www.linkedin.com/in/gabrielmarruda/", "Prioritario": False, "Tema": "O que ninguém conta sobre escalar IA: falhas, dados, governança e as decisões que fazem pilotos virarem negócio", "Descricao": "- Quais são os principais motivos que fazem projetos promissores falharem e o que a dor da tentativa ensina sobre maturidade de dados.\n\n- Quais decisões técnicas, de governança e de arquitetura precisam ser tomadas no \"dia zero\" para garantir que uma prova de conceito consiga suportar o volume de um gigante de pagamentos como a Cielo.\n\n- A importância de construir capacidades sólidas de observabilidade e arquitetura em nuvem para sustentar modelos avançados de IA sem explodir custos operacionais nem degradar a qualidade dos dados.\n\n- Como conduzir a mudança cultural necessária para que as áreas de negócio realmente adotem e confiem na tomada de decisão orientada por IA.\n\n- Como a educação executiva recente em GenAI ajuda a filtrar o hype e a tomar decisões pragmáticas para construir o modelo operacional das empresas líderes do mercado", "Status": "whatsapp não enviado"},
-    {"ID": 5, "Nome": "Gustavo Nery", "Empresa": "Anatel", "Cargo": "CIO", "LinkedIn": "https://www.linkedin.com/in/gustavo-nery-silva/", "Prioritario": False, "Tema": "O que ninguém conta sobre escalar IA: falhas, dados, governança e as decisões que fazem pilotos virarem negócio", "Descricao": "\"- Os gargalos invisíveis e burocráticos de infraestrutura, dados e compras públicas que dificultam que soluções de IA saiam do papel e virem serviço público.\n\n- Como lidar com as falhas inerentes aos modelos de IA em um ambiente estatal onde a transparência e a responsabilidade legal são exigências absolutas perante órgãos de controle e a sociedade.\n\n- TransformaGov e a virada para a gestão pública orientada a dados: lições aprendidas em grandes programas de transformação do Estado que ajudam a desenhar processos para que a IA seja uma alavanca de produtividade e não apenas um hype.\n\n- Como estruturar modelos de governança, interoperabilidade e compartilhamento de dados sensíveis entre diferentes áreas e órgãos federais para viabilizar projetos robustos de IA.\n\n- As dores e aprendizados de usar internamente na agência reguladora as mesmas tecnologias de inteligência artificial que essa mesma agência precisa regular para o mercado de telecomunicações.\"", "Status": "whatsapp não enviado"},
-    {"ID": 6, "Nome": "Sabrina Nazario", "Empresa": "Schneider electric", "Cargo": "CDO SAM", "LinkedIn": "https://www.linkedin.com/in/sabrina-nazario-7138a822/", "Prioritario": False, "Tema": "Governança e Estratégia de Dados na América do Sul: Desafios e Escala Regional", "Descricao": "- Os desafios de desenhar e implementar uma estratégia de dados coesa para toda LATAM, considerando as particularidades locais e as diretrizes globais de uma empresa gigante como a Schneider Electric.\n\n- Como estruturar uma governança de dados eficiente que garanta qualidade, conformidade e segurança sem criar burocracia excessiva ou travar a agilidade e a inovação das equipes.\n\n- Quais estratégias e iniciativas práticas têm sido mais eficazes para vencer a resistência à mudança, democratizar o acesso à informação e elevar a maturidade analítica dos times operacionais e executivos.\n\n- Como a Schneider Electric está utilizando dados e IA para impulsionar soluções de eficiência energética, sustentabilidade e automação industrial na América do Sul.", "Status": "whatsapp não enviado"}
+    {
+        "ID": 1, "Nome": "Giuliane Paulista", "Empresa": "Banco do Brasil", "Cargo": "AI & Analytics Executive", 
+        "LinkedIn": "https://www.linkedin.com/in/giulianepaulista/", "Prioritario": False, 
+        "Tema": "Construindo confiança na Era da IA: Jornada do Banco do Brasil em governança, capacitação e maturidade", 
+        "Descricao": "- Estratégias para construir governança de dados e IA em escala: como estruturar um modelo de governança sólido em uma instituição do porte do Banco do Brasil\n\n- Os caminhos para alfabetizar em dados e IA milhares de colaboradores com diferentes níveis de maturidade, transformando resistência em engajamento.\n\n- Quais métricas e marcos práticos ajudam a avaliar se a organização está evoluindo de forma madura, segura e alinhada às exigências regulatórias do setor financeiro.\n\n- Como o Banco do Brasil equilibra o entusiasmo com novos modelos de IA e a necessidade de garantir respostas confiáveis, transparentes e sem alucinações.\n\n- Reflexões sobre como valores fundamentais de gestão — como resiliência, simplicidade e curiosidade — se mantêm atuais em meio a transformações tecnológicas tão aceleradas.", 
+        "Status": "whatsapp não enviado"
+    },
+    {
+        "ID": 2, "Nome": "Sara Sitta e Fernanda Vargas", "Empresa": "Ford", "Cargo": "AI & Data Science Lead (Sara)", 
+        "LinkedIn": "https://www.linkedin.com/in/sarasitta/", "Prioritario": False, 
+        "Tema": "Fast Cases — Dados, IA, pessoas e ROI em empresas brasileiras / Workshop \"Do piloto ao P&L\" / Mesas Colaborativas", 
+        "Descricao": "- Como identificar rapidamente oportunidades de Dados e IA na indústria que tenham ciclo curto de implementação e forte potencial de retorno financeiro.\n\n- Quais são os principais gargalos ao mover projetos da fase de testes para a operação diária e como garantir que o ROI seja refletido no balanço financeiro.\n\n- Como definir KPIs claros e atribuir valor financeiro a iniciativas de Inteligência Artificial (de modelos tradicionais a GenAI) \n\n- Como construir uma base de dados sólida e pipelines resilientes para garantir que as aplicações de GenAI operem com dados de alta qualidade e em escala.\n\n- Como ecossistemas abertos de discussão e compartilhamento de casos reais entre empresas brasileiras ajudam a acelerar a maturidade do mercado local de IA.", 
+        "Status": "whatsapp não enviado"
+    },
+    {
+        "ID": 3, "Nome": "Gabriel Vernalha Ribeiro", "Empresa": "Dasa", "Cargo": "Executivo de Dados, Analytics e IA", 
+        "LinkedIn": "https://www.linkedin.com/in/gvribeiro/", "Prioritario": False, 
+        "Tema": "Liderando o Futuro / Board Reverse Pitch: A IA muda tudo? / Mesas Colaborativas", 
+        "Descricao": "- Como liderar a agenda de implementação da IA em um ecossistema tão crítico e regulado quanto o de saúde.\n\n- Como conduzir a conversa com conselheiros e acionistas sem cair no exagero do hype, balanceando grandes promessas com retorno claro de investimento, gestão de riscos e segurança do paciente.\n\n- Estratégias práticas para manter a conformidade (LGPD/hipaa), a privacidade de dados médicos e a qualidade analítica sem travar a inovação\n\n- Como aplicar PMO, OKRs e Design Thinking para gerenciar a carteira de projetos de inteligência artificial, priorizando as iniciativas que trazem maior impacto nos resultados e na jornada do cliente/paciente.\n\n- Como engajar e capacitar equipes multidisciplinares e profissionais da saúde — que muitas vezes resistem à automação —, promovendo a adoção confiável de novas ferramentas.", 
+        "Status": "whatsapp não enviado"
+    },
+    {
+        "ID": 4, "Nome": "Gabriel Mochnacs", "Empresa": "Cielo", "Cargo": "Superintendente de Dados e IA", 
+        "LinkedIn": "https://www.linkedin.com/in/gabrielmarruda/", "Prioritario": False, 
+        "Tema": "O que ninguém conta sobre escalar IA: falhas, dados, governança e as decisões que fazem pilotos virarem negócio", 
+        "Descricao": "- Quais são os principais motivos que fazem projetos promissores falharem e o que a dor da tentativa ensina sobre maturidade de dados.\n\n- Quais decisões técnicas, de governança e de arquitetura precisam ser tomadas no \"dia zero\" para garantir que uma prova de conceito consiga suportar o volume de um gigante de pagamentos como a Cielo.\n\n- A importância de construir capacidades sólidas de observabilidade e arquitetura em nuvem para sustentar modelos avançados de IA sem explodir custos operacionais nem degradar a qualidade dos dados.\n\n- Como conduzir a mudança cultural necessária para que as áreas de negócio realmente adotem e confiem na tomada de decisão orientada por IA.\n\n- Como a educação executiva recente em GenAI ajuda a filtrar o hype e a tomar decisões pragmáticas para construir o modelo operacional das empresas líderes do mercado", 
+        "Status": "whatsapp não enviado"
+    },
+    {
+        "ID": 5, "Nome": "Gustavo Nery", "Empresa": "Anatel", "Cargo": "CIO", 
+        "LinkedIn": "https://www.linkedin.com/in/gustavo-nery-silva/", "Prioritario": False, 
+        "Tema": "O que ninguém conta sobre escalar IA: falhas, dados, governança e as decisões que fazem pilotos virarem negócio", 
+        "Descricao": "- Os gargalos invisíveis e burocráticos de infraestrutura, dados e compras públicas que dificultam que soluções de IA saiam do papel e virem serviço público.\n\n- Como lidar com as falhas inerentes aos modelos de IA em um ambiente estatal onde a transparência e a responsabilidade legal são exigências absolutas perante órgãos de controle e a sociedade.\n\n- TransformaGov e a virada para a gestão pública orientada a dados: lições aprendidas em grandes programas de transformação do Estado que ajudam a desenhar processos para que a IA seja uma alavanca de produtividade e não apenas um hype.\n\n- Como estruturar modelos de governança, interoperabilidade e compartilhamento de dados sensíveis entre diferentes áreas e órgãos federais para viabilizar projetos robustos de IA.\n\n- As dores e aprendizados de usar internamente na agência reguladora as mesmas tecnologias de inteligência artificial que essa mesma agência precisa regular para o mercado de telecomunicações.", 
+        "Status": "whatsapp não enviado"
+    },
+    {
+        "ID": 6, "Nome": "Sabrina Nazario", "Empresa": "Schneider electric", "Cargo": "CDO SAM", 
+        "LinkedIn": "https://www.linkedin.com/in/sabrina-nazario-7138a822/", "Prioritario": False, 
+        "Tema": "Governança e Estratégia de Dados na América do Sul: Desafios e Escala Regional", 
+        "Descricao": "- Os desafios de desenhar e implementar uma estratégia de dados coesa para toda LATAM, considerando as particularidades locais e as diretrizes globais de uma empresa gigante como a Schneider Electric.\n\n- Como estruturar uma governança de dados eficiente que garanta qualidade, conformidade e segurança sem criar burocracia excessiva ou travar a agilidade e a inovação das equipes.\n\n- Quais estratégias e iniciativas práticas têm sido mais eficazes para vencer a resistência à mudança, democratizar o acesso à informação e elevar a maturidade analítica dos times operacionais e executivos.\n\n- Como a Schneider Electric está utilizando dados e IA para impulsionar soluções de eficiência energética, sustentabilidade e automação industrial na América do Sul.", 
+        "Status": "whatsapp não enviado"
+    }
 ]
 
 def load_leads_from_supabase():
@@ -189,6 +225,7 @@ def update_lead_status_in_supabase(lead_id, novo_status):
     except Exception as e:
         flash(f"Erro ao atualizar status: {e}")
 
+# Lógica robusta de chave de banco de dados (Gera uma chave única mesmo sem LinkedIn)
 def get_lead_ref(l):
     url = l.get('LinkedIn', '')
     if url and str(url).lower() != 'nan' and url != '#':
@@ -366,7 +403,7 @@ def apply_executive_styles():
         .timeline-date {{ font-size: 0.8rem; color: {C['SUB']}; margin-bottom: 5px; }}
         .star-tag {{ background: linear-gradient(90deg, #FFD700 0%, #FFA500 100%); color: #000; font-size: 0.75rem; font-weight: 800; padding: 2px 8px; border-radius: 12px; text-transform: uppercase; margin-left: 8px; }}
         .status-tag {{ font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; border: 1px solid {C['BORDER']}; margin-left: 8px; color: {C['SUB']}; }}
-        .info-box {{ background: {C['INPUT_BKG']}; border: 1px solid {C['BORDER']}; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }}
+        .info-box {{ background: {C['INPUT_BKG']}; border: 1px solid {C['BORDER']}; padding: 1.5rem; border-radius: 8px; margin-bottom: 1rem; }}
         </style>
     """, unsafe_allow_html=True)
 
@@ -456,12 +493,13 @@ if st.session_state.view_mode == 'list':
         star_html = '<span class="star-tag">⭐ Prioritário</span>' if l.get("Prioritario") else ""
         status_html = f"<span class='status-tag'>{l.get('Status', 'whatsapp não enviado')}</span>"
         
+        # A LISTA PRINCIPAL FICA LIMPA, APENAS COM O BOTÃO DE ABRIR O PERFIL
         card = f"""
         <div class="lead-row">
             <div style="display:flex; align-items:center; gap:15px;">
                 {get_photo_html(l['Nome'], l.get('LinkedIn', '#'), "small")}
                 <div style="flex:1;">
-                    <strong style="font-size: 1.1rem;">{l['Nome']}</strong> {star_html} {status_html}<br>
+                    <strong style="font-size: 1.1rem;">{l['Nome']}</strong> {status_html} {star_html}<br>
                     <span class="subtext">{l['Cargo']} @ {l['Empresa']}</span>
                 </div>
             </div>
@@ -478,6 +516,7 @@ if st.session_state.view_mode == 'list':
 
 elif st.session_state.view_mode == 'detail':
     l = next(item for item in st.session_state.leads_list if item['ID'] == st.session_state.selected_lead_id)
+    # GERAÇÃO DA CHAVE: Usa o LinkedIn, ou se não tiver, funde Nome e Empresa de forma robusta
     lead_ref = get_lead_ref(l)
     
     if st.button("← Voltar"): 
@@ -514,26 +553,31 @@ elif st.session_state.view_mode == 'detail':
 
     st.divider()
     
-    # --- INFORMAÇÕES DA ENTREVISTA E STATUS ---
-    st.markdown("### 📋 Informações do Lead")
-    st.markdown(f"**Tema da Entrevista:** {l.get('Tema', 'Não definido')}")
-    st.markdown(f"<div class='info-box'>{l.get('Descricao', 'Sem descrição')}</div>", unsafe_allow_html=True)
-    
-    opcoes_status = ["whatsapp não enviado", "mensagem 01 enviada", "lead respondeu", "lead não respondeu"]
-    current_status = l.get('Status', 'whatsapp não enviado')
-    if current_status not in opcoes_status:
-        current_status = "whatsapp não enviado"
+    # --- O MENU OCULTO COM INFORMAÇÕES E STATUS (EXPANDER) ---
+    with st.expander("📋 Informações do Lead"):
+        st.markdown(f"**Tema da Entrevista:** {l.get('Tema', 'Não definido')}")
+        st.markdown("---")
+        # O markdown renderiza a formatação com hifens (bullets) perfeitamente
+        st.markdown(l.get('Descricao', 'Sem descrição'))
+        st.markdown("---")
         
-    novo_status = st.selectbox(
-        "Atualizar Status do Lead:", 
-        opcoes_status, 
-        index=opcoes_status.index(current_status), 
-        key=f"status_detail_{l['ID']}"
-    )
-    if novo_status != current_status:
-        update_lead_status_in_supabase(l['ID'], novo_status)
-        l['Status'] = novo_status
-        st.success("Status atualizado!")
+        opcoes_status = ["whatsapp não enviado", "mensagem 01 enviada", "lead respondeu", "lead não respondeu"]
+        current_status = l.get('Status', 'whatsapp não enviado')
+        if current_status not in opcoes_status:
+            current_status = "whatsapp não enviado"
+            
+        novo_status = st.selectbox(
+            "Atualizar Status do Lead:", 
+            opcoes_status, 
+            index=opcoes_status.index(current_status), 
+            key=f"status_detail_{l['ID']}"
+        )
+        if novo_status != current_status:
+            update_lead_status_in_supabase(l['ID'], novo_status)
+            l['Status'] = novo_status
+            st.success("Status atualizado!")
+            time.sleep(0.5)
+            st.rerun()
 
     st.divider()
 
@@ -614,6 +658,7 @@ elif st.session_state.view_mode == 'detail':
             if n.get('audio_url'): 
                 st.audio(n['audio_url'])
             
+            # CONFIRMAÇÃO DE SEGURANÇA PARA EXCLUSÃO (NOVA)
             with st.expander("🗑️ Excluir esta interação"):
                 st.warning("⚠️ Atenção: Esta ação é irreversível e apagará o log e o áudio permanentemente do banco de dados.")
                 confirmacao = st.checkbox("Sim, tenho certeza que desejo excluir", key=f"chk_del_{n['id']}")
