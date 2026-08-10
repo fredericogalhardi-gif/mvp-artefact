@@ -64,14 +64,20 @@ def render_login_screen():
     
     usuarios_permitidos = ["Spinelli", "André", "Rafael", "Manu", "Paolo", "Ponti", "Fred"]
     usuario_selecionado = st.selectbox("Usuário", usuarios_permitidos, label_visibility="collapsed")
+    senha_digitada = st.text_input("Senha", type="password", label_visibility="collapsed", placeholder="Digite a senha da equipe...")
     
     if st.button("Acessar CRM", type="primary", use_container_width=True):
-        st.session_state.logged_in = True
-        st.session_state.current_user = usuario_selecionado
-        cookie_manager.set("artefact_user", usuario_selecionado, expires_at=datetime.now() + timedelta(days=365))
-        time.sleep(0.5) 
-        st.rerun()
-        
+        senha_correta = st.secrets.get("APP_PASSWORD", "appleads123")
+        if senha_digitada == senha_correta:
+            st.session_state.logged_in = True
+            st.session_state.current_user = usuario_selecionado
+            # Salva o cookie para durar 1 ANO (365 dias)
+            cookie_manager.set("artefact_user", usuario_selecionado, expires_at=datetime.now() + timedelta(days=365))
+            time.sleep(0.5) 
+            st.rerun()
+        else:
+            st.error("Senha incorreta. Tente novamente.")
+            
     st.markdown('</div>', unsafe_allow_html=True)
 
 if not st.session_state.logged_in:
@@ -730,6 +736,7 @@ elif st.session_state.view_mode == 'detail':
             if n.get('audio_url'): 
                 st.audio(n['audio_url'])
             
+            # CONFIRMAÇÃO DE SEGURANÇA PARA EXCLUSÃO
             with st.expander("🗑️ Excluir esta interação"):
                 st.warning("⚠️ Atenção: Esta ação é irreversível e apagará o log e o áudio permanentemente do banco de dados.")
                 confirmacao = st.checkbox("Sim, tenho certeza que desejo excluir", key=f"chk_del_{n['id']}")
