@@ -24,16 +24,20 @@ st.set_page_config(
 # --- GERENCIADOR DE COOKIES ---
 cookie_manager = stx.CookieManager()
 cookie_user = cookie_manager.get(cookie="artefact_user")
+cookie_event = cookie_manager.get(cookie="artefact_event")
 
 # --- 2. SISTEMA DE LOGIN (AUTENTICAÇÃO) ---
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 if 'current_user' not in st.session_state:
     st.session_state.current_user = None
+if 'selected_event_filter' not in st.session_state:
+    st.session_state.selected_event_filter = cookie_event if cookie_event else "ILOS"
 
 if not st.session_state.logged_in and cookie_user:
     st.session_state.logged_in = True
     st.session_state.current_user = cookie_user
+    st.session_state.selected_event_filter = cookie_event if cookie_event else "ILOS"
 
 def render_login_screen():
     st.markdown("""
@@ -60,18 +64,22 @@ def render_login_screen():
     
     st.markdown('<div class="login-container">', unsafe_allow_html=True)
     st.markdown('<h1 class="atf-gradient">Artefact</h1>', unsafe_allow_html=True)
-    st.markdown("<p style='color: #8E8E93; margin-bottom: 1rem;'>Selecione quem você é para acessar</p>", unsafe_allow_html=True)
+    st.markdown("<p style='color: #8E8E93; margin-bottom: 1rem;'>Selecione seu perfil e evento</p>", unsafe_allow_html=True)
     
     usuarios_permitidos = ["Spinelli", "André", "Rafael", "Manu", "Paolo", "Ponti", "Fred", "Giu", "Mau"]
-    usuario_selecionado = st.selectbox("Usuário", usuarios_permitidos, label_visibility="collapsed")
-    senha_digitada = st.text_input("Senha", type="password", label_visibility="collapsed", placeholder="Digite a senha da equipe...")
+    usuario_selecionado = st.selectbox("Usuário", usuarios_permitidos)
+    evento_selecionado = st.selectbox("Evento que vai cobrir", ["ILOS", "AIDL"])
+    senha_digitada = st.text_input("Senha", type="password", placeholder="Digite a senha da equipe...")
     
     if st.button("Acessar Plataforma", type="primary", use_container_width=True):
         senha_correta = st.secrets.get("APP_PASSWORD", "appleads123")
         if senha_digitada == senha_correta:
             st.session_state.logged_in = True
             st.session_state.current_user = usuario_selecionado
+            st.session_state.selected_event_filter = evento_selecionado
+            
             cookie_manager.set("artefact_user", usuario_selecionado, expires_at=datetime.now() + timedelta(days=365))
+            cookie_manager.set("artefact_event", evento_selecionado, expires_at=datetime.now() + timedelta(days=365))
             time.sleep(0.5) 
             st.rerun()
         else:
@@ -213,17 +221,13 @@ def save_new_lead_to_supabase(lead_data):
         flash(f"Erro ao salvar contato: {e}")
         return False
 
-def update_lead_priority_in_supabase(lead_id, prioritario):
+def update_lead_full_info_in_supabase(lead_id, update_dict):
     try:
-        supabase.table("leads").update({"prioritario": prioritario}).eq("id", lead_id).execute()
+        supabase.table("leads").update(update_dict).eq("id", lead_id).execute()
+        return True
     except Exception as e:
-        flash(f"Erro ao atualizar prioridade: {e}")
-
-def update_lead_status_in_supabase(lead_id, novo_status):
-    try:
-        supabase.table("leads").update({"status": novo_status}).eq("id", lead_id).execute()
-    except Exception as e:
-        flash(f"Erro ao atualizar status: {e}")
+        flash(f"Erro ao atualizar perfil: {e}")
+        return False
 
 def get_lead_ref(l):
     url = l.get('LinkedIn', '')
@@ -474,7 +478,6 @@ if 'view_mode' not in st.session_state: st.session_state.view_mode = 'list'
 if 'selected_lead_id' not in st.session_state: st.session_state.selected_lead_id = None
 if 'theme' not in st.session_state: st.session_state.theme = 'dark'
 if 'audio_key' not in st.session_state: st.session_state.audio_key = 0
-if 'selected_event_filter' not in st.session_state: st.session_state.selected_event_filter = 'Todos'
 
 SABI_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sabi')
 
@@ -545,11 +548,11 @@ with st.sidebar:
     
     st.markdown(f"<div style='text-align: center; margin-bottom: 20px;'><span style='font-size: 1.2rem;'>👋 Olá, <b>{st.session_state.current_user}</b>!</span></div>", unsafe_allow_html=True)
     
-    # NOVO: Filtro de Evento na Sidebar
-    st.markdown("**Selecione o Evento:**")
-    event_filter = st.selectbox("Filtro de Evento", ["Todos", "ILOS", "AIDL"], index=["Todos", "ILOS", "AIDL"].index(st.session_state.selected_event_filter), label_visibility="collapsed")
+    st.markdown("**Evento Ativo:**")
+    event_filter = st.selectbox("Filtro de Evento", ["ILOS", "AIDL"], index=["ILOS", "AIDL"].index(st.session_state.selected_event_filter), label_visibility="collapsed")
     if event_filter != st.session_state.selected_event_filter:
         st.session_state.selected_event_filter = event_filter
+        cookie_manager.set("artefact_event", event_filter, expires_at=datetime.now() + timedelta(days=365))
         st.session_state.view_mode = 'list'
         st.rerun()
 
@@ -592,14 +595,11 @@ with st.sidebar:
 
 # --- 8. VIEWS ---
 if st.session_state.view_mode == 'list':
-    filter_label = "Todos os Eventos" if st.session_state.selected_event_filter == "Todos" else f"Evento {st.session_state.selected_event_filter}"
-    st.markdown(f'<h1>Base de Contatos ({filter_label})</h1>', unsafe_allow_html=True)
+    st.markdown(f'<h1>Base de Contatos (Evento {st.session_state.selected_event_filter})</h1>', unsafe_allow_html=True)
     
     with st.expander("➕ Adicionar Novo Registro"):
         with st.form("add_contact_form", clear_on_submit=True):
-            col_e1, col_e2, col_e3 = st.columns(3)
-            with col_e1:
-                novo_evento = st.selectbox("Evento", ["ILOS", "AIDL", "Outro"], index=0 if st.session_state.selected_event_filter == "ILOS" else 1)
+            col_e2, col_e3 = st.columns(2)
             with col_e2:
                 novo_tipo = st.selectbox("Tipo de Registro", ["Cliente/Lead", "Inteligência de Mercado"])
             with col_e3:
@@ -630,7 +630,7 @@ if st.session_state.view_mode == 'list':
                         "Empresa": nova_empresa.strip(),
                         "Cargo": novo_cargo.strip(),
                         "Industria": nova_industria.strip(),
-                        "Evento": novo_evento,
+                        "Evento": st.session_state.selected_event_filter,
                         "TipoRegistro": novo_tipo,
                         "DiaEvento": novo_dia,
                         "LinkedIn": novo_linkedin.strip(),
@@ -657,11 +657,10 @@ if st.session_state.view_mode == 'list':
     f_leads = []
     for l in st.session_state.leads_list:
         text_match = search.lower() in l['Nome'].lower() or search.lower() in l.get('Empresa', '').lower() or search.lower() in l.get('Industria', '').lower()
-        event_match = st.session_state.selected_event_filter == "Todos" or l.get('Evento', 'AIDL') == st.session_state.selected_event_filter
+        event_match = l.get('Evento', 'AIDL') == st.session_state.selected_event_filter
         if text_match and event_match:
             f_leads.append(l)
     
-    # ORDENAÇÃO
     if sort_by == "Prioridade":
         f_leads.sort(key=lambda x: (not x.get("Prioritario", False), not x.get("Podcast", False), x.get("Nome", "")))
     elif sort_by == "Podcast":
@@ -688,7 +687,6 @@ if st.session_state.view_mode == 'list':
         if l.get('Industria'):
             info_empresa_industria += f" | {l['Industria']}"
         
-        # Subtexto dinâmico (Se for inteligência, pode não ter cargo)
         subtexto = f"{l.get('Cargo', '')}"
         if info_empresa_industria.strip():
             subtexto += f" @ {info_empresa_industria}" if subtexto else info_empresa_industria
@@ -744,55 +742,73 @@ elif st.session_state.view_mode == 'detail':
     </div>
     """, unsafe_allow_html=True)
     
-    col_a, col_b = st.columns([1, 4])
-    with col_a:
-        btn_star_label = "❌ Remover Prioridade" if l.get("Prioritario") else "⭐ Marcar Prioritário"
-        if st.button(btn_star_label, use_container_width=True):
-            novo_status = not l.get("Prioritario", False)
-            update_lead_priority_in_supabase(l["ID"], novo_status)
-            l["Prioritario"] = novo_status
-            st.rerun()
-            
-    with col_b:
-        url_linkedin = l.get('LinkedIn', '')
-        if url_linkedin and url_linkedin != "#" and str(url_linkedin).lower() != 'nan': 
-            st.link_button("🔗 Ver no LinkedIn", url_linkedin)
-        else:
-            st.button("Sem LinkedIn cadastrado", disabled=True)
+    url_linkedin = l.get('LinkedIn', '')
+    if url_linkedin and url_linkedin != "#" and str(url_linkedin).lower() != 'nan': 
+        st.link_button("🔗 Ver no LinkedIn", url_linkedin)
 
     st.divider()
     
-    # Se for lead, mostra status. Se for inteligência de mercado, não precisa de dropdown de status.
-    if l.get("TipoRegistro") != "Inteligência de Mercado":
-        with st.expander("📋 Informações do Lead"):
-            st.markdown(f"**Tema da Entrevista:** {l.get('Tema', 'Não definido')}")
-            st.markdown("---")
-            st.markdown(l.get('Descricao', 'Sem descrição'))
-            st.markdown("---")
+    with st.expander("✏️ Editar Perfil e Tags"):
+        with st.form("edit_profile_form"):
+            e_nome = st.text_input("Nome", value=l['Nome'])
+            col_e1, col_e2 = st.columns(2)
+            e_cargo = col_e1.text_input("Cargo", value=l['Cargo'])
+            e_empresa = col_e2.text_input("Empresa", value=l.get('Empresa', ''))
+            
+            col_i1, col_i2 = st.columns(2)
+            e_industria = col_i1.text_input("Indústria", value=l.get('Industria', ''))
+            e_linkedin = col_i2.text_input("LinkedIn", value=l.get('LinkedIn', ''))
+            
+            col_t1, col_t2, col_t3 = st.columns(3)
+            idx_evento = ["ILOS", "AIDL", "Outro"].index(l.get('Evento', 'AIDL') if l.get('Evento', 'AIDL') in ["ILOS", "AIDL", "Outro"] else "Outro")
+            e_evento = col_t1.selectbox("Evento", ["ILOS", "AIDL", "Outro"], index=idx_evento)
+            
+            idx_tipo = 0 if l.get('TipoRegistro', 'Cliente/Lead') == 'Cliente/Lead' else 1
+            e_tipo = col_t2.selectbox("Tipo de Registro", ["Cliente/Lead", "Inteligência de Mercado"], index=idx_tipo)
+            
+            idx_dia = ["D1", "D2", "Outro"].index(l.get('DiaEvento', 'Outro') if l.get('DiaEvento', 'Outro') in ["D1", "D2", "Outro"] else "Outro")
+            e_dia = col_t3.selectbox("Dia do Evento", ["D1", "D2", "Outro"], index=idx_dia)
+            
+            e_tema = st.text_input("Tema / Assunto de Interesse", value=l.get('Tema', ''))
+            e_desc = st.text_area("Descrição", value=l.get('Descricao', ''))
             
             opcoes_status = ["whatsapp não enviado", "mensagem 01 enviada", "lead respondeu", "lead não respondeu"]
-            current_status = l.get('Status', 'whatsapp não enviado')
-            if current_status not in opcoes_status:
-                current_status = "whatsapp não enviado"
-                
-            novo_status = st.selectbox(
-                "Atualizar Status do Lead:", 
-                opcoes_status, 
-                index=opcoes_status.index(current_status), 
-                key=f"status_detail_{l['ID']}"
-            )
-            if novo_status != current_status:
-                update_lead_status_in_supabase(l['ID'], novo_status)
-                l['Status'] = novo_status
-                st.success("Status atualizado!")
-                time.sleep(0.5)
-                st.rerun()
+            idx_status = opcoes_status.index(l.get('Status', 'whatsapp não enviado') if l.get('Status', 'whatsapp não enviado') in opcoes_status else "whatsapp não enviado")
+            e_status = st.selectbox("Status Comercial", opcoes_status, index=idx_status)
+            
+            col_c1, col_c2 = st.columns(2)
+            e_prio = col_c1.checkbox("⭐ Prioritário", value=l.get('Prioritario', False))
+            e_pod = col_c2.checkbox("🎙️ Podcast", value=l.get('Podcast', False))
+            
+            if st.form_submit_button("Salvar Alterações", type="primary"):
+                update_dict = {
+                    "nome": e_nome,
+                    "cargo": e_cargo,
+                    "empresa": e_empresa,
+                    "industria": e_industria,
+                    "linkedin": e_linkedin,
+                    "evento": e_evento,
+                    "tipo_registro": e_tipo,
+                    "dia_evento": e_dia,
+                    "tema": e_tema,
+                    "descricao": e_desc,
+                    "status": e_status,
+                    "prioritario": e_prio,
+                    "podcast": e_pod
+                }
+                if update_lead_full_info_in_supabase(l['ID'], update_dict):
+                    l.update({
+                        'Nome': e_nome, 'Cargo': e_cargo, 'Empresa': e_empresa, 'Industria': e_industria,
+                        'LinkedIn': e_linkedin, 'Evento': e_evento, 'TipoRegistro': e_tipo, 'DiaEvento': e_dia,
+                        'Tema': e_tema, 'Descricao': e_desc, 'Status': e_status, 'Prioritario': e_prio, 'Podcast': e_pod
+                    })
+                    st.success("Perfil atualizado!")
+                    time.sleep(0.5)
+                    st.rerun()
 
-        st.divider()
+    st.divider()
 
-    # --- SESSÃO DE INSIGHTS DA IA ---
     insights_db = load_insights_from_supabase(lead_ref)
-    
     st.markdown("### 🧠 Insights Gerados (IA)")
     if insights_db:
         for insight in insights_db:
@@ -814,12 +830,10 @@ elif st.session_state.view_mode == 'detail':
 
     st.divider()
 
-    st.markdown("### 🎙️ Gravar Interação / Observação (Áudio)")
-    st.caption(f"Você está gravando como **{st.session_state.current_user}**.")
-    
+    st.markdown("### 🎙️ Gravar Interação (Áudio)")
+    st.caption(f"Gravando como **{st.session_state.current_user}**.")
     if hasattr(st, 'audio_input'):
         audio = st.audio_input("Grave aqui", label_visibility="collapsed", key=f"audio_widget_{st.session_state.audio_key}")
-        
         if audio:
             with st.spinner("🧠 Processando áudio com IA..."):
                 audio_bytes_wav = audio.read()
@@ -842,22 +856,22 @@ elif st.session_state.view_mode == 'detail':
                 st.session_state.audio_key += 1
                 st.rerun()
 
-    with st.expander("📝 Escrever Interação / Observação (Texto)"):
-        with st.form("text_note_form", clear_on_submit=True):
-            txt = st.text_area("Digite suas anotações aqui", label_visibility="collapsed")
-            if st.form_submit_button("Salvar e Processar na IA", type="primary"):
-                if txt.strip():
-                    with st.spinner("🧠 Processando texto com IA..."):
-                        insights_anteriores_texto = "\n".join([f"- {i['tipo']}: {i['texto']}" for i in insights_db]) if insights_db else "Nenhum insight anterior."
-                        novos_insights = processar_texto_com_ia(txt.strip(), insights_anteriores_texto, st.session_state.current_user)
-                        
-                        save_note_to_supabase(lead_ref, f"👤 **{st.session_state.current_user}** (Texto):\n\n_{txt.strip()}_", None)
-                        
-                        if novos_insights:
-                            delete_all_insights_from_supabase(lead_ref)
-                            for insight in novos_insights:
-                                save_insight_to_supabase(lead_ref, insight.get("tipo", "Geral"), insight.get("texto", ""))
-                        st.rerun()
+    st.markdown("<br>### ✍️ Registrar Interação (Texto)", unsafe_allow_html=True)
+    with st.form("text_note_form", clear_on_submit=True):
+        txt = st.text_area("Anotações", label_visibility="collapsed", placeholder="Digite os detalhes da conversa, objeções, ou insights capturados...")
+        if st.form_submit_button("Salvar e Processar na IA", type="primary"):
+            if txt.strip():
+                with st.spinner("🧠 Processando texto com IA..."):
+                    insights_anteriores_texto = "\n".join([f"- {i['tipo']}: {i['texto']}" for i in insights_db]) if insights_db else "Nenhum insight anterior."
+                    novos_insights = processar_texto_com_ia(txt.strip(), insights_anteriores_texto, st.session_state.current_user)
+                    
+                    save_note_to_supabase(lead_ref, f"👤 **{st.session_state.current_user}** (Texto):\n\n_{txt.strip()}_", None)
+                    
+                    if novos_insights:
+                        delete_all_insights_from_supabase(lead_ref)
+                        for insight in novos_insights:
+                            save_insight_to_supabase(lead_ref, insight.get("tipo", "Geral"), insight.get("texto", ""))
+                    st.rerun()
     
     st.markdown("<br>#### Histórico de Registros Brutos", unsafe_allow_html=True)
     notas = load_notes_from_supabase(lead_ref)
@@ -949,22 +963,22 @@ elif st.session_state.view_mode == 'feedback':
                 st.session_state.audio_key += 1
                 st.rerun()
 
-    with st.expander("📝 Escrever Feedback (Texto)"):
-        with st.form("text_feedback_form", clear_on_submit=True):
-            txt = st.text_area("Seu feedback", label_visibility="collapsed")
-            if st.form_submit_button("Salvar e Processar na IA", type="primary"):
-                if txt.strip():
-                    with st.spinner("🧠 Processando texto com IA..."):
-                        feedbacks_anteriores_texto = "\n".join([f"- {i['tipo']}: {i['texto']}" for i in insights_db]) if insights_db else "Nenhum feedback anterior."
-                        novos_insights = processar_feedback_texto_com_ia(txt.strip(), feedbacks_anteriores_texto, st.session_state.current_user)
-                        
-                        save_note_to_supabase(feedback_ref, f"👤 **{st.session_state.current_user}** (Texto):\n\n_{txt.strip()}_", None, table="feedback_notas")
-                        
-                        if novos_insights:
-                            delete_all_insights_from_supabase(feedback_ref, table="feedback_insights")
-                            for insight in novos_insights:
-                                save_insight_to_supabase(feedback_ref, insight.get("tipo", "Geral"), insight.get("texto", ""), table="feedback_insights")
-                        st.rerun()
+    st.markdown("<br>### ✍️ Escrever Feedback (Texto)", unsafe_allow_html=True)
+    with st.form("text_feedback_form", clear_on_submit=True):
+        txt = st.text_area("Seu feedback", label_visibility="collapsed", placeholder="O que podemos melhorar?")
+        if st.form_submit_button("Salvar e Processar na IA", type="primary"):
+            if txt.strip():
+                with st.spinner("🧠 Processando texto com IA..."):
+                    feedbacks_anteriores_texto = "\n".join([f"- {i['tipo']}: {i['texto']}" for i in insights_db]) if insights_db else "Nenhum feedback anterior."
+                    novos_insights = processar_feedback_texto_com_ia(txt.strip(), feedbacks_anteriores_texto, st.session_state.current_user)
+                    
+                    save_note_to_supabase(feedback_ref, f"👤 **{st.session_state.current_user}** (Texto):\n\n_{txt.strip()}_", None, table="feedback_notas")
+                    
+                    if novos_insights:
+                        delete_all_insights_from_supabase(feedback_ref, table="feedback_insights")
+                        for insight in novos_insights:
+                            save_insight_to_supabase(feedback_ref, insight.get("tipo", "Geral"), insight.get("texto", ""), table="feedback_insights")
+                    st.rerun()
     
     st.markdown("<br>#### Histórico Bruto de Feedbacks", unsafe_allow_html=True)
     notas = load_notes_from_supabase(feedback_ref, table="feedback_notas")
