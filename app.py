@@ -230,15 +230,9 @@ def update_lead_full_info_in_supabase(lead_id, update_dict):
         return False
 
 def get_lead_ref(l):
-    url = l.get('LinkedIn', '')
-    if url and str(url).lower() != 'nan' and url != '#':
-        extracted = url.rstrip('/').split('/')[-1]
-        if extracted: return extracted
-        
-    nome = l.get('Nome', '')
-    empresa = l.get('Empresa', '')
-    fallback = re.sub(r'[^a-zA-Z0-9]', '', f"{nome}_{empresa}").lower()
-    return fallback if fallback else str(l['ID'])
+    # ATENÇÃO: Agora a chave usa diretamente o ID real do banco (Ex: "1", "240")
+    # Isso impede que notas sumam caso alguém edite o nome ou o linkedin do perfil.
+    return str(l['ID'])
 
 def load_notes_from_supabase(lead_id: str, table="notas"):
     try:
@@ -830,48 +824,52 @@ elif st.session_state.view_mode == 'detail':
 
     st.divider()
 
-    st.markdown("### 🎙️ Gravar Interação (Áudio)")
+    st.markdown("### 🎙️ Gravar Interação (Áudio) ou ✍️ Digitar Anotações (Texto)")
     st.caption(f"Gravando como **{st.session_state.current_user}**.")
-    if hasattr(st, 'audio_input'):
-        audio = st.audio_input("Grave aqui", label_visibility="collapsed", key=f"audio_widget_{st.session_state.audio_key}")
-        if audio:
-            with st.spinner("🧠 Processando áudio com IA..."):
-                audio_bytes_wav = audio.read()
-                audio_bytes_mp3 = comprimir_audio_para_mp3(audio_bytes_wav)
-                url = upload_audio_to_supabase(audio_bytes_mp3, lead_ref)
-                
-                insights_anteriores_texto = "\n".join([f"- {i['tipo']}: {i['texto']}" for i in insights_db]) if insights_db else "Nenhum insight anterior."
-                texto_transcrito, novos_insights = processar_audio_com_ia(audio_bytes_mp3, insights_anteriores_texto, st.session_state.current_user)
-                
-                if url:
-                    save_note_to_supabase(lead_ref, f"🎙️ **{st.session_state.current_user}** (Áudio):\n\n_{texto_transcrito}_", url)
-                else:
-                    save_note_to_supabase(lead_ref, f"🎙️ **{st.session_state.current_user}** (Sem áudio):\n\n_{texto_transcrito}_")
-                
-                if novos_insights:
-                    delete_all_insights_from_supabase(lead_ref)
-                    for insight in novos_insights:
-                        save_insight_to_supabase(lead_ref, insight.get("tipo", "Geral"), insight.get("texto", ""))
-                
-                st.session_state.audio_key += 1
-                st.rerun()
-
-    st.markdown("<br>### ✍️ Registrar Interação (Texto)", unsafe_allow_html=True)
-    with st.form("text_note_form", clear_on_submit=True):
-        txt = st.text_area("Anotações", label_visibility="collapsed", placeholder="Digite os detalhes da conversa, objeções, ou insights capturados...")
-        if st.form_submit_button("Salvar e Processar na IA", type="primary"):
-            if txt.strip():
-                with st.spinner("🧠 Processando texto com IA..."):
-                    insights_anteriores_texto = "\n".join([f"- {i['tipo']}: {i['texto']}" for i in insights_db]) if insights_db else "Nenhum insight anterior."
-                    novos_insights = processar_texto_com_ia(txt.strip(), insights_anteriores_texto, st.session_state.current_user)
+    
+    col_audio, col_texto = st.columns([1, 1])
+    
+    with col_audio:
+        if hasattr(st, 'audio_input'):
+            audio = st.audio_input("Grave o áudio aqui", label_visibility="collapsed", key=f"audio_widget_{st.session_state.audio_key}")
+            if audio:
+                with st.spinner("🧠 Processando áudio com IA..."):
+                    audio_bytes_wav = audio.read()
+                    audio_bytes_mp3 = comprimir_audio_para_mp3(audio_bytes_wav)
+                    url = upload_audio_to_supabase(audio_bytes_mp3, lead_ref)
                     
-                    save_note_to_supabase(lead_ref, f"👤 **{st.session_state.current_user}** (Texto):\n\n_{txt.strip()}_", None)
+                    insights_anteriores_texto = "\n".join([f"- {i['tipo']}: {i['texto']}" for i in insights_db]) if insights_db else "Nenhum insight anterior."
+                    texto_transcrito, novos_insights = processar_audio_com_ia(audio_bytes_mp3, insights_anteriores_texto, st.session_state.current_user)
+                    
+                    if url:
+                        save_note_to_supabase(lead_ref, f"🎙️ **{st.session_state.current_user}** (Áudio):\n\n_{texto_transcrito}_", url)
+                    else:
+                        save_note_to_supabase(lead_ref, f"🎙️ **{st.session_state.current_user}** (Sem áudio):\n\n_{texto_transcrito}_")
                     
                     if novos_insights:
                         delete_all_insights_from_supabase(lead_ref)
                         for insight in novos_insights:
                             save_insight_to_supabase(lead_ref, insight.get("tipo", "Geral"), insight.get("texto", ""))
+                    
+                    st.session_state.audio_key += 1
                     st.rerun()
+
+    with col_texto:
+        with st.form("text_note_form", clear_on_submit=True):
+            txt = st.text_area("Anotações em Texto", label_visibility="collapsed", placeholder="Digite os detalhes da conversa, objeções, ou insights capturados...")
+            if st.form_submit_button("Salvar Texto e Processar na IA", type="primary"):
+                if txt.strip():
+                    with st.spinner("🧠 Processando texto com IA..."):
+                        insights_anteriores_texto = "\n".join([f"- {i['tipo']}: {i['texto']}" for i in insights_db]) if insights_db else "Nenhum insight anterior."
+                        novos_insights = processar_texto_com_ia(txt.strip(), insights_anteriores_texto, st.session_state.current_user)
+                        
+                        save_note_to_supabase(lead_ref, f"👤 **{st.session_state.current_user}** (Texto):\n\n_{txt.strip()}_", None)
+                        
+                        if novos_insights:
+                            delete_all_insights_from_supabase(lead_ref)
+                            for insight in novos_insights:
+                                save_insight_to_supabase(lead_ref, insight.get("tipo", "Geral"), insight.get("texto", ""))
+                        st.rerun()
     
     st.markdown("<br>#### Histórico de Registros Brutos", unsafe_allow_html=True)
     notas = load_notes_from_supabase(lead_ref)
@@ -935,50 +933,53 @@ elif st.session_state.view_mode == 'feedback':
 
     st.divider()
 
-    st.markdown("### 🎙️ Gravar Feedback (Áudio)")
+    st.markdown("### 🎙️ Gravar Feedback (Áudio) ou ✍️ Escrever Feedback (Texto)")
     st.caption(f"Você está gravando como **{st.session_state.current_user}**.")
     
-    if hasattr(st, 'audio_input'):
-        audio = st.audio_input("Grave seu feedback", label_visibility="collapsed", key=f"audio_widget_{st.session_state.audio_key}")
-        
-        if audio:
-            with st.spinner("🧠 A IA está categorizando seu feedback..."):
-                audio_bytes_wav = audio.read()
-                audio_bytes_mp3 = comprimir_audio_para_mp3(audio_bytes_wav)
-                url = upload_audio_to_supabase(audio_bytes_mp3, feedback_ref)
-                
-                feedbacks_anteriores_texto = "\n".join([f"- {i['tipo']}: {i['texto']}" for i in insights_db]) if insights_db else "Nenhum feedback anterior."
-                texto_transcrito, novos_insights = processar_feedback_com_ia(audio_bytes_mp3, feedbacks_anteriores_texto, st.session_state.current_user)
-                
-                if url:
-                    save_note_to_supabase(feedback_ref, f"🎙️ **{st.session_state.current_user}** (Áudio):\n\n_{texto_transcrito}_", url, table="feedback_notas")
-                else:
-                    save_note_to_supabase(feedback_ref, f"🎙️ **{st.session_state.current_user}** (Sem áudio):\n\n_{texto_transcrito}_", table="feedback_notas")
-                
-                if novos_insights:
-                    delete_all_insights_from_supabase(feedback_ref, table="feedback_insights")
-                    for insight in novos_insights:
-                        save_insight_to_supabase(feedback_ref, insight.get("tipo", "Geral"), insight.get("texto", ""), table="feedback_insights")
-                
-                st.session_state.audio_key += 1
-                st.rerun()
+    col_audio_fb, col_texto_fb = st.columns([1, 1])
 
-    st.markdown("<br>### ✍️ Escrever Feedback (Texto)", unsafe_allow_html=True)
-    with st.form("text_feedback_form", clear_on_submit=True):
-        txt = st.text_area("Seu feedback", label_visibility="collapsed", placeholder="O que podemos melhorar?")
-        if st.form_submit_button("Salvar e Processar na IA", type="primary"):
-            if txt.strip():
-                with st.spinner("🧠 Processando texto com IA..."):
-                    feedbacks_anteriores_texto = "\n".join([f"- {i['tipo']}: {i['texto']}" for i in insights_db]) if insights_db else "Nenhum feedback anterior."
-                    novos_insights = processar_feedback_texto_com_ia(txt.strip(), feedbacks_anteriores_texto, st.session_state.current_user)
+    with col_audio_fb:
+        if hasattr(st, 'audio_input'):
+            audio = st.audio_input("Grave seu feedback aqui", label_visibility="collapsed", key=f"audio_widget_{st.session_state.audio_key}")
+            
+            if audio:
+                with st.spinner("🧠 A IA está categorizando seu feedback..."):
+                    audio_bytes_wav = audio.read()
+                    audio_bytes_mp3 = comprimir_audio_para_mp3(audio_bytes_wav)
+                    url = upload_audio_to_supabase(audio_bytes_mp3, feedback_ref)
                     
-                    save_note_to_supabase(feedback_ref, f"👤 **{st.session_state.current_user}** (Texto):\n\n_{txt.strip()}_", None, table="feedback_notas")
+                    feedbacks_anteriores_texto = "\n".join([f"- {i['tipo']}: {i['texto']}" for i in insights_db]) if insights_db else "Nenhum feedback anterior."
+                    texto_transcrito, novos_insights = processar_feedback_com_ia(audio_bytes_mp3, feedbacks_anteriores_texto, st.session_state.current_user)
+                    
+                    if url:
+                        save_note_to_supabase(feedback_ref, f"🎙️ **{st.session_state.current_user}** (Áudio):\n\n_{texto_transcrito}_", url, table="feedback_notas")
+                    else:
+                        save_note_to_supabase(feedback_ref, f"🎙️ **{st.session_state.current_user}** (Sem áudio):\n\n_{texto_transcrito}_", table="feedback_notas")
                     
                     if novos_insights:
                         delete_all_insights_from_supabase(feedback_ref, table="feedback_insights")
                         for insight in novos_insights:
                             save_insight_to_supabase(feedback_ref, insight.get("tipo", "Geral"), insight.get("texto", ""), table="feedback_insights")
+                    
+                    st.session_state.audio_key += 1
                     st.rerun()
+
+    with col_texto_fb:
+        with st.form("text_feedback_form", clear_on_submit=True):
+            txt = st.text_area("Seu feedback em Texto", label_visibility="collapsed", placeholder="O que podemos melhorar?")
+            if st.form_submit_button("Salvar Texto e Processar na IA", type="primary"):
+                if txt.strip():
+                    with st.spinner("🧠 Processando texto com IA..."):
+                        feedbacks_anteriores_texto = "\n".join([f"- {i['tipo']}: {i['texto']}" for i in insights_db]) if insights_db else "Nenhum feedback anterior."
+                        novos_insights = processar_feedback_texto_com_ia(txt.strip(), feedbacks_anteriores_texto, st.session_state.current_user)
+                        
+                        save_note_to_supabase(feedback_ref, f"👤 **{st.session_state.current_user}** (Texto):\n\n_{txt.strip()}_", None, table="feedback_notas")
+                        
+                        if novos_insights:
+                            delete_all_insights_from_supabase(feedback_ref, table="feedback_insights")
+                            for insight in novos_insights:
+                                save_insight_to_supabase(feedback_ref, insight.get("tipo", "Geral"), insight.get("texto", ""), table="feedback_insights")
+                        st.rerun()
     
     st.markdown("<br>#### Histórico Bruto de Feedbacks", unsafe_allow_html=True)
     notas = load_notes_from_supabase(feedback_ref, table="feedback_notas")
